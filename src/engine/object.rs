@@ -1,0 +1,254 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
+use crate::engine::math::{vec3::Vec3, vec4::Vec4};
+
+use super::{engine::Engine, image::Image, material::Material, math::mat4::Mat4, model::Model, physics::physics::PhysicsObject, render::render::{Mesh, MeshUsage}};
+
+#[derive(Clone)]
+pub struct Object{
+    pub mesh: Mesh,
+    pub physic_object: PhysicsObject,
+    pub is_looking_at: bool,
+    pub draw: bool,
+    pub draw_shadow: bool,
+    pub draw_distance: f32,
+    pub view_reaction_distance: f32,
+    pub render_in_behind: bool,
+    pub name: String,
+    usage: MeshUsage,
+    eng_ph_id: usize,
+    blank: bool,
+}
+
+impl Object {
+    pub fn new(engine: &mut Engine, model: Model, material: Material, images: Vec<Image>, usage: MeshUsage, is_static: bool, name: String, raw_vertices: Vec<Vec3>) -> Object{
+        let ph = PhysicsObject::new_mesh(model.points.to_vec(), is_static, raw_vertices);
+        let id = engine.obj_ph.len();
+        if usage == MeshUsage::DefferedPass || usage == MeshUsage::ShadowAndDefferedPass || usage == MeshUsage::ShadowPass{
+            engine.obj_ph.push(ph.clone());
+        }
+        let mut txs = vec![];
+        for i in 0..images.len(){
+            txs.push(images[i].textures);
+        }
+        Object { 
+            mesh: Mesh::new(engine.render, model.vertexbuf, material.material_shaders, txs, usage),
+            physic_object: ph.clone(),
+            is_looking_at: false,
+            draw: true,
+            draw_shadow: true,
+            draw_distance: 100f32,
+            view_reaction_distance: 5f32,
+            render_in_behind: true,
+            name: name,
+            usage: usage,
+            eng_ph_id: id,
+            blank: false,
+        }
+    }
+    pub fn new_blank() -> Object{
+        Object { 
+            mesh: Mesh { meshid: 0, ubo: [0.0; 56], draw: true, draw_shadow: true, keep_shadow: false, render_all_cameras: true, exclude_selected_camera: false, camera_number: 0, destroyed: true },
+            physic_object: PhysicsObject::new(vec![Vec3::new(), Vec3::new()], true),
+            usage: MeshUsage::ShadowAndDefferedPass,
+            is_looking_at: false,
+            draw: true,
+            draw_shadow: true,
+            draw_distance: 100f32,
+            view_reaction_distance: 2f32,
+            render_in_behind: true,
+            name: "".to_string(),
+            eng_ph_id: 0,
+            blank: true,
+        }
+    }
+    pub fn init(&mut self, engine: &mut Engine, model: Model, material: Material, images: Vec<Image>, usage: MeshUsage, is_static: bool, name: String){
+        let ph = PhysicsObject::new(model.points.to_vec(), is_static);
+        let id = engine.obj_ph.len();
+        if usage == MeshUsage::DefferedPass || usage == MeshUsage::ShadowAndDefferedPass || usage == MeshUsage::ShadowPass{
+            engine.obj_ph.push(ph.clone());
+        }
+        let mut txs = vec![];
+        for i in 0..images.len(){
+            txs.push(images[i].textures);
+        }
+        self.mesh.destroy(engine.render);
+        self.mesh.init(engine.render, model.vertexbuf, material.material_shaders, txs, usage);
+        self.physic_object = ph.clone();
+        self.is_looking_at = false;
+        self.draw = true;
+        self.draw_shadow = true;
+        self.draw_distance = 100f32;
+        self.view_reaction_distance = 2f32;
+        self.render_in_behind = true;
+        self.name = name;
+        self.usage = usage;
+        self.eng_ph_id = id;
+        self.blank = false;
+    }
+    pub fn execph(&mut self, eng: &mut Engine){
+        if self.usage == MeshUsage::DefferedPass || self.usage == MeshUsage::ShadowAndDefferedPass {
+            self.physic_object.reset_states();
+            self.physic_object.exec(eng.logic_frametime);
+            for i in 0..u32::min(eng.used_camera_count, 10){
+                eng.cameras[i as usize].physic_object.interact_with_other_object(self.physic_object.clone());
+            }
+        }
+    }
+    fn in_range(v1: f32, v2: f32, p1: f32) -> bool{
+        return  p1 >= v1 && p1 <= v2;
+    }
+    #[allow(dead_code)]
+    fn getbgp(v: Vec<Vec4>) -> Vec3 {
+        let mut f = Vec3{ x: v[0].x, y: v[0].y, z: v[0].z};
+        for i in 0..v.len(){
+            if v[i].x > f.x{
+                f.x = v[i].x;
+            }
+            if v[i].y > f.y{
+                f.y = v[i].y;
+            }
+            if v[i].z > f.z{
+                f.z = v[i].z;
+            }
+        }
+        return f;
+    }
+    #[allow(dead_code)]
+    fn getbsp(v: Vec<Vec4>) -> Vec3 {
+        let mut f = Vec3{ x: v[0].x, y: v[0].y, z: v[0].z};
+        for i in 0..v.len(){
+            if v[i].x < f.x{
+                f.x = v[i].x;
+            }
+            if v[i].y < f.y{
+                f.y = v[i].y;
+            }
+            if v[i].z < f.z{
+                f.z = v[i].z;
+            }
+        }
+        return f;
+    }
+    pub fn exec(&mut self, eng: &mut Engine){
+        if !self.blank{
+            if self.usage == MeshUsage::DefferedPass || self.usage == MeshUsage::ShadowAndDefferedPass || self.usage == MeshUsage::ShadowPass{
+                self.physic_object.reset_states();
+                self.physic_object.exec(eng.logic_frametime);
+                if !self.physic_object.is_static{
+                    for i in 0..eng.forces.len(){
+                        if let Some(f) = &mut eng.forces[i]{
+                            f.compute_force(&mut self.physic_object);
+                        }
+                    }
+
+                    for i in 0..eng.obj_ph.len(){
+                        if i != self.eng_ph_id{
+                            self.physic_object.interact_with_other_object(eng.obj_ph[i].clone());
+                        }
+                    }
+                }
+                eng.obj_ph[self.eng_ph_id] = self.physic_object.clone();
+            }
+
+            let mut lubm;
+            let mut ubm = Mat4::new();
+            ubm.trans(self.physic_object.pos);
+            lubm = ubm.clone();
+
+            ubm.transpose();
+            for i in 0..16{
+                self.mesh.ubo[i] = ubm.mat[i];
+            }
+
+            ubm = Mat4::new();
+            ubm.quat_rot(self.physic_object.rot);
+
+            lubm *= ubm;
+
+            ubm.transpose();
+            for i in 0..16{
+                self.mesh.ubo[i+16] = ubm.mat[i];
+            }
+
+            ubm = Mat4::new();
+            ubm.scale(self.physic_object.scale);
+
+            lubm *= ubm;
+            
+            ubm.transpose();
+            for i in 0..16{
+                self.mesh.ubo[i+32] = ubm.mat[i];
+            }
+
+            if self.usage == MeshUsage::DefferedPass || self.usage == MeshUsage::ShadowAndDefferedPass{
+                let mut mt = eng.cameras[eng.primary_camera as usize].get_projection(eng.render.resolution_x as f32/eng.render.resolution_y as f32);
+                mt.transpose();
+
+                let mut c1 = [
+                    lubm.vec4mul(Vec4{ x: self.physic_object.collider.local_max.x, y: self.physic_object.collider.local_max.y, z: self.physic_object.collider.local_max.z, w: 1.0}),
+                    lubm.vec4mul(Vec4{ x: self.physic_object.collider.local_max.x, y: self.physic_object.collider.local_min.y, z: self.physic_object.collider.local_max.z, w: 1.0}),
+                    lubm.vec4mul(Vec4{ x: self.physic_object.collider.local_min.x, y: self.physic_object.collider.local_min.y, z: self.physic_object.collider.local_max.z, w: 1.0}),
+                    lubm.vec4mul(Vec4{ x: self.physic_object.collider.local_min.x, y: self.physic_object.collider.local_max.y, z: self.physic_object.collider.local_max.z, w: 1.0}),
+                    lubm.vec4mul(Vec4{ x: self.physic_object.collider.local_min.x, y: self.physic_object.collider.local_min.y, z: self.physic_object.collider.local_min.z, w: 1.0}),
+                    lubm.vec4mul(Vec4{ x: self.physic_object.collider.local_max.x, y: self.physic_object.collider.local_min.y, z: self.physic_object.collider.local_min.z, w: 1.0}),
+                    lubm.vec4mul(Vec4{ x: self.physic_object.collider.local_max.x, y: self.physic_object.collider.local_max.y, z: self.physic_object.collider.local_min.z, w: 1.0}),
+                    lubm.vec4mul(Vec4{ x: self.physic_object.collider.local_min.x, y: self.physic_object.collider.local_max.y, z: self.physic_object.collider.local_min.z, w: 1.0}),
+                ];
+
+                let bg = Self::getbgp(c1.to_vec());
+                let sg = Self::getbsp(c1.to_vec());
+
+                c1 = [
+                    mt.vec4mul(c1[0]),
+                    mt.vec4mul(c1[1]),
+                    mt.vec4mul(c1[2]),
+                    mt.vec4mul(c1[3]),
+                    mt.vec4mul(c1[4]),
+                    mt.vec4mul(c1[5]),
+                    mt.vec4mul(c1[6]),
+                    mt.vec4mul(c1[7]),
+                ];
+
+                for i in 0..8{
+                    c1[i].x /= c1[i].w;
+                    c1[i].y /= c1[i].w; 
+                    c1[i].z /= c1[i].w;
+                }
+
+                let lbg = Self::getbgp(c1.to_vec());
+                let lsg = Self::getbsp(c1.to_vec());
+
+                let cmp = eng.cameras[eng.primary_camera as usize].physic_object.pos;
+                let dst1 = f32::sqrt(f32::powi(bg.x-cmp.x, 2)+f32::powi(bg.y-cmp.y, 2)+f32::powi(bg.z-cmp.z, 2));
+                let dst2 = f32::sqrt(f32::powi(sg.x-cmp.x, 2)+f32::powi(sg.y-cmp.y, 2)+f32::powi(sg.z-cmp.z, 2));
+                let fdst = f32::min(dst1, dst2);
+                if (c1[0].z < 0.0 && c1[1].z < 0.0 && c1[2].z < 0.0 && c1[3].z < 0.0 && c1[4].z < 0.0 && c1[5].z < 0.0 && c1[6].z < 0.0 && c1[7].z < 0.0 && self.render_in_behind) || fdst >= self.draw_distance{
+                    self.mesh.draw = false;
+                    self.mesh.keep_shadow = self.draw_shadow;
+                    self.mesh.draw_shadow = self.draw_shadow;
+                }else{
+                    self.mesh.draw = self.draw;
+                    self.mesh.keep_shadow = self.draw_shadow;
+                    self.mesh.draw_shadow = self.draw_shadow;
+                }
+
+                self.is_looking_at = false;
+
+                if Self::in_range(lsg.x, lbg.x, 0.0) && Self::in_range(lsg.y, lbg.y, 0.0) && Self::in_range(0.0, 1.0, lsg.z) && Self::in_range(0.0, 1.0, lbg.z) && fdst <= self.view_reaction_distance{
+                    self.is_looking_at = true;
+                }
+            }else if self.usage == MeshUsage::LightingPass || self.usage == MeshUsage::PostPass{
+                self.mesh.draw = self.draw;
+                self.mesh.keep_shadow = false;
+                self.mesh.draw_shadow = true;
+            }else{
+                self.mesh.draw = self.draw;
+                self.mesh.keep_shadow = self.draw;
+                self.mesh.draw_shadow = self.draw;
+            }
+            self.mesh.exec(eng.render);
+        }
+    }
+}

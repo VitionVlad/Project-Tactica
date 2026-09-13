@@ -1,0 +1,47 @@
+use core::f32;
+
+use crate::engine::math::vec4::Vec4;
+
+use super::{camera::Camera, math::vec3::Vec3, physics::physics::PhysicsObject};
+
+#[allow(dead_code)]
+#[derive(PartialEq)]
+#[derive(Copy, Clone)]
+pub enum LightType{
+    Directional,
+    Spot,
+}
+
+#[allow(dead_code)]
+#[derive(Clone)]
+pub struct Light{
+    pub light_type: LightType,
+    pub pos: Vec3,
+    pub rot: Vec4,
+    pub color: Vec3,
+    pub shadow: bool,
+    pub direction: Vec3,
+    pub camera: Camera,
+}
+
+impl Light{
+    #[allow(dead_code)]
+    pub fn new(light_type: LightType) -> Light{
+        Light{
+            light_type: light_type,
+            pos: Vec3::new(),
+            rot: Vec4::new(),
+            color: Vec3{ x: 1f32, y: 1f32, z: 1f32},
+            shadow: true,
+            direction: Vec3::new(),
+            camera: Camera{ physic_object: PhysicsObject::new(vec![Vec3::new(), Vec3::new()], true), fov: 90f32, znear: 0.1f32, zfar: 100f32, is_orthographic: light_type == LightType::Directional, rotation_colision_calc: false },
+        }
+    }
+    #[allow(dead_code)]
+    pub fn getvec(&mut self) -> Vec<f32>{
+        self.camera.physic_object.pos = self.pos;
+        self.camera.physic_object.rot = self.rot;
+        self.camera.is_orthographic = self.light_type == LightType::Directional;
+        return self.camera.get_projection(1f32).mat.to_vec();
+    }
+}
