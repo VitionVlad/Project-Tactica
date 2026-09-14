@@ -7,6 +7,15 @@ mod engine;
 pub struct Pivot{
   pub id: usize,
   pub tbtmode: bool,
+  pub start_pos: Vec3,
+}
+
+#[derive(PartialEq, Clone, Eq, Hash, Ord, PartialOrd)]
+pub enum Awarness{
+  Unseen(u8),
+  Suspected(i8),
+  Detected(i8),
+  Compromised(i8)
 }
 
 pub struct Enemy{
@@ -14,6 +23,7 @@ pub struct Enemy{
   pub direction: Vec3,
   pub plate_id: Option<usize>,
   pub alive: bool,
+  pub start_pos: Vec3,
 }
 
 pub struct TBTplate{
@@ -163,7 +173,7 @@ fn main() {
 
     println!("shadowmapresolution(ignore if shadowmaps are off): {}", eng.render.shadow_map_resolution);
 
-    let mut pivot = Pivot{id: 0, tbtmode: false};
+    let mut pivot = Pivot{id: 0, tbtmode: false, start_pos: Vec3{x: 0.0, y: 0.0, z: 0.0}};
 
     let mut tbtplates = Vec::new();
 
@@ -175,6 +185,7 @@ fn main() {
       if scn.objects[i].name.contains("pivot"){
         println!("pivot id = {}", i);
         pivot.id = i;
+        pivot.start_pos = scn.objects[pivot.id].physic_object.pos;
         scn.objects[pivot.id].physic_object.compute_torque = false;
         scn.objects[pivot.id].physic_object.gravity = false;
         scn.objects[pivot.id].physic_object.is_static = false;
@@ -186,36 +197,92 @@ fn main() {
         tbtplates.push(TBTplate{id: i, safe: true, enemy_id: None});
       }else if scn.objects[i].name.contains("enemy"){
         println!("enemy found with name {}", scn.objects[i].name);
-        enemies.push(Enemy{id: i, direction: Vec3{x: 0.0, y: 0.0, z: 0.0}, plate_id: None, alive: true});
+        enemies.push(Enemy{id: i, direction: Vec3{x: 0.0, y: 0.0, z: -1.0}, plate_id: None, alive: true, start_pos: scn.objects[i].physic_object.pos});
+        scn.objects[i].physic_object.compute_torque = false;
+        scn.objects[i].physic_object.gravity = false;
+        scn.objects[i].physic_object.is_static = false;
       }
     }
 
     eng.cameras[0].physic_object.solid = false;
     eng.cameras[0].physic_object.gravity = false;
 
+    let mut level_awarness = Awarness::Unseen(0);
+
+    let mut making_step = false;
+
+    let keycodes = vec![
+      40, //w
+      44, //s
+      25, //a
+      22, //d
+      48, //space
+    ];
+
     while eng.work(){
       if tm > 0.0{
         tm -= eng.logic_frametime;
       }
 
-      //controls
-      if pivot.tbtmode{
-        for i in 0..enemies.len(){
-          let enemy = &mut enemies[i];
-          if enemy.plate_id.is_none(){
-            for j in 0..tbtplates.len() {
-              if tile_test(&scn.objects[enemy.id].physic_object, &scn.objects[tbtplates[j].id].physic_object) && !tbtplates[j].safe {
-                enemies[i].plate_id = Some(j);
-                tbtplates[j].enemy_id = Some(i);
-                break;
-              }
-            }
-          }else{
-            let plate_id = enemy.plate_id.unwrap();
-            scn.objects[enemy.id].physic_object.acceleration.x = -(scn.objects[enemy.id].physic_object.pos.x - scn.objects[tbtplates[plate_id].id].physic_object.pos.x)*10.0;
-            scn.objects[enemy.id].physic_object.acceleration.z = -(scn.objects[enemy.id].physic_object.pos.z - scn.objects[tbtplates[plate_id].id].physic_object.pos.z)*10.0;
+      //step logic
+      if making_step{
+        making_step = false;
+
+        for plates in tbtplates.iter_mut(){
+          plates.enemy_id = None;
+        }
+        for enemies in enemies.iter_mut(){
+          if enemies.alive && enemies.plate_id.is_some() && enemies.plate_id.unwrap() == actual_plate_id{
+            level_awarness = Awarness::Compromised(2);
           }
         }
+
+        for i in 0..enemies.len(){
+          if enemies[i].alive{
+            let enemy = &mut enemies[i];
+            if enemy.plate_id.is_none(){
+              for j in 0..tbtplates.len() {
+                if tile_test(&scn.objects[enemy.id].physic_object, &scn.objects[tbtplates[j].id].physic_object) && !tbtplates[j].safe {
+                  enemies[i].plate_id = Some(j);
+                  tbtplates[j].enemy_id = Some(i);
+                  break;
+                }
+              }
+            }else if enemy.plate_id.is_some(){
+              let mut found_dir = false;
+              for j in 0..tbtplates.len() {
+                if tile_test_point(&(scn.objects[enemy.id].physic_object.pos+enemy.direction), &scn.objects[tbtplates[j].id].physic_object) && !tbtplates[j].safe {
+                  enemy.plate_id = Some(j);
+                  tbtplates[j].enemy_id = Some(i);
+                  found_dir = true;
+                  break;
+                }
+              }
+              if !found_dir{
+                for j in 0..tbtplates.len() {
+                  if tile_test_point(&(scn.objects[enemy.id].physic_object.pos-enemy.direction), &scn.objects[tbtplates[j].id].physic_object) && !tbtplates[j].safe {
+                    enemy.plate_id = Some(j);
+                    tbtplates[j].enemy_id = Some(i);
+                    enemy.direction = -enemy.direction;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      for enemy in enemies.iter_mut(){
+        if enemy.alive && enemy.plate_id.is_some(){
+          let plate_id = enemy.plate_id.unwrap();
+          scn.objects[enemy.id].physic_object.acceleration.x = -(scn.objects[enemy.id].physic_object.pos.x - scn.objects[tbtplates[plate_id].id].physic_object.pos.x)*10.0;
+          scn.objects[enemy.id].physic_object.acceleration.z = -(scn.objects[enemy.id].physic_object.pos.z - scn.objects[tbtplates[plate_id].id].physic_object.pos.z)*10.0;
+        }
+      }
+
+      //controls
+      if pivot.tbtmode{
 
         let deltapos = scn.objects[tbtplates[actual_plate_id].id].physic_object.pos - scn.objects[pivot.id].physic_object.pos;
         if deltapos.length_squared().sqrt() < 0.01{
@@ -246,7 +313,7 @@ fn main() {
             }
           }
 
-          if eng.control.get_key_state(40) && direction[0].is_some(){//w
+          if eng.control.get_key_state(keycodes[0]) && direction[0].is_some(){//w
             let dir = direction[0].unwrap();
             match dir.1{
               false => {
@@ -259,7 +326,8 @@ fn main() {
                 scn.objects[enemies[tbtplates[actual_plate_id].enemy_id.unwrap()].id].draw = false;
               }
             }
-          }else if eng.control.get_key_state(44) && direction[1].is_some(){//s
+            making_step = true;
+          }else if eng.control.get_key_state(keycodes[1]) && direction[1].is_some(){//s
             let dir = direction[1].unwrap();
             match dir.1{
               false => {
@@ -272,7 +340,8 @@ fn main() {
                 scn.objects[enemies[tbtplates[actual_plate_id].enemy_id.unwrap()].id].draw = false;
               }
             }
-          }else if eng.control.get_key_state(25) && direction[2].is_some(){//a
+            making_step = true;
+          }else if eng.control.get_key_state(keycodes[2]) && direction[2].is_some(){//a
             let dir = direction[2].unwrap();
             match dir.1{
               false => {
@@ -285,7 +354,8 @@ fn main() {
                 scn.objects[enemies[tbtplates[actual_plate_id].enemy_id.unwrap()].id].draw = false;
               }
             }
-          }else if eng.control.get_key_state(22) && direction[3].is_some(){//d
+            making_step = true;
+          }else if eng.control.get_key_state(keycodes[3]) && direction[3].is_some(){//d
             let dir = direction[3].unwrap();
             match dir.1{
               false => {
@@ -298,22 +368,25 @@ fn main() {
                 scn.objects[enemies[tbtplates[actual_plate_id].enemy_id.unwrap()].id].draw = false;
               }
             }
+            making_step = true;
+          }else if eng.control.get_key_state(keycodes[4]){ //skip step
+            making_step = true;
           }
         }
 
         scn.objects[pivot.id].physic_object.acceleration.x = -(scn.objects[pivot.id].physic_object.pos.x - scn.objects[tbtplates[actual_plate_id].id].physic_object.pos.x)*10.0;
         scn.objects[pivot.id].physic_object.acceleration.z = -(scn.objects[pivot.id].physic_object.pos.z - scn.objects[tbtplates[actual_plate_id].id].physic_object.pos.z)*10.0;
       }else{
-        if eng.control.get_key_state(40){//w
+        if eng.control.get_key_state(keycodes[0]){//w
           scn.objects[pivot.id].physic_object.acceleration.z += SPEED;
         }
-        if eng.control.get_key_state(44){//s
+        if eng.control.get_key_state(keycodes[1]){//s
           scn.objects[pivot.id].physic_object.acceleration.z -= SPEED;
         }
-        if eng.control.get_key_state(25){//a
+        if eng.control.get_key_state(keycodes[2]){//a
           scn.objects[pivot.id].physic_object.acceleration.x += SPEED;
         }
-        if eng.control.get_key_state(22){//d
+        if eng.control.get_key_state(keycodes[3]){//d
           scn.objects[pivot.id].physic_object.acceleration.x -= SPEED;
         }
       }
@@ -365,6 +438,16 @@ fn main() {
       viewport.object.mesh.ubo[50] = 0.2;
       viewport.object.mesh.ubo[51] = 0.18;
       viewport.exec(&mut eng);
+
+      if level_awarness == Awarness::Compromised(2){
+        level_awarness = Awarness::Unseen(0);
+        pivot.tbtmode = false;
+        scn.objects[pivot.id].physic_object.pos = pivot.start_pos;
+        for enemy in enemies.iter_mut(){
+          enemy.alive = true;
+          scn.objects[enemy.id].physic_object.pos = enemy.start_pos;
+        }
+      }
       
       fcnt += 1;
       if fcnt > 100000{
