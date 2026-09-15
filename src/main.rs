@@ -10,7 +10,7 @@ pub struct Pivot{
   pub start_pos: Vec3,
 }
 
-#[derive(PartialEq, Clone, Eq, Hash, Ord, PartialOrd)]
+#[derive(PartialEq, Clone, Eq, Hash, Ord, PartialOrd, Debug)]
 pub enum Awarness{
   Unseen(u8),
   Suspected(i8),
@@ -181,6 +181,8 @@ fn main() {
 
     let mut actual_plate_id = 0;
 
+    let awarness_max_level = 2;
+
     for i in 0..scn.objects.len(){
       if scn.objects[i].name.contains("pivot"){
         println!("pivot id = {}", i);
@@ -226,14 +228,45 @@ fn main() {
 
       //step logic
       if making_step{
+        let mut enemdet = false;
         making_step = false;
 
         for plates in tbtplates.iter_mut(){
           plates.enemy_id = None;
         }
         for enemies in enemies.iter_mut(){
+          let dist = (scn.objects[enemies.id].physic_object.pos - scn.objects[pivot.id].physic_object.pos).length_squared().sqrt();
+          if dist < 1.5f32{
+            enemdet = true;
+            match level_awarness {
+              Awarness::Unseen(x) => {
+                if x < awarness_max_level as u8{
+                  level_awarness = Awarness::Unseen(x+1);
+                }else{
+                  level_awarness = Awarness::Suspected(0);
+                }
+              }
+              Awarness::Suspected(x) => {
+                if x < awarness_max_level{
+                  level_awarness = Awarness::Suspected(x+1);
+                }else{
+                  level_awarness = Awarness::Detected(0);
+                }
+              }
+              Awarness::Detected(x) => {
+                if x < awarness_max_level{
+                  level_awarness = Awarness::Detected(x+1);
+                }else{
+                  level_awarness = Awarness::Compromised(0);
+                }
+              }
+              Awarness::Compromised(x) => {
+                level_awarness = Awarness::Compromised(x+1);
+              }
+            }
+          }
           if enemies.alive && enemies.plate_id.is_some() && enemies.plate_id.unwrap() == actual_plate_id{
-            level_awarness = Awarness::Compromised(2);
+            level_awarness = Awarness::Compromised(awarness_max_level);
           }
         }
 
@@ -270,6 +303,39 @@ fn main() {
               }
             }
           }
+        }
+
+        if !enemdet{
+          match level_awarness {
+              Awarness::Unseen(x) => {
+                if x > 0{
+                  level_awarness = Awarness::Unseen(x-1);
+                }else{
+                  level_awarness = Awarness::Unseen(0);
+                }
+              }
+              Awarness::Suspected(x) => {
+                if x > 0{
+                  level_awarness = Awarness::Suspected(x-1);
+                }else{
+                  level_awarness = Awarness::Unseen(awarness_max_level as u8);
+                }
+              }
+              Awarness::Detected(x) => {
+                if x > 0{
+                  level_awarness = Awarness::Detected(x-1);
+                }else{
+                  level_awarness = Awarness::Suspected(awarness_max_level);
+                }
+              }
+              Awarness::Compromised(x) => {
+                if x > 0{
+                  level_awarness = Awarness::Compromised(x-1);
+                }else{
+                  level_awarness = Awarness::Detected(awarness_max_level);
+                }
+              }
+            }
         }
       }
 
@@ -369,8 +435,9 @@ fn main() {
               }
             }
             making_step = true;
-          }else if eng.control.get_key_state(keycodes[4]){ //skip step
+          }else if eng.control.get_key_state(keycodes[4]) && tm <= 0.0{ //skip step
             making_step = true;
+            tm = 0.5;
           }
         }
 
@@ -396,7 +463,7 @@ fn main() {
       eng.cameras[0].physic_object.pos.z = scn.objects[pivot.id].physic_object.pos.z + 10.0f32;
       eng.cameras[0].look_at(scn.objects[pivot.id].physic_object.pos+Vec3{x: 0.0, y: 0.5, z: 0.0});
 
-      let fpstxt = format!("CPU_fps:{}|GPU_fps:{}|CPU_frametime:{}", eng.cpu_fps, eng.gpu_fps, eng.logic_frametime);
+      let fpstxt = format!("CPU_fps:{}|GPU_fps:{}|detection_level: {:?}", eng.cpu_fps, eng.gpu_fps, level_awarness);
       fpscnt.size.x = 15_f32;
       fpscnt.size.y = 30_f32;
       fpscnt.pos.x = 0.0;
@@ -439,9 +506,10 @@ fn main() {
       viewport.object.mesh.ubo[51] = 0.18;
       viewport.exec(&mut eng);
 
-      if level_awarness == Awarness::Compromised(2){
+      if level_awarness == Awarness::Compromised(awarness_max_level){
         level_awarness = Awarness::Unseen(0);
         pivot.tbtmode = false;
+        making_step = false;
         scn.objects[pivot.id].physic_object.pos = pivot.start_pos;
         for enemy in enemies.iter_mut(){
           enemy.alive = true;
