@@ -24,6 +24,7 @@ pub struct Enemy{
   pub plate_id: Option<usize>,
   pub alive: bool,
   pub start_pos: Vec3,
+  pub initial_tile_id: Option<usize>,
 }
 
 pub struct TBTplate{
@@ -199,7 +200,7 @@ fn main() {
         tbtplates.push(TBTplate{id: i, safe: true, enemy_id: None});
       }else if scn.objects[i].name.contains("enemy"){
         println!("enemy found with name {}", scn.objects[i].name);
-        enemies.push(Enemy{id: i, direction: Vec3{x: 0.0, y: 0.0, z: -1.0}, plate_id: None, alive: true, start_pos: scn.objects[i].physic_object.pos});
+        enemies.push(Enemy{id: i, direction: Vec3{x: 0.0, y: 0.0, z: -1.0}, plate_id: None, alive: true, start_pos: scn.objects[i].physic_object.pos, initial_tile_id: None});
         scn.objects[i].physic_object.compute_torque = false;
         scn.objects[i].physic_object.gravity = false;
         scn.objects[i].physic_object.is_static = false;
@@ -278,6 +279,9 @@ fn main() {
                 if tile_test(&scn.objects[enemy.id].physic_object, &scn.objects[tbtplates[j].id].physic_object) && !tbtplates[j].safe {
                   enemies[i].plate_id = Some(j);
                   tbtplates[j].enemy_id = Some(i);
+                  if enemies[i].initial_tile_id.is_none(){
+                    enemies[i].initial_tile_id = Some(j);
+                  }
                   break;
                 }
               }
@@ -514,6 +518,9 @@ fn main() {
         for enemy in enemies.iter_mut(){
           enemy.alive = true;
           scn.objects[enemy.id].physic_object.pos = enemy.start_pos;
+          if enemy.initial_tile_id.is_some(){
+            enemy.plate_id = enemy.initial_tile_id;
+          }
         }
       }
       
