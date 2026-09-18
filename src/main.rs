@@ -1,6 +1,6 @@
 use std::println;
 
-use crate::engine::{engine::Engine, image::Image, loader::rw::readfs, material::Material, math::vec3::Vec3, physics::physics::PhysicsObject, render::render::TextureFormat, scene::Scene, ui::{UIplane, UItext}};
+use crate::engine::{engine::Engine, image::Image, loader::rw::readfs, material::Material, math::vec3::Vec3, physics::{force::{Force, ForceKind}, physics::PhysicsObject}, render::render::TextureFormat, scene::Scene, ui::{UIplane, UItext}};
 
 mod engine;
 
@@ -192,6 +192,7 @@ fn main() {
         scn.objects[pivot.id].physic_object.compute_torque = false;
         scn.objects[pivot.id].physic_object.gravity = false;
         scn.objects[pivot.id].physic_object.is_static = false;
+        scn.objects[pivot.id].physic_object.compute_force = false;
       }else if scn.objects[i].name.contains("tactica_"){
         println!("TBT plate found with name {}", scn.objects[i].name);
         tbtplates.push(TBTplate{id: i, safe: false, enemy_id: None});
@@ -204,6 +205,7 @@ fn main() {
         scn.objects[i].physic_object.compute_torque = false;
         scn.objects[i].physic_object.gravity = false;
         scn.objects[i].physic_object.is_static = false;
+        scn.objects[i].physic_object.compute_force = false;
       }
     }
 
@@ -221,6 +223,10 @@ fn main() {
       22, //d
       48, //space
     ];
+
+    let mut object_holding = None;
+
+    eng.forces.push(None);
 
     while eng.work(){
       if tm > 0.0{
@@ -353,7 +359,6 @@ fn main() {
 
       //controls
       if pivot.tbtmode{
-
         let deltapos = scn.objects[tbtplates[actual_plate_id].id].physic_object.pos - scn.objects[pivot.id].physic_object.pos;
         if deltapos.length_squared().sqrt() < 0.01{
           if tbtplates[actual_plate_id].safe {
@@ -460,6 +465,12 @@ fn main() {
         if eng.control.get_key_state(keycodes[3]){//d
           scn.objects[pivot.id].physic_object.acceleration.x -= SPEED;
         }
+        if eng.control.get_key_state(keycodes[4]){//space
+          //scn.objects[pivot.id].physic_object.acceleration.x -= SPEED;
+          object_holding = Some(scn.objects[pivot.id].physic_object.rot.quat_direction())
+        }else{
+          object_holding = None;
+        }
       }
 
       eng.cameras[0].physic_object.pos.x = scn.objects[pivot.id].physic_object.pos.x + 5.0f32;
@@ -500,6 +511,12 @@ fn main() {
             break;
           }
         }
+      }
+
+      if object_holding.is_some() && eng.forces[0].is_none(){
+        eng.forces[0] = Some(Force::new(0.0, ForceKind::Point { position: eng.cameras[0].physic_object.pos + object_holding.unwrap() + Vec3{x: 0.0, y: 1.0, z: 0.0}, radius: 1.5, falloff_radius: 1.0 }));
+      }else if object_holding.is_none(){
+        eng.forces[0] = None;
       }
 
       viewport.object.physic_object.scale.x = eng.render.resolution_x as f32;

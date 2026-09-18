@@ -80,6 +80,7 @@ pub struct PhysicsObject{
     pub pin_pos: bool,
     standing_on: bool,
     pub compute_torque: bool,
+    pub compute_force: bool,
 }
 
 impl PhysicsObject{
@@ -112,6 +113,7 @@ impl PhysicsObject{
             pin_pos: false,
             standing_on: false,
             compute_torque: false,
+            compute_force: true,
         }
     }
     #[allow(dead_code)]
@@ -143,6 +145,7 @@ impl PhysicsObject{
             pin_pos: false,
             standing_on: false,
             compute_torque: true,
+            compute_force: true,
         }
     }
     #[allow(dead_code)]
