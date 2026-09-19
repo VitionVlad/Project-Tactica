@@ -7,13 +7,13 @@ use crate::engine::math::{mat4::Mat4, vec3::Vec3};
 
 use crate::engine::physics::collision::*;
 
-const GRAVITATIONAL_ACCELERATION: f32 = 9.81f32;
+pub const GRAVITATIONAL_ACCELERATION: f32 = 9.81f32;
 
-const TIE_EPS: f32 = 0.001;
+pub const TIE_EPS: f32 = 0.001;
 
-const ANGULAR_DAMPING: f32 = 2.0;
+pub const ANGULAR_DAMPING: f32 = 2.0;
 
-const SETTLE_VEL_EPS: f32 = 0.01;
+pub const SETTLE_VEL_EPS: f32 = 0.01;
 
 #[allow(dead_code)]
 pub fn check_for_intersection(x1: f32, x2: f32, y1: f32, y2: f32) -> bool{
@@ -78,7 +78,7 @@ pub struct PhysicsObject{
     intersectionp: Vec2,
     pub hit: bool,
     pub pin_pos: bool,
-    standing_on: bool,
+    pub standing_on: bool,
     pub compute_torque: bool,
     pub compute_force: bool,
 }
@@ -274,10 +274,10 @@ impl PhysicsObject{
     #[allow(dead_code)]
     pub fn reset_states(&mut self){
         self.is_interacting = false;
+        self.standing_on = false;
     }
     #[allow(dead_code)]
     pub fn interact_with_other_object(&mut self, ph2: PhysicsObject){
-        self.standing_on = false;
         if self.pin_pos {
             return;
         }
@@ -299,7 +299,8 @@ impl PhysicsObject{
             let self_bottom = self.collider.aabb_min.y;
             let obstacle_top = ph2.collider.aabb_max.y;
             let is_side_hit = n.y.abs() < std::f32::consts::FRAC_1_SQRT_2;
-            if is_side_hit && obstacle_top - self_bottom <= self.step_height {
+            if is_side_hit && obstacle_top - self_bottom <= self.step_height{
+                self.standing_on = true;
                 self.pos.y += obstacle_top - self_bottom + 0.001;
             } else {
                 self.pos.x -= m.axis.x * (m.penetration + 0.001);

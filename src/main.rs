@@ -1,6 +1,6 @@
 use std::println;
 
-use crate::engine::{engine::Engine, image::Image, loader::rw::readfs, material::Material, math::vec3::Vec3, physics::{force::{Force, ForceKind}, physics::PhysicsObject}, render::render::TextureFormat, scene::Scene, ui::{UIplane, UItext}};
+use crate::engine::{engine::Engine, image::Image, loader::rw::readfs, material::Material, math::vec3::Vec3, physics::physics::PhysicsObject, render::render::TextureFormat, scene::Scene, ui::{UIplane, UItext}};
 
 mod engine;
 
@@ -180,6 +180,8 @@ fn main() {
 
     let mut enemies = Vec::new();
 
+    let mut pho = Vec::new();
+
     let mut actual_plate_id = 0;
 
     let awarness_max_level = 2;
@@ -199,6 +201,9 @@ fn main() {
       }else if scn.objects[i].name.contains("safe_"){
         println!("safe plate found with name {}", scn.objects[i].name);
         tbtplates.push(TBTplate{id: i, safe: true, enemy_id: None});
+      }else if scn.objects[i].name.contains("ph_"){
+        scn.objects[i].physic_object.is_static = false;
+        pho.push(i);
       }else if scn.objects[i].name.contains("enemy"){
         println!("enemy found with name {}", scn.objects[i].name);
         enemies.push(Enemy{id: i, direction: Vec3{x: 0.0, y: 0.0, z: -1.0}, plate_id: None, alive: true, start_pos: scn.objects[i].physic_object.pos, initial_tile_id: None});
@@ -226,7 +231,7 @@ fn main() {
 
     let mut object_holding = None;
 
-    eng.forces.push(None);
+    let mut current_dir = Vec3::new();
 
     while eng.work(){
       if tm > 0.0{
@@ -359,7 +364,8 @@ fn main() {
 
       //controls
       if pivot.tbtmode{
-        let deltapos = scn.objects[tbtplates[actual_plate_id].id].physic_object.pos - scn.objects[pivot.id].physic_object.pos;
+        object_holding = None;
+        let deltapos = Vec3{x: scn.objects[tbtplates[actual_plate_id].id].physic_object.pos.x, y: 0.0, z: scn.objects[tbtplates[actual_plate_id].id].physic_object.pos.z} - Vec3{ x: scn.objects[pivot.id].physic_object.pos.x, y: 0.0, z: scn.objects[pivot.id].physic_object.pos.z};
         if deltapos.length_squared().sqrt() < 0.01{
           if tbtplates[actual_plate_id].safe {
             pivot.tbtmode = false;
@@ -455,21 +461,35 @@ fn main() {
       }else{
         if eng.control.get_key_state(keycodes[0]){//w
           scn.objects[pivot.id].physic_object.acceleration.z += SPEED;
+          current_dir = Vec3{x: 0.0, y: 1.4, z: 1.0};
         }
         if eng.control.get_key_state(keycodes[1]){//s
           scn.objects[pivot.id].physic_object.acceleration.z -= SPEED;
+          current_dir = Vec3{x: 0.0, y: 1.4, z: -1.0};
         }
         if eng.control.get_key_state(keycodes[2]){//a
           scn.objects[pivot.id].physic_object.acceleration.x += SPEED;
+          current_dir = Vec3{x: 1.0, y: 1.4, z: 0.0};
         }
         if eng.control.get_key_state(keycodes[3]){//d
           scn.objects[pivot.id].physic_object.acceleration.x -= SPEED;
+          current_dir = Vec3{x: -1.0, y: 1.4, z: 0.0};
         }
-        if eng.control.get_key_state(keycodes[4]){//space
+        if eng.control.get_key_state(keycodes[4]) && tm <= 0.0{//space
           //scn.objects[pivot.id].physic_object.acceleration.x -= SPEED;
-          object_holding = Some(scn.objects[pivot.id].physic_object.rot.quat_direction())
-        }else{
-          object_holding = None;
+          if object_holding.is_none(){
+            object_holding = Some(current_dir);
+            let point = scn.objects[pivot.id].physic_object.pos + current_dir;
+            for ind in pho.iter(){
+              if (scn.objects[*ind].physic_object.pos - point).length_squared().sqrt() <= 1.8{
+                scn.objects[*ind].physic_object.pos.y += 0.1;
+                scn.objects[*ind].physic_object.acceleration = (point - scn.objects[*ind].physic_object.pos)*100.0;
+              }
+            }
+          }else{
+            object_holding = None;
+          }
+          tm = 0.25;
         }
       }
 
@@ -513,10 +533,14 @@ fn main() {
         }
       }
 
-      if object_holding.is_some() && eng.forces[0].is_none(){
-        eng.forces[0] = Some(Force::new(0.0, ForceKind::Point { position: eng.cameras[0].physic_object.pos + object_holding.unwrap() + Vec3{x: 0.0, y: 1.0, z: 0.0}, radius: 1.5, falloff_radius: 1.0 }));
+      if object_holding.is_some(){
+        let point = scn.objects[pivot.id].physic_object.pos + object_holding.unwrap();
+        for ind in pho.iter(){
+          if (scn.objects[*ind].physic_object.pos - point).length_squared().sqrt() <= 1.8{
+            scn.objects[*ind].physic_object.acceleration = (point - scn.objects[*ind].physic_object.pos)*100.0;
+          }
+        }
       }else if object_holding.is_none(){
-        eng.forces[0] = None;
       }
 
       viewport.object.physic_object.scale.x = eng.render.resolution_x as f32;
@@ -527,6 +551,7 @@ fn main() {
       viewport.object.mesh.ubo[51] = 0.18;
       viewport.exec(&mut eng);
 
+      //gameover handling
       if level_awarness == Awarness::Compromised(awarness_max_level){
         level_awarness = Awarness::Unseen(0);
         pivot.tbtmode = false;
