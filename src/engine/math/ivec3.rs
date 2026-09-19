@@ -2,15 +2,15 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
-pub struct Ivec3{
+pub struct Ivec3 {
     pub x: i32,
     pub y: i32,
-    pub z: i32
+    pub z: i32,
 }
 
-impl Ivec3{
+impl Ivec3 {
     #[allow(dead_code)]
-    pub fn new() -> Ivec3{
+    pub fn new() -> Ivec3 {
         Ivec3 { x: 0, y: 0, z: 0 }
     }
     #[allow(dead_code)]
@@ -117,7 +117,7 @@ impl Div for Ivec3 {
 
 impl DivAssign for Ivec3 {
     fn div_assign(&mut self, other: Self) {
-        self.x /= other.x; 
+        self.x /= other.x;
         self.y /= other.y;
         self.z /= other.z;
     }

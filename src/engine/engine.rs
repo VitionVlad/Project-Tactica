@@ -3,10 +3,17 @@
 
 use crate::engine::{light::LightType, physics::force};
 
-use super::{camera::Camera, light::Light, math::vec3::Vec3, physics::physics::PhysicsObject, render::render::{Control, Render}, audio::audio::AudioEngine};
+use super::{
+    audio::audio::AudioEngine,
+    camera::Camera,
+    light::Light,
+    math::vec3::Vec3,
+    physics::physics::PhysicsObject,
+    render::render::{Control, Render},
+};
 
 #[derive(Clone)]
-pub struct Engine{
+pub struct Engine {
     pub render: Render,
     pub audio: AudioEngine,
     pub control: Control,
@@ -27,14 +34,35 @@ pub struct Engine{
     pub logic_frametime: f32,
 }
 
-impl Engine{
-    pub fn new(debug: bool) -> Engine{
+impl Engine {
+    pub fn new(debug: bool) -> Engine {
         let rn = Render::new(debug);
-        Engine { 
+        Engine {
             render: rn,
             audio: AudioEngine::new(),
-            control: Control::new(rn), 
-            cameras: vec![Camera{ physic_object: PhysicsObject::new(vec![Vec3{ x: 0.15, y: 0f32, z: 0.15}, Vec3{ x: -0.15, y: -2f32, z: -0.15}], false), fov: 90f32, znear: 0.1f32, zfar: 100f32, is_orthographic: false, rotation_colision_calc: false }],
+            control: Control::new(rn),
+            cameras: vec![Camera {
+                physic_object: PhysicsObject::new(
+                    vec![
+                        Vec3 {
+                            x: 0.15,
+                            y: 0f32,
+                            z: 0.15,
+                        },
+                        Vec3 {
+                            x: -0.15,
+                            y: -2f32,
+                            z: -0.15,
+                        },
+                    ],
+                    false,
+                ),
+                fov: 90f32,
+                znear: 0.1f32,
+                zfar: 100f32,
+                is_orthographic: false,
+                rotation_colision_calc: false,
+            }],
             used_camera_count: 1,
             lights: vec![Light::new(super::light::LightType::Directional)],
             used_light_count: 1,
@@ -51,7 +79,7 @@ impl Engine{
             logic_frametime: 0.0,
         }
     }
-    pub fn work(&mut self) -> bool{
+    pub fn work(&mut self) -> bool {
         self.audio.exec();
         self.gpu_fps = self.render.gpu_fps;
         self.cumulated_time += self.render.cpu_frametime;
@@ -62,68 +90,116 @@ impl Engine{
             self.cfps = 0;
             self.tmpassed = 0.0;
         }
-        self.logic_frametime = (self.render.cpu_frametime/1000.0).min(1.0);
+        self.logic_frametime = (self.render.cpu_frametime / 1000.0).min(1.0);
         self.render.camera_count = self.used_camera_count;
         self.render.lights_count = self.used_light_count;
-        self.render.shadow_map_count = self.lights.iter().take(self.used_light_count as usize).filter(|l| l.shadow).count() as u32;
-        for i in 0..u32::min(self.used_camera_count.min(self.cameras.len() as u32), 10){
-            let mt = self.cameras[i as usize].get_projection(self.render.resolution_x as f32/self.render.resolution_y as f32);
-            for j in 0..16{
-                self.render.set_deffered_uniform_data(j+i*16, mt.mat[j as usize]);
+        self.render.shadow_map_count = self
+            .lights
+            .iter()
+            .take(self.used_light_count as usize)
+            .filter(|l| l.shadow)
+            .count() as u32;
+        for i in 0..u32::min(self.used_camera_count.min(self.cameras.len() as u32), 10) {
+            let mt = self.cameras[i as usize]
+                .get_projection(self.render.resolution_x as f32 / self.render.resolution_y as f32);
+            for j in 0..16 {
+                self.render
+                    .set_deffered_uniform_data(j + i * 16, mt.mat[j as usize]);
             }
             let invmt = mt.inverse();
-            for j in 0..16{
-                self.render.set_deffered_uniform_data(j+i*16+160, invmt.mat[j as usize]);
+            for j in 0..16 {
+                self.render
+                    .set_deffered_uniform_data(j + i * 16 + 160, invmt.mat[j as usize]);
             }
-            self.render.set_deffered_uniform_data(i*4+320, self.cameras[i as usize].physic_object.pos.x);
-            self.render.set_deffered_uniform_data(i*4+321, self.cameras[i as usize].physic_object.pos.y);
-            self.render.set_deffered_uniform_data(i*4+322, self.cameras[i as usize].physic_object.pos.z);
-            self.render.set_deffered_uniform_data(i*4+323, 0.0);
-            self.render.set_deffered_uniform_data(i*4+360, self.cameras[i as usize].physic_object.rot.x);
-            self.render.set_deffered_uniform_data(i*4+361, self.cameras[i as usize].physic_object.rot.y);
-            self.render.set_deffered_uniform_data(i*4+362, self.cameras[i as usize].physic_object.rot.z);
-            self.render.set_deffered_uniform_data(i*4+363, self.cameras[i as usize].fov);
+            self.render.set_deffered_uniform_data(
+                i * 4 + 320,
+                self.cameras[i as usize].physic_object.pos.x,
+            );
+            self.render.set_deffered_uniform_data(
+                i * 4 + 321,
+                self.cameras[i as usize].physic_object.pos.y,
+            );
+            self.render.set_deffered_uniform_data(
+                i * 4 + 322,
+                self.cameras[i as usize].physic_object.pos.z,
+            );
+            self.render.set_deffered_uniform_data(i * 4 + 323, 0.0);
+            self.render.set_deffered_uniform_data(
+                i * 4 + 360,
+                self.cameras[i as usize].physic_object.rot.x,
+            );
+            self.render.set_deffered_uniform_data(
+                i * 4 + 361,
+                self.cameras[i as usize].physic_object.rot.y,
+            );
+            self.render.set_deffered_uniform_data(
+                i * 4 + 362,
+                self.cameras[i as usize].physic_object.rot.z,
+            );
+            self.render
+                .set_deffered_uniform_data(i * 4 + 363, self.cameras[i as usize].fov);
         }
         let mut li = 0;
-        for i in 0..u32::min(self.used_light_count.min(self.lights.len() as u32), 100){
-            if self.lights[i as usize].shadow{
+        for i in 0..u32::min(self.used_light_count.min(self.lights.len() as u32), 100) {
+            if self.lights[i as usize].shadow {
                 let mt = self.lights[i as usize].getvec();
-                for j in 0..16{
-                    self.render.set_shadow_uniform_data(j+li*16, mt[j as usize]);
+                for j in 0..16 {
+                    self.render
+                        .set_shadow_uniform_data(j + li * 16, mt[j as usize]);
                 }
                 li += 1;
             }
 
-            if self.lights[i as usize].light_type == LightType::Spot{
-                self.render.set_shadow_uniform_data(i*4+1600, self.lights[i as usize].pos.x);
-                self.render.set_shadow_uniform_data(i*4+1601, self.lights[i as usize].pos.y);
-                self.render.set_shadow_uniform_data(i*4+1602, self.lights[i as usize].pos.z);
-                self.render.set_shadow_uniform_data(i*4+1603, 1.0f32);
-            }else{
-                self.render.set_shadow_uniform_data(i*4+1600, self.lights[i as usize].direction.x);
-                self.render.set_shadow_uniform_data(i*4+1601, self.lights[i as usize].direction.y);
-                self.render.set_shadow_uniform_data(i*4+1602, self.lights[i as usize].direction.z);
-                self.render.set_shadow_uniform_data(i*4+1603, 0.0f32);
+            if self.lights[i as usize].light_type == LightType::Spot {
+                self.render
+                    .set_shadow_uniform_data(i * 4 + 1600, self.lights[i as usize].pos.x);
+                self.render
+                    .set_shadow_uniform_data(i * 4 + 1601, self.lights[i as usize].pos.y);
+                self.render
+                    .set_shadow_uniform_data(i * 4 + 1602, self.lights[i as usize].pos.z);
+                self.render.set_shadow_uniform_data(i * 4 + 1603, 1.0f32);
+            } else {
+                self.render
+                    .set_shadow_uniform_data(i * 4 + 1600, self.lights[i as usize].direction.x);
+                self.render
+                    .set_shadow_uniform_data(i * 4 + 1601, self.lights[i as usize].direction.y);
+                self.render
+                    .set_shadow_uniform_data(i * 4 + 1602, self.lights[i as usize].direction.z);
+                self.render.set_shadow_uniform_data(i * 4 + 1603, 0.0f32);
             }
-            self.render.set_shadow_uniform_data(i*4+2000, self.lights[i as usize].color.x);
-            self.render.set_shadow_uniform_data(i*4+2001, self.lights[i as usize].color.y);
-            self.render.set_shadow_uniform_data(i*4+2002, self.lights[i as usize].color.z);
-            self.render.set_shadow_uniform_data(i*4+2003, if self.lights[i as usize].shadow { 1.0f32 } else { 0.0f32 });
+            self.render
+                .set_shadow_uniform_data(i * 4 + 2000, self.lights[i as usize].color.x);
+            self.render
+                .set_shadow_uniform_data(i * 4 + 2001, self.lights[i as usize].color.y);
+            self.render
+                .set_shadow_uniform_data(i * 4 + 2002, self.lights[i as usize].color.z);
+            self.render.set_shadow_uniform_data(
+                i * 4 + 2003,
+                if self.lights[i as usize].shadow {
+                    1.0f32
+                } else {
+                    0.0f32
+                },
+            );
         }
         //if self.used_light_count
         self.control.get_mouse_pos();
-        for i in 0..u32::min(self.used_camera_count.min(self.cameras.len() as u32), 10){
+        for i in 0..u32::min(self.used_camera_count.min(self.cameras.len() as u32), 10) {
             self.cameras[i as usize].physic_object.reset_states();
-            self.cameras[i as usize].physic_object.exec(self.logic_frametime);
+            self.cameras[i as usize]
+                .physic_object
+                .exec(self.logic_frametime);
         }
-        for i in 0..self.obj_ph.len(){
-            for j in 0..u32::min(self.used_camera_count.min(self.cameras.len() as u32), 10){
-                self.cameras[j as usize].physic_object.interact_with_other_object(self.obj_ph[i].clone());
+        for i in 0..self.obj_ph.len() {
+            for j in 0..u32::min(self.used_camera_count.min(self.cameras.len() as u32), 10) {
+                self.cameras[j as usize]
+                    .physic_object
+                    .interact_with_other_object(self.obj_ph[i].clone());
             }
         }
         return self.render.continue_loop();
     }
-    pub fn end(&mut self){
+    pub fn end(&mut self) {
         self.audio.destroy();
         self.render.destroy();
     }

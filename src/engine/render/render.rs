@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use std::{ffi::CString};
+use std::ffi::CString;
 
 use cty::{uint8_t, uint32_t};
 
-unsafe extern "C"{
+unsafe extern "C" {
     fn get_frametime(eh: cty::uint32_t) -> cty::c_float;
     fn get_gpuframetime(eh: cty::uint32_t) -> cty::c_float;
     fn get_gpufps(eh: cty::uint32_t) -> cty::uint32_t;
@@ -20,8 +20,8 @@ unsafe extern "C"{
     fn getmr(eh: cty::uint32_t) -> cty::uint8_t;
     fn getml(eh: cty::uint32_t) -> cty::uint8_t;
     fn getmm(eh: cty::uint32_t) -> cty::uint8_t;
-    fn get_mouse_posx(eh: cty::uint32_t)  -> cty::c_double;
-    fn get_mouse_posy(eh: cty::uint32_t)  -> cty::c_double;
+    fn get_mouse_posx(eh: cty::uint32_t) -> cty::c_double;
+    fn get_mouse_posy(eh: cty::uint32_t) -> cty::c_double;
     fn req_mouse_lock(eh: cty::uint32_t);
     fn req_mouse_unlock(eh: cty::uint32_t);
     fn get_axis(eh: cty::uint32_t, n: cty::uint8_t) -> cty::c_float;
@@ -29,32 +29,107 @@ unsafe extern "C"{
     fn gamepad_con(eh: cty::uint32_t) -> cty::uint8_t;
     fn gamepad_axisnm(eh: cty::uint32_t) -> cty::uint8_t;
     fn gamepad_buttonnm(eh: cty::uint32_t) -> cty::uint8_t;
-    fn modifyshadowdata(eh: cty::uint32_t, ncnt: cty::uint32_t, nres: cty::uint32_t, lcnt: cty::uint32_t);
+    fn modifyshadowdata(
+        eh: cty::uint32_t,
+        ncnt: cty::uint32_t,
+        nres: cty::uint32_t,
+        lcnt: cty::uint32_t,
+    );
     fn modifydeffereddata(eh: cty::uint32_t, ncnt: cty::uint32_t, nres: cty::c_float);
     fn modifyshadowuniform(eh: cty::uint32_t, pos: cty::uint32_t, value: cty::c_float);
     fn modifydeffereduniform(eh: cty::uint32_t, pos: cty::uint32_t, value: cty::c_float);
     fn neweng(shadowMapResolution: cty::uint32_t, debug: cty::uint8_t) -> cty::uint32_t;
     fn destroy(eh: cty::uint32_t);
-    fn newmaterial(eh: cty::uint32_t, vert: *mut cty::uint32_t, frag: *mut cty::uint32_t, shadow: *mut cty::uint32_t, svert: cty::uint32_t, sfrag: cty::uint32_t, sshadow: cty::uint32_t, cullmode: cty::uint32_t, scullmode: cty::uint32_t) -> cty::uint32_t;
-    fn newmodel(eh: cty::uint32_t, vert: *mut cty::c_float, uv: *mut cty::c_float, normals: *mut cty::c_float, size: cty::uint32_t) -> cty::uint32_t;
+    fn newmaterial(
+        eh: cty::uint32_t,
+        vert: *mut cty::uint32_t,
+        frag: *mut cty::uint32_t,
+        shadow: *mut cty::uint32_t,
+        svert: cty::uint32_t,
+        sfrag: cty::uint32_t,
+        sshadow: cty::uint32_t,
+        cullmode: cty::uint32_t,
+        scullmode: cty::uint32_t,
+    ) -> cty::uint32_t;
+    fn newmodel(
+        eh: cty::uint32_t,
+        vert: *mut cty::c_float,
+        uv: *mut cty::c_float,
+        normals: *mut cty::c_float,
+        size: cty::uint32_t,
+    ) -> cty::uint32_t;
     fn setrendercamera(eh: cty::uint32_t, eme: cty::uint32_t, val: cty::int8_t);
     fn setmeshbuf(eh: cty::uint32_t, eme: cty::uint32_t, i: cty::uint32_t, val: cty::c_float);
     fn setdrawable(eh: cty::uint32_t, eme: cty::uint32_t, val: cty::uint8_t);
-    fn newmesh(eh: cty::uint32_t, es: cty::uint32_t, em: cty::uint32_t, te: *mut cty::uint32_t, tn: cty::uint32_t, usage: cty::uint32_t) -> cty::uint32_t;
-    fn newtexture(eh: cty::uint32_t, xsize: cty::uint32_t, ysize: cty::uint32_t, zsize: cty::uint32_t, byteperpixel: cty::uint32_t, pixels: *mut cty::c_char, is3d: cty::uint8_t, imageformat: cty::uint32_t, genmips: cty::uint8_t) -> cty::uint32_t;
+    fn newmesh(
+        eh: cty::uint32_t,
+        es: cty::uint32_t,
+        em: cty::uint32_t,
+        te: *mut cty::uint32_t,
+        tn: cty::uint32_t,
+        usage: cty::uint32_t,
+    ) -> cty::uint32_t;
+    fn newtexture(
+        eh: cty::uint32_t,
+        xsize: cty::uint32_t,
+        ysize: cty::uint32_t,
+        zsize: cty::uint32_t,
+        byteperpixel: cty::uint32_t,
+        pixels: *mut cty::c_char,
+        is3d: cty::uint8_t,
+        imageformat: cty::uint32_t,
+        genmips: cty::uint8_t,
+    ) -> cty::uint32_t;
     fn loopcont(eh: cty::uint32_t) -> cty::uint32_t;
     fn destroy_material(eh: cty::uint32_t, em: cty::uint32_t);
     fn destroy_model(eh: cty::uint32_t, em: cty::uint32_t);
     fn destroy_texture(eh: cty::uint32_t, te: cty::uint32_t);
     fn destroy_mesh(eh: cty::uint32_t, em: cty::uint32_t);
-    fn recmaterial(eh: cty::uint32_t, em: cty::uint32_t, vert: *mut cty::uint32_t, frag: *mut cty::uint32_t, shadow: *mut cty::uint32_t, svert: cty::uint32_t, sfrag: cty::uint32_t, sshadow: cty::uint32_t, cullmode: cty::uint32_t, scullmode: cty::uint32_t);
-    fn recmodel(eh: cty::uint32_t, em: cty::uint32_t, vert: *mut cty::c_float, uv: *mut cty::c_float, normals: *mut cty::c_float, size: cty::uint32_t);
-    fn recmesh(eh: cty::uint32_t, em: cty::uint32_t, es: cty::uint32_t, em: cty::uint32_t, te: *mut cty::uint32_t, tn: cty::uint32_t, usage: cty::uint32_t);
-    fn rectexture(eh: cty::uint32_t, te: cty::uint32_t, xsize: cty::uint32_t, ysize: cty::uint32_t, zsize: cty::uint32_t, byteperpixel: cty::uint32_t, pixels: *mut cty::c_char, is3d: cty::uint8_t, imageformat: cty::uint32_t, genmips: cty::uint8_t);
+    fn recmaterial(
+        eh: cty::uint32_t,
+        em: cty::uint32_t,
+        vert: *mut cty::uint32_t,
+        frag: *mut cty::uint32_t,
+        shadow: *mut cty::uint32_t,
+        svert: cty::uint32_t,
+        sfrag: cty::uint32_t,
+        sshadow: cty::uint32_t,
+        cullmode: cty::uint32_t,
+        scullmode: cty::uint32_t,
+    );
+    fn recmodel(
+        eh: cty::uint32_t,
+        em: cty::uint32_t,
+        vert: *mut cty::c_float,
+        uv: *mut cty::c_float,
+        normals: *mut cty::c_float,
+        size: cty::uint32_t,
+    );
+    fn recmesh(
+        eh: cty::uint32_t,
+        em: cty::uint32_t,
+        es: cty::uint32_t,
+        em: cty::uint32_t,
+        te: *mut cty::uint32_t,
+        tn: cty::uint32_t,
+        usage: cty::uint32_t,
+    );
+    fn rectexture(
+        eh: cty::uint32_t,
+        te: cty::uint32_t,
+        xsize: cty::uint32_t,
+        ysize: cty::uint32_t,
+        zsize: cty::uint32_t,
+        byteperpixel: cty::uint32_t,
+        pixels: *mut cty::c_char,
+        is3d: cty::uint8_t,
+        imageformat: cty::uint32_t,
+        genmips: cty::uint8_t,
+    );
 }
 
 #[derive(Copy, Clone)]
-pub struct Render{
+pub struct Render {
     pub euclid: u32,
     pub shadow_map_resolution: u32,
     pub shadow_map_count: u32,
@@ -70,12 +145,10 @@ pub struct Render{
     fullscreeno: bool,
 }
 
-impl Render{
-    pub fn new(debug: bool) -> Render{
-        Render { 
-            euclid: unsafe {
-                neweng(1000, if debug { 1 } else { 0 })
-            },
+impl Render {
+    pub fn new(debug: bool) -> Render {
+        Render {
+            euclid: unsafe { neweng(1000, if debug { 1 } else { 0 }) },
             shadow_map_count: 1,
             shadow_map_resolution: 1000,
             camera_count: 1,
@@ -90,18 +163,23 @@ impl Render{
             lights_count: 1,
         }
     }
-    pub fn continue_loop(&mut self) -> bool{
-        unsafe{ 
+    pub fn continue_loop(&mut self) -> bool {
+        unsafe {
             self.resolution_x = get_resx(self.euclid);
             self.resolution_y = get_resy(self.euclid);
             if self.fullscreen != self.fullscreeno {
-                match self.fullscreen{
+                match self.fullscreen {
                     true => setfullscreen(self.euclid),
                     false => quitfullscreen(self.euclid),
                 }
                 self.fullscreeno = self.fullscreen;
             }
-            modifyshadowdata(self.euclid, self.shadow_map_count, self.shadow_map_resolution, self.lights_count);
+            modifyshadowdata(
+                self.euclid,
+                self.shadow_map_count,
+                self.shadow_map_resolution,
+                self.lights_count,
+            );
             modifydeffereddata(self.euclid, self.camera_count, self.resolution_scale);
             self.cpu_frametime = get_frametime(self.euclid);
             self.gpu_frametime = get_gpuframetime(self.euclid);
@@ -109,30 +187,38 @@ impl Render{
         };
         return unsafe { loopcont(self.euclid) } == 1;
     }
-    pub fn set_shadow_uniform_data(&self, i: u32, value: f32){
-        unsafe{ modifyshadowuniform(self.euclid, i, value); }
+    pub fn set_shadow_uniform_data(&self, i: u32, value: f32) {
+        unsafe {
+            modifyshadowuniform(self.euclid, i, value);
+        }
     }
-    pub fn set_deffered_uniform_data(&self, i: u32, value: f32){
-        unsafe{ modifydeffereduniform(self.euclid, i, value); }
+    pub fn set_deffered_uniform_data(&self, i: u32, value: f32) {
+        unsafe {
+            modifydeffereduniform(self.euclid, i, value);
+        }
     }
-    pub fn set_new_resolution(&self, resx: u32, resy: u32){
-        unsafe { setresolution(self.euclid, resx, resy); }
+    pub fn set_new_resolution(&self, resx: u32, resy: u32) {
+        unsafe {
+            setresolution(self.euclid, resx, resy);
+        }
     }
-    pub fn set_icon(&mut self, resx: u32, resy: u32, data: Vec<u8>){
+    pub fn set_icon(&mut self, resx: u32, resy: u32, data: Vec<u8>) {
         unsafe { seticon(self.euclid, resx, resy, data.as_ptr() as *mut i8) }
     }
-    pub fn set_title(&self, title: &str){
-        unsafe { settitle(self.euclid, CString::new(title).unwrap().as_ptr()); }
+    pub fn set_title(&self, title: &str) {
+        unsafe {
+            settitle(self.euclid, CString::new(title).unwrap().as_ptr());
+        }
     }
-    pub fn destroy(&self){
-        unsafe{
+    pub fn destroy(&self) {
+        unsafe {
             destroy(self.euclid);
         }
     }
 }
 
 #[derive(Copy, Clone)]
-pub struct Control{
+pub struct Control {
     euclid: u32,
     pub xpos: f64,
     pub ypos: f64,
@@ -144,8 +230,8 @@ pub struct Control{
     pub gamepad_button_count: u8,
 }
 
-impl Control{
-    pub fn new(render: Render) -> Control{
+impl Control {
+    pub fn new(render: Render) -> Control {
         Control {
             euclid: render.euclid,
             xpos: 0.0f64,
@@ -158,29 +244,33 @@ impl Control{
             gamepad_button_count: 0,
         }
     }
-    pub fn get_key_state(&self, keyindex: uint32_t) -> bool{
+    pub fn get_key_state(&self, keyindex: uint32_t) -> bool {
         return unsafe { getKeyPressed(self.euclid, keyindex) != 0 };
     }
-    pub fn get_gamepad_button_state(&self, button_index: uint8_t) -> bool{
+    pub fn get_gamepad_button_state(&self, button_index: uint8_t) -> bool {
         return unsafe { get_button(self.euclid, button_index) != 0 };
     }
-    pub fn get_gamepad_axis_state(&self, axis_index: uint8_t) -> f32{
+    pub fn get_gamepad_axis_state(&self, axis_index: uint8_t) -> f32 {
         return unsafe { get_axis(self.euclid, axis_index) };
     }
-    pub fn get_mouse_pos(&mut self){
-        self.gamepad_connected = unsafe{gamepad_con(self.euclid)} == 1;
-        self.gamepad_axis_count = unsafe{gamepad_axisnm(self.euclid)};
-        self.gamepad_button_count = unsafe{gamepad_buttonnm(self.euclid)};
-        if self.mouse_lock != self.old_mouse_lock{
+    pub fn get_mouse_pos(&mut self) {
+        self.gamepad_connected = unsafe { gamepad_con(self.euclid) } == 1;
+        self.gamepad_axis_count = unsafe { gamepad_axisnm(self.euclid) };
+        self.gamepad_button_count = unsafe { gamepad_buttonnm(self.euclid) };
+        if self.mouse_lock != self.old_mouse_lock {
             match self.mouse_lock {
                 true => unsafe { req_mouse_lock(self.euclid) },
                 false => unsafe { req_mouse_unlock(self.euclid) },
             }
             self.old_mouse_lock = self.mouse_lock;
         }
-        self.xpos = unsafe{ get_mouse_posx(self.euclid) };
-        self.ypos = unsafe{ get_mouse_posy(self.euclid) };
-        self.mousebtn = [ unsafe { getmr(self.euclid) } == 1, unsafe { getmm(self.euclid) } == 1, unsafe { getml(self.euclid) } == 1];
+        self.xpos = unsafe { get_mouse_posx(self.euclid) };
+        self.ypos = unsafe { get_mouse_posy(self.euclid) };
+        self.mousebtn = [
+            unsafe { getmr(self.euclid) } == 1,
+            unsafe { getmm(self.euclid) } == 1,
+            unsafe { getml(self.euclid) } == 1,
+        ];
     }
 }
 
@@ -193,32 +283,68 @@ pub enum CullMode {
 }
 
 #[derive(Copy, Clone)]
-pub struct MaterialShaders{
+pub struct MaterialShaders {
     pub materialid: u32,
     pub destroyed: bool,
 }
 
-impl MaterialShaders{
-    pub fn new(ren: Render, vert: Vec<u8>, frag: Vec<u8>, shadow: Vec<u8>, cullmode: CullMode, shadow_cullmode: CullMode) -> MaterialShaders{
-        MaterialShaders { 
-            materialid: unsafe{
-                newmaterial(ren.euclid, vert.as_ptr() as *mut u32, frag.as_ptr() as *mut u32, shadow.as_ptr() as *mut u32, vert.len() as u32, frag.len() as u32, shadow.len() as u32, cullmode as u32, shadow_cullmode as u32)
+impl MaterialShaders {
+    pub fn new(
+        ren: Render,
+        vert: Vec<u8>,
+        frag: Vec<u8>,
+        shadow: Vec<u8>,
+        cullmode: CullMode,
+        shadow_cullmode: CullMode,
+    ) -> MaterialShaders {
+        MaterialShaders {
+            materialid: unsafe {
+                newmaterial(
+                    ren.euclid,
+                    vert.as_ptr() as *mut u32,
+                    frag.as_ptr() as *mut u32,
+                    shadow.as_ptr() as *mut u32,
+                    vert.len() as u32,
+                    frag.len() as u32,
+                    shadow.len() as u32,
+                    cullmode as u32,
+                    shadow_cullmode as u32,
+                )
             },
             destroyed: false,
         }
     }
-    pub fn destroy(&mut self, ren: Render){
-        if !self.destroyed{
+    pub fn destroy(&mut self, ren: Render) {
+        if !self.destroyed {
             unsafe {
                 destroy_material(ren.euclid, self.materialid);
             }
             self.destroyed = true;
         }
     }
-    pub fn init(&mut self, ren: Render, vert: Vec<u8>, frag: Vec<u8>, shadow: Vec<u8>, cullmode: CullMode, shadow_cullmode: CullMode){
-        if self.destroyed{
+    pub fn init(
+        &mut self,
+        ren: Render,
+        vert: Vec<u8>,
+        frag: Vec<u8>,
+        shadow: Vec<u8>,
+        cullmode: CullMode,
+        shadow_cullmode: CullMode,
+    ) {
+        if self.destroyed {
             unsafe {
-                recmaterial(ren.euclid, self.materialid, vert.as_ptr() as *mut u32, frag.as_ptr() as *mut u32, shadow.as_ptr() as *mut u32, vert.len() as u32, frag.len() as u32, shadow.len() as u32, cullmode as u32, shadow_cullmode as u32);
+                recmaterial(
+                    ren.euclid,
+                    self.materialid,
+                    vert.as_ptr() as *mut u32,
+                    frag.as_ptr() as *mut u32,
+                    shadow.as_ptr() as *mut u32,
+                    vert.len() as u32,
+                    frag.len() as u32,
+                    shadow.len() as u32,
+                    cullmode as u32,
+                    shadow_cullmode as u32,
+                );
             }
             self.destroyed = false;
         }
@@ -226,115 +352,167 @@ impl MaterialShaders{
 }
 
 #[derive(Copy, Clone)]
-pub struct Vertexes{
+pub struct Vertexes {
     pub modelid: u32,
     pub destroyed: bool,
 }
 
-impl Vertexes{
-    pub fn new(ren: Render, vertices: Vec<f32>) -> Vertexes{
-        let size = vertices.len()/8;
+impl Vertexes {
+    pub fn new(ren: Render, vertices: Vec<f32>) -> Vertexes {
+        let size = vertices.len() / 8;
         let mut v: Vec<f32> = vec![];
         let mut u: Vec<f32> = vec![];
         let mut n: Vec<f32> = vec![];
-        for i in 0..size*3 {
+        for i in 0..size * 3 {
             v.push(vertices[i]);
         }
-        for i in 0..size*2 {
-            u.push(vertices[i+size*3]);
+        for i in 0..size * 2 {
+            u.push(vertices[i + size * 3]);
         }
-        for i in 0..size*3 {
-            n.push(vertices[i+size*5]);
+        for i in 0..size * 3 {
+            n.push(vertices[i + size * 5]);
         }
-        Vertexes { 
-            modelid: unsafe{
-                newmodel(ren.euclid, v.as_ptr() as *mut f32, u.as_ptr() as *mut f32, n.as_ptr() as *mut f32, size as u32)
+        Vertexes {
+            modelid: unsafe {
+                newmodel(
+                    ren.euclid,
+                    v.as_ptr() as *mut f32,
+                    u.as_ptr() as *mut f32,
+                    n.as_ptr() as *mut f32,
+                    size as u32,
+                )
             },
             destroyed: false,
         }
     }
-    pub fn destroy(&mut self, ren: Render){
-        if !self.destroyed{
+    pub fn destroy(&mut self, ren: Render) {
+        if !self.destroyed {
             unsafe {
                 destroy_model(ren.euclid, self.modelid);
             }
             self.destroyed = true;
         }
     }
-    pub fn init(&mut self, ren: Render, vertices: Vec<f32>){
-        if self.destroyed{
-            let size = vertices.len()/8;
+    pub fn init(&mut self, ren: Render, vertices: Vec<f32>) {
+        if self.destroyed {
+            let size = vertices.len() / 8;
             let mut v: Vec<f32> = vec![];
             let mut u: Vec<f32> = vec![];
             let mut n: Vec<f32> = vec![];
-            for i in 0..size*3 {
+            for i in 0..size * 3 {
                 v.push(vertices[i]);
             }
-            for i in 0..size*2 {
-                u.push(vertices[i+size*3]);
+            for i in 0..size * 2 {
+                u.push(vertices[i + size * 3]);
             }
-            for i in 0..size*3 {
-                n.push(vertices[i+size*5]);
+            for i in 0..size * 3 {
+                n.push(vertices[i + size * 5]);
             }
             unsafe {
-                recmodel(ren.euclid, self.modelid, v.as_ptr() as *mut f32, u.as_ptr() as *mut f32, n.as_ptr() as *mut f32, size as u32);
+                recmodel(
+                    ren.euclid,
+                    self.modelid,
+                    v.as_ptr() as *mut f32,
+                    u.as_ptr() as *mut f32,
+                    n.as_ptr() as *mut f32,
+                    size as u32,
+                );
             }
             self.destroyed = false;
         }
     }
 }
 
-pub enum TextureFormat{
+pub enum TextureFormat {
     R8g8b8a8Unorm = 37,
     R16g16b16a16Sfloat = 97,
     R8 = 13,
 }
 
 #[derive(Copy, Clone)]
-pub struct Texture{
+pub struct Texture {
     pub texid: u32,
     pub destroyed: bool,
 }
 
 impl Texture {
-    pub fn new(render: Render, xs: u32, ys: u32, zs: u32, data: Vec<u8>, is3d: bool, format: TextureFormat, gen_mipmaps: bool) -> Texture{
+    pub fn new(
+        render: Render,
+        xs: u32,
+        ys: u32,
+        zs: u32,
+        data: Vec<u8>,
+        is3d: bool,
+        format: TextureFormat,
+        gen_mipmaps: bool,
+    ) -> Texture {
         let byteperpixel = match format {
             TextureFormat::R8g8b8a8Unorm => 4,
             TextureFormat::R16g16b16a16Sfloat => 8,
             TextureFormat::R8 => 1,
         };
-        Texture { 
+        Texture {
             texid: unsafe {
-                newtexture(render.euclid, xs, ys, zs, byteperpixel, data.as_ptr() as *mut i8, is3d as u8, format as u32, gen_mipmaps as u8)
+                newtexture(
+                    render.euclid,
+                    xs,
+                    ys,
+                    zs,
+                    byteperpixel,
+                    data.as_ptr() as *mut i8,
+                    is3d as u8,
+                    format as u32,
+                    gen_mipmaps as u8,
+                )
             },
             destroyed: false,
         }
     }
-    pub fn destroy(&mut self, ren: Render){
-        if !self.destroyed{
+    pub fn destroy(&mut self, ren: Render) {
+        if !self.destroyed {
             unsafe {
                 destroy_texture(ren.euclid, self.texid);
             }
             self.destroyed = true;
         }
     }
-    pub fn init(&mut self, render: Render, xs: u32, ys: u32, zs: u32, data: Vec<u8>, is3d: bool, format: TextureFormat, gen_mipmaps: bool){
-        if self.destroyed{
+    pub fn init(
+        &mut self,
+        render: Render,
+        xs: u32,
+        ys: u32,
+        zs: u32,
+        data: Vec<u8>,
+        is3d: bool,
+        format: TextureFormat,
+        gen_mipmaps: bool,
+    ) {
+        if self.destroyed {
             let byteperpixel = match format {
                 TextureFormat::R8g8b8a8Unorm => 4,
                 TextureFormat::R16g16b16a16Sfloat => 8,
                 TextureFormat::R8 => 1,
             };
             unsafe {
-                rectexture(render.euclid, self.texid, xs, ys, zs, byteperpixel, data.as_ptr() as *mut i8, is3d as u8, format as u32, gen_mipmaps as u8);
+                rectexture(
+                    render.euclid,
+                    self.texid,
+                    xs,
+                    ys,
+                    zs,
+                    byteperpixel,
+                    data.as_ptr() as *mut i8,
+                    is3d as u8,
+                    format as u32,
+                    gen_mipmaps as u8,
+                );
             }
             self.destroyed = false;
         }
     }
 }
 
-#[derive(Copy, Clone)]
-#[derive(PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum MeshUsage {
     PostPass = 0,
     DefferedPass = 1,
@@ -344,7 +522,7 @@ pub enum MeshUsage {
 }
 
 #[derive(Copy, Clone)]
-pub struct Mesh{
+pub struct Mesh {
     pub meshid: u32,
     pub ubo: [f32; 56],
     pub draw: bool,
@@ -356,15 +534,28 @@ pub struct Mesh{
     pub destroyed: bool,
 }
 
-impl Mesh{
-    pub fn new(ren: Render, model: Vertexes, material: MaterialShaders, textures: Vec<Texture>, usage: MeshUsage) -> Mesh{
+impl Mesh {
+    pub fn new(
+        ren: Render,
+        model: Vertexes,
+        material: MaterialShaders,
+        textures: Vec<Texture>,
+        usage: MeshUsage,
+    ) -> Mesh {
         let mut idv = vec![];
-        for i in 0..textures.len(){
+        for i in 0..textures.len() {
             idv.push(textures[i].texid);
         }
-        Mesh { 
-            meshid: unsafe{
-                newmesh(ren.euclid, material.materialid, model.modelid, idv.as_mut_ptr(), textures.len() as u32, usage as u32)
+        Mesh {
+            meshid: unsafe {
+                newmesh(
+                    ren.euclid,
+                    material.materialid,
+                    model.modelid,
+                    idv.as_mut_ptr(),
+                    textures.len() as u32,
+                    usage as u32,
+                )
             },
             ubo: [1.0; 56],
             draw: true,
@@ -376,14 +567,29 @@ impl Mesh{
             destroyed: false,
         }
     }
-    pub fn init(&mut self, ren: Render, model: Vertexes, material: MaterialShaders, textures: Vec<Texture>, usage: MeshUsage){
-        if self.destroyed{
+    pub fn init(
+        &mut self,
+        ren: Render,
+        model: Vertexes,
+        material: MaterialShaders,
+        textures: Vec<Texture>,
+        usage: MeshUsage,
+    ) {
+        if self.destroyed {
             let mut idv = vec![];
-            for i in 0..textures.len(){
+            for i in 0..textures.len() {
                 idv.push(textures[i].texid);
             }
             unsafe {
-                recmesh(ren.euclid, self.meshid, material.materialid, model.modelid, idv.as_mut_ptr(), textures.len() as u32, usage as u32);
+                recmesh(
+                    ren.euclid,
+                    self.meshid,
+                    material.materialid,
+                    model.modelid,
+                    idv.as_mut_ptr(),
+                    textures.len() as u32,
+                    usage as u32,
+                );
                 self.ubo = [1.0; 56];
                 self.draw = true;
                 self.draw_shadow = true;
@@ -395,37 +601,45 @@ impl Mesh{
             }
         }
     }
-    pub fn exec(&self, ren: Render){
-        for i in 0..self.ubo.len(){
+    pub fn exec(&self, ren: Render) {
+        for i in 0..self.ubo.len() {
             unsafe {
                 setmeshbuf(ren.euclid, self.meshid, i as u32, self.ubo[i]);
             };
         }
         unsafe {
-            setdrawable(ren.euclid, self.meshid, match self.draw {
-                true => match self.draw_shadow {
-                    true => 1,
-                    false => 3,
+            setdrawable(
+                ren.euclid,
+                self.meshid,
+                match self.draw {
+                    true => match self.draw_shadow {
+                        true => 1,
+                        false => 3,
+                    },
+                    false => match self.keep_shadow {
+                        true => 2,
+                        false => 0,
+                    },
                 },
-                false => match self.keep_shadow {
-                    true => 2,
-                    false => 0,
-                },
-            });
-            setrendercamera(ren.euclid, self.meshid, match self.render_all_cameras{
-                true => -1,
-                false => {
-                    if self.exclude_selected_camera {
-                        self.camera_number + 10
-                    }else{
-                        self.camera_number
+            );
+            setrendercamera(
+                ren.euclid,
+                self.meshid,
+                match self.render_all_cameras {
+                    true => -1,
+                    false => {
+                        if self.exclude_selected_camera {
+                            self.camera_number + 10
+                        } else {
+                            self.camera_number
+                        }
                     }
-                }
-            });
+                },
+            );
         }
     }
-    pub fn destroy(&mut self, ren: Render){
-        if !self.destroyed{
+    pub fn destroy(&mut self, ren: Render) {
+        if !self.destroyed {
             unsafe {
                 destroy_mesh(ren.euclid, self.meshid);
             }

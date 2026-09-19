@@ -4,21 +4,26 @@ use crate::engine::math::vec3::Vec3;
 
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
-pub struct Vec4{
+pub struct Vec4 {
     pub x: f32,
     pub y: f32,
     pub z: f32,
-    pub w: f32
+    pub w: f32,
 }
 
-impl Vec4{
+impl Vec4 {
     #[allow(dead_code)]
-    pub fn new() -> Vec4{
-        Vec4 { x: 0.0f32, y: 0.0f32, z: 0.0f32, w: 0.0f32 }
+    pub fn new() -> Vec4 {
+        Vec4 {
+            x: 0.0f32,
+            y: 0.0f32,
+            z: 0.0f32,
+            w: 0.0f32,
+        }
     }
     #[allow(dead_code)]
-    pub fn magnitude(self) -> f32{
-        (self.x*self.x + self.y*self.y + self.z*self.z + self.w*self.w).sqrt()
+    pub fn magnitude(self) -> f32 {
+        (self.x * self.x + self.y * self.y + self.z * self.z + self.w * self.w).sqrt()
     }
     #[allow(dead_code)]
     pub fn normalize(&mut self) {
@@ -34,17 +39,17 @@ impl Vec4{
     pub fn to_euler(&self) -> Vec3 {
         let (x, y, z, w) = (self.x, self.y, self.z, self.w);
 
-        let xx = x*x;
-        let yy = y*y;
-        let zz = z*z;
+        let xx = x * x;
+        let yy = y * y;
+        let zz = z * z;
 
-        let m13 = 2.0*(x*z + w*y);
-        let m23 = 2.0*(y*z - w*x);
-        let m33 = 1.0 - 2.0*(xx + yy);
-        let m12 = 2.0*(x*y - w*z);
-        let m11 = 1.0 - 2.0*(yy + zz);
-        let m32 = 2.0*(y*z + w*x);
-        let m22 = 1.0 - 2.0*(xx + zz);
+        let m13 = 2.0 * (x * z + w * y);
+        let m23 = 2.0 * (y * z - w * x);
+        let m33 = 1.0 - 2.0 * (xx + yy);
+        let m12 = 2.0 * (x * y - w * z);
+        let m11 = 1.0 - 2.0 * (yy + zz);
+        let m32 = 2.0 * (y * z + w * x);
+        let m22 = 1.0 - 2.0 * (xx + zz);
 
         let m13_c = m13.clamp(-1.0, 1.0);
         let pitch = m13_c.asin();
@@ -55,7 +60,11 @@ impl Vec4{
             (f32::atan2(m32, m22), 0.0)
         };
 
-        Vec3 { x: roll, y: pitch, z: yaw }
+        Vec3 {
+            x: roll,
+            y: pitch,
+            z: yaw,
+        }
     }
     #[allow(dead_code)]
     pub fn quat_direction(&self) -> Vec3 {
@@ -110,7 +119,12 @@ impl Vec4{
     }
     #[allow(dead_code)]
     pub fn conjugate(self) -> Vec4 {
-        Vec4 { x: -self.x, y: -self.y, z: -self.z, w: self.w }
+        Vec4 {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+            w: self.w,
+        }
     }
     #[allow(dead_code)]
     pub fn multiply(self, other: Vec4) -> Vec4 {

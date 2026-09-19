@@ -3,7 +3,7 @@
 
 use std::ffi::CString;
 
-unsafe extern "C"{
+unsafe extern "C" {
     fn newmozart() -> cty::uint32_t;
     fn mozartsetvolume(mhi: cty::uint32_t, vol: cty::c_float);
     fn newsound(mhi: cty::uint32_t, path: *const cty::c_char) -> cty::uint32_t;
@@ -16,63 +16,59 @@ unsafe extern "C"{
 }
 
 #[derive(Copy, Clone)]
-pub struct AudioEngine{
+pub struct AudioEngine {
     pub index: u32,
     pub vol: f32,
     pub spacial: bool,
 }
 
-impl AudioEngine{
-    pub fn new() -> AudioEngine{
-        AudioEngine{
-            index: unsafe{ newmozart() },
+impl AudioEngine {
+    pub fn new() -> AudioEngine {
+        AudioEngine {
+            index: unsafe { newmozart() },
             vol: 1.0f32,
             spacial: true,
         }
     }
-    pub fn exec(&mut self){
-        unsafe{ mozartsetvolume(self.index, self.vol) };
+    pub fn exec(&mut self) {
+        unsafe { mozartsetvolume(self.index, self.vol) };
     }
-    pub fn destroy(&mut self){
-        unsafe{ destroymozart(self.index) };
+    pub fn destroy(&mut self) {
+        unsafe { destroymozart(self.index) };
     }
 }
 
-pub struct Sound{
+pub struct Sound {
     index: u32,
     pub vol: f32,
     pub pan: f32,
     pub loopsound: bool,
 }
 
-impl Sound{
-    pub fn new(ae: AudioEngine, path: &str) -> Sound{
-        Sound { 
-            index: unsafe {
-                newsound(ae.index, CString::new(path).unwrap().as_ptr())
-            }, 
-            vol: 1.0, 
+impl Sound {
+    pub fn new(ae: AudioEngine, path: &str) -> Sound {
+        Sound {
+            index: unsafe { newsound(ae.index, CString::new(path).unwrap().as_ptr()) },
+            vol: 1.0,
             pan: 0.0,
             loopsound: true,
         }
     }
-    pub fn play(&mut self){
+    pub fn play(&mut self) {
         unsafe {
             soundsetloop(self.index, self.loopsound as u8);
             soundplay(self.index, self.pan, self.vol);
         }
     }
-    pub fn check_end(&mut self) -> bool{
-        unsafe {
-            cend(self.index) == 1
-        }
+    pub fn check_end(&mut self) -> bool {
+        unsafe { cend(self.index) == 1 }
     }
-    pub fn set_new_pos(&mut self, newpos: f32){
+    pub fn set_new_pos(&mut self, newpos: f32) {
         unsafe {
             soundsetpos(self.index, newpos);
         }
     }
-    pub fn stop(&mut self){
+    pub fn stop(&mut self) {
         unsafe {
             soundstop(self.index);
         }

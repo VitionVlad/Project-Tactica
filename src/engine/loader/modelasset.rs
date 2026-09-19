@@ -1,35 +1,36 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
-use crate::engine::{loader::rw::readfs, math::{vec2::Vec2, vec3::Vec3, vec4::Vec4}};
+use crate::engine::{
+    loader::rw::readfs,
+    math::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
+};
 
 use super::mtlasset::MtlAsset;
 
-#[derive(Clone)]
-#[derive(PartialEq)]
-enum Rdbft{
-  SCALAR,
-  VEC2,
-  VEC3,
-  VEC4
+#[derive(Clone, PartialEq)]
+enum Rdbft {
+    SCALAR,
+    VEC2,
+    VEC3,
+    VEC4,
 }
 
-#[derive(Clone)]
-#[derive(PartialEq)]
-enum Aus{
-  POSITION,
-  NORMAL,
-  UV,
-  INDICES,
-  OTHER,
+#[derive(Clone, PartialEq)]
+enum Aus {
+    POSITION,
+    NORMAL,
+    UV,
+    INDICES,
+    OTHER,
 }
 
-struct Rdbf{
-  tp: Rdbft,
-  mu: Aus,
-  scalar: Vec<u32>,
-  vec2: Vec<Vec2>,
-  vec3: Vec<Vec3>,
-  vec4: Vec<Vec4>,
+struct Rdbf {
+    tp: Rdbft,
+    mu: Aus,
+    scalar: Vec<u32>,
+    vec2: Vec<Vec2>,
+    vec3: Vec<Vec3>,
+    vec4: Vec<Vec4>,
 }
 
 fn quat_to_euler(q: Vec4) -> Vec3 {
@@ -48,10 +49,14 @@ fn quat_to_euler(q: Vec4) -> Vec3 {
     let cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z);
     let yaw = siny_cosp.atan2(cosy_cosp);
 
-    Vec3 { x: roll, y: pitch, z: yaw }
+    Vec3 {
+        x: roll,
+        y: pitch,
+        z: yaw,
+    }
 }
 
-pub struct ModelAsset{
+pub struct ModelAsset {
     pub vertices: Vec<Vec<f32>>,
     pub rwvertices: Vec<Vec<Vec3>>,
     pub matnam: Vec<String>,
@@ -62,8 +67,8 @@ pub struct ModelAsset{
     pub mtl: MtlAsset,
 }
 
-impl ModelAsset{
-    pub fn load_obj(path: &str) -> ModelAsset{
+impl ModelAsset {
+    pub fn load_obj(path: &str) -> ModelAsset {
         let file = String::from_utf8(readfs(path)).unwrap();
         let reader: Vec<&str> = file.split('\n').collect();
         let mut vert: Vec<Vec3> = vec![];
@@ -78,24 +83,27 @@ impl ModelAsset{
         let mut fnobj: Vec<Vec<f32>> = vec![];
 
         let mut fnrwobj: Vec<Vec<Vec3>> = vec![];
-        
+
         let mut objcnt = 0usize;
         let mut objbegind: Vec<[usize; 3]> = vec![];
 
-        let mut mtl: MtlAsset = MtlAsset { matinfo: vec![], matnam: vec![] };
+        let mut mtl: MtlAsset = MtlAsset {
+            matinfo: vec![],
+            matnam: vec![],
+        };
 
         let mut mtsl: Vec<String> = vec![];
         let mut obn: Vec<String> = vec![];
-         for i in 0..reader.len() {
+        for i in 0..reader.len() {
             let va = reader[i];
             if va.chars().next().unwrap_or_default() == '#' {
                 continue;
             }
             let spl: Vec<&str> = va.split(' ').collect();
-            if spl[0] == "mtllib"{
+            if spl[0] == "mtllib" {
                 let pspl: Vec<&str> = path.split('/').collect();
                 let mut mtlp: String = "".to_string();
-                for i in 0..pspl.len()-1{
+                for i in 0..pspl.len() - 1 {
                     mtlp += &pspl[i].to_string();
                     mtlp += "/";
                 }
@@ -103,40 +111,67 @@ impl ModelAsset{
                 mtl = MtlAsset::load_mtl(&mtlp);
                 continue;
             }
-            if spl[0] == "usemtl"{
+            if spl[0] == "usemtl" {
                 mtsl.push(spl[1].to_owned());
                 continue;
             }
-            if va.as_bytes()[0] == b'o' && va.as_bytes()[1] == b' '{
+            if va.as_bytes()[0] == b'o' && va.as_bytes()[1] == b' ' {
                 obn.push(spl[1].to_string());
                 objcnt += 1usize;
                 objbegind.push([ivert.len(), iuv.len(), inorm.len()]);
                 continue;
             }
-            if va.as_bytes()[0] == b'v' && va.as_bytes()[1] == b' '{
+            if va.as_bytes()[0] == b'v' && va.as_bytes()[1] == b' ' {
                 let spl: Vec<&str> = va.split(' ').collect();
-                let pos = Vec3{ x: spl[1].parse::<f32>().unwrap(), y: spl[2].parse::<f32>().unwrap(), z: spl[3].parse::<f32>().unwrap()};
+                let pos = Vec3 {
+                    x: spl[1].parse::<f32>().unwrap(),
+                    y: spl[2].parse::<f32>().unwrap(),
+                    z: spl[3].parse::<f32>().unwrap(),
+                };
                 vert.push(pos);
                 continue;
             }
-            if va.as_bytes()[0] == b'v' && va.as_bytes()[1] == b't'{
+            if va.as_bytes()[0] == b'v' && va.as_bytes()[1] == b't' {
                 let spl: Vec<&str> = va.split(' ').collect();
-                let uvc = Vec2{ x: spl[1].parse::<f32>().unwrap(), y: spl[2].parse::<f32>().unwrap()};
+                let uvc = Vec2 {
+                    x: spl[1].parse::<f32>().unwrap(),
+                    y: spl[2].parse::<f32>().unwrap(),
+                };
                 uv.push(uvc);
                 continue;
             }
-            if va.as_bytes()[0] == b'v' && va.as_bytes()[1] == b'n'{
+            if va.as_bytes()[0] == b'v' && va.as_bytes()[1] == b'n' {
                 let spl: Vec<&str> = va.split(' ').collect();
-                let normal = Vec3{ x: spl[1].parse::<f32>().unwrap(), y: spl[2].parse::<f32>().unwrap(), z: spl[3].parse::<f32>().unwrap()};
+                let normal = Vec3 {
+                    x: spl[1].parse::<f32>().unwrap(),
+                    y: spl[2].parse::<f32>().unwrap(),
+                    z: spl[3].parse::<f32>().unwrap(),
+                };
                 norm.push(normal);
                 continue;
             }
-            if va.as_bytes()[0] == b'f' && va.as_bytes()[1] == b' '{
+            if va.as_bytes()[0] == b'f' && va.as_bytes()[1] == b' ' {
                 let spl: Vec<&str> = va.split(' ').collect();
-                let spl3: [Vec<&str>; 3] = [spl[1].split('/').collect(), spl[2].split('/').collect(), spl[3].split('/').collect()];
-                let posi: [u32; 3] = [spl3[0][0].parse::<u32>().unwrap(), spl3[1][0].parse::<u32>().unwrap(), spl3[2][0].parse::<u32>().unwrap()];
-                let uvi: [u32; 3] = [spl3[0][1].parse::<u32>().unwrap(), spl3[1][1].parse::<u32>().unwrap(), spl3[2][1].parse::<u32>().unwrap()];
-                let normali: [u32; 3] = [spl3[0][2].parse::<u32>().unwrap(), spl3[1][2].parse::<u32>().unwrap(), spl3[2][2].parse::<u32>().unwrap()];
+                let spl3: [Vec<&str>; 3] = [
+                    spl[1].split('/').collect(),
+                    spl[2].split('/').collect(),
+                    spl[3].split('/').collect(),
+                ];
+                let posi: [u32; 3] = [
+                    spl3[0][0].parse::<u32>().unwrap(),
+                    spl3[1][0].parse::<u32>().unwrap(),
+                    spl3[2][0].parse::<u32>().unwrap(),
+                ];
+                let uvi: [u32; 3] = [
+                    spl3[0][1].parse::<u32>().unwrap(),
+                    spl3[1][1].parse::<u32>().unwrap(),
+                    spl3[2][1].parse::<u32>().unwrap(),
+                ];
+                let normali: [u32; 3] = [
+                    spl3[0][2].parse::<u32>().unwrap(),
+                    spl3[1][2].parse::<u32>().unwrap(),
+                    spl3[2][2].parse::<u32>().unwrap(),
+                ];
                 inorm.push(normali[0]);
                 inorm.push(normali[1]);
                 inorm.push(normali[2]);
@@ -152,28 +187,28 @@ impl ModelAsset{
             }
         }
         objbegind.push([ivert.len(), iuv.len(), inorm.len()]);
-        for j in 0..objcnt{
-            for i in objbegind[j][0]..objbegind[j+1][0]{
+        for j in 0..objcnt {
+            for i in objbegind[j][0]..objbegind[j + 1][0] {
                 fnvrt.push(vert[ivert[i] as usize - 1].x);
                 fnvrt.push(vert[ivert[i] as usize - 1].y);
                 fnvrt.push(vert[ivert[i] as usize - 1].z);
             }
-            for i in objbegind[j][1]..objbegind[j+1][1]{
+            for i in objbegind[j][1]..objbegind[j + 1][1] {
                 fnvrt.push(uv[iuv[i] as usize - 1].x);
                 fnvrt.push(uv[iuv[i] as usize - 1].y);
             }
-            for i in objbegind[j][2]..objbegind[j+1][2]{
+            for i in objbegind[j][2]..objbegind[j + 1][2] {
                 fnvrt.push(norm[inorm[i] as usize - 1].x);
                 fnvrt.push(norm[inorm[i] as usize - 1].y);
                 fnvrt.push(norm[inorm[i] as usize - 1].z);
             }
-            fnrwobj.push(vert[objbegind[j][0]..objbegind[j+1][0]].to_vec());
+            fnrwobj.push(vert[objbegind[j][0]..objbegind[j + 1][0]].to_vec());
             fnobj.push(fnvrt.clone());
             fnvrt = vec![];
         }
-        ModelAsset { 
+        ModelAsset {
             vertices: fnobj,
-            rwvertices: fnrwobj, 
+            rwvertices: fnrwobj,
             matnam: mtsl,
             obn: obn,
             objpos: vec![],

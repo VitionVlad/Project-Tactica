@@ -2,9 +2,8 @@ use self::{mat4::Mat4, vec2::Vec2, vec3::Vec3, vec4::Vec4};
 
 use super::*;
 
-#[derive(Clone, Copy)]
-#[derive(PartialEq)]
-pub enum Usages{
+#[derive(Clone, Copy, PartialEq)]
+pub enum Usages {
     Float,
     Vec2,
     Vec3,
@@ -14,7 +13,7 @@ pub enum Usages{
 
 #[allow(dead_code)]
 #[derive(Clone)]
-pub struct Uniformstruct{
+pub struct Uniformstruct {
     pub usage: Usages,
     pub float: f32,
     pub vec2: Vec2,
@@ -25,8 +24,8 @@ pub struct Uniformstruct{
 }
 
 #[allow(dead_code)]
-pub fn createfloat(value: f32, label: &str) -> Uniformstruct{
-    Uniformstruct{
+pub fn createfloat(value: f32, label: &str) -> Uniformstruct {
+    Uniformstruct {
         usage: Usages::Float,
         float: value,
         vec2: Vec2::new(),
@@ -38,8 +37,8 @@ pub fn createfloat(value: f32, label: &str) -> Uniformstruct{
 }
 
 #[allow(dead_code)]
-pub fn createvec2(value: Vec2, label: &str) -> Uniformstruct{
-    Uniformstruct{
+pub fn createvec2(value: Vec2, label: &str) -> Uniformstruct {
+    Uniformstruct {
         usage: Usages::Vec2,
         float: 0.0f32,
         vec2: value,
@@ -51,8 +50,8 @@ pub fn createvec2(value: Vec2, label: &str) -> Uniformstruct{
 }
 
 #[allow(dead_code)]
-pub fn createvec3(value: Vec3, label: &str) -> Uniformstruct{
-    Uniformstruct{
+pub fn createvec3(value: Vec3, label: &str) -> Uniformstruct {
+    Uniformstruct {
         usage: Usages::Vec3,
         float: 0.0f32,
         vec2: Vec2::new(),
@@ -64,8 +63,8 @@ pub fn createvec3(value: Vec3, label: &str) -> Uniformstruct{
 }
 
 #[allow(dead_code)]
-pub fn createvec4(value: Vec4, label: &str) -> Uniformstruct{
-    Uniformstruct{
+pub fn createvec4(value: Vec4, label: &str) -> Uniformstruct {
+    Uniformstruct {
         usage: Usages::Vec4,
         float: 0.0f32,
         vec2: Vec2::new(),
@@ -77,8 +76,8 @@ pub fn createvec4(value: Vec4, label: &str) -> Uniformstruct{
 }
 
 #[allow(dead_code)]
-pub fn createmat(value: Mat4, label: &str) -> Uniformstruct{
-    Uniformstruct{
+pub fn createmat(value: Mat4, label: &str) -> Uniformstruct {
+    Uniformstruct {
         usage: Usages::Mat,
         float: 0.0f32,
         vec2: Vec2::new(),
@@ -90,9 +89,9 @@ pub fn createmat(value: Mat4, label: &str) -> Uniformstruct{
 }
 
 #[allow(dead_code)]
-pub fn getsize(uniforms: &Vec<Uniformstruct>) -> i32{
+pub fn getsize(uniforms: &Vec<Uniformstruct>) -> i32 {
     let mut size: i32 = 224;
-    for i in 0..uniforms.len(){
+    for i in 0..uniforms.len() {
         match uniforms[i].usage {
             Usages::Float => size += 4,
             Usages::Vec2 => size += 8,

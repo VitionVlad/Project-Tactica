@@ -3,9 +3,21 @@ use crate::engine::{math::vec3::Vec3, physics::physics::PhysicsObject};
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
 pub enum ForceKind {
-    Global { direction: Vec3 },
-    Directional { origin: Vec3, direction: Vec3, radius: f32, max_distance: f32, falloff_distance: f32 },
-    Point { position: Vec3, radius: f32, falloff_radius: f32 },
+    Global {
+        direction: Vec3,
+    },
+    Directional {
+        origin: Vec3,
+        direction: Vec3,
+        radius: f32,
+        max_distance: f32,
+        falloff_distance: f32,
+    },
+    Point {
+        position: Vec3,
+        radius: f32,
+        falloff_radius: f32,
+    },
 }
 
 #[allow(dead_code)]
@@ -18,18 +30,29 @@ pub struct Force {
 impl Force {
     #[allow(dead_code)]
     pub fn new(magnitude: f32, force_kind: ForceKind) -> Self {
-        Self { magnitude, force_kind }
+        Self {
+            magnitude,
+            force_kind,
+        }
     }
     #[allow(dead_code)]
-    pub fn compute_force(&mut self, object: &mut PhysicsObject){
-        if object.compute_force{
+    pub fn compute_force(&mut self, object: &mut PhysicsObject) {
+        if object.compute_force {
             match self.force_kind {
                 ForceKind::Global { direction } => {
-                    self.force_kind = ForceKind::Global { direction: direction.normalize() };
-                    let new_acceleration = (direction * self.magnitude)/object.mass;
+                    self.force_kind = ForceKind::Global {
+                        direction: direction.normalize(),
+                    };
+                    let new_acceleration = (direction * self.magnitude) / object.mass;
                     object.acceleration += new_acceleration;
-                },
-                ForceKind::Directional { origin, direction, radius, max_distance, falloff_distance } => {
+                }
+                ForceKind::Directional {
+                    origin,
+                    direction,
+                    radius,
+                    max_distance,
+                    falloff_distance,
+                } => {
                     let direction = direction.normalize();
                     if direction.length_squared() == 0.0 || radius < 0.0 || max_distance <= 0.0 {
                         return;
@@ -47,8 +70,10 @@ impl Force {
 
                         let radial = offset - direction * distance;
                         if radial.length_squared() <= radius_squared {
-                            distance_along_axis = Some(distance_along_axis
-                                .map_or(distance, |current: f32| current.min(distance)));
+                            distance_along_axis = Some(
+                                distance_along_axis
+                                    .map_or(distance, |current: f32| current.min(distance)),
+                            );
                         }
                     }
 
@@ -65,8 +90,12 @@ impl Force {
                     };
 
                     object.acceleration += direction * (self.magnitude * coefficient / object.mass);
-                },
-                ForceKind::Point { position, radius, falloff_radius } => {
+                }
+                ForceKind::Point {
+                    position,
+                    radius,
+                    falloff_radius,
+                } => {
                     let closest_point = Self::closest_point(position, object);
                     let offset = closest_point - position;
                     let distance = offset.length_squared().sqrt();
@@ -80,7 +109,7 @@ impl Force {
                     };
 
                     object.acceleration += direction * (self.magnitude * coefficient / object.mass);
-                },
+                }
             }
         }
     }

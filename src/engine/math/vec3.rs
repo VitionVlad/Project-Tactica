@@ -4,16 +4,20 @@ use crate::engine::math::vec4::Vec4;
 
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
-pub struct Vec3{
+pub struct Vec3 {
     pub x: f32,
     pub y: f32,
-    pub z: f32
+    pub z: f32,
 }
 
-impl Vec3{
+impl Vec3 {
     #[allow(dead_code)]
-    pub fn new() -> Vec3{
-        Vec3 { x: 0.0f32, y: 0.0f32, z: 0.0f32 }
+    pub fn new() -> Vec3 {
+        Vec3 {
+            x: 0.0f32,
+            y: 0.0f32,
+            z: 0.0f32,
+        }
     }
     pub fn cross(self, other: Self) -> Vec3 {
         Vec3 {
@@ -45,11 +49,11 @@ impl Vec3{
     }
     #[allow(dead_code)]
     pub fn dot(self, other: Vec3) -> f32 {
-        self.x*other.x + self.y*other.y + self.z*other.z
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
     #[allow(dead_code)]
-    pub fn length_squared(self) -> f32{
-        self.x*self.x + self.y*self.y + self.z*self.z
+    pub fn length_squared(self) -> f32 {
+        self.x * self.x + self.y * self.y + self.z * self.z
     }
     #[allow(dead_code)]
     pub fn to_quat(&self) -> Vec4 {
@@ -73,7 +77,11 @@ impl Vec3{
     pub fn normalize(&self) -> Vec3 {
         let length = (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
         if length == 0.0 {
-            Vec3 { x: 0.0, y: 0.0, z: 0.0 }
+            Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            }
         } else {
             Vec3 {
                 x: self.x / length,
@@ -198,13 +206,13 @@ impl DivAssign<f32> for Vec3 {
     }
 }
 
-impl Neg for Vec3{
+impl Neg for Vec3 {
     type Output = Self;
     fn neg(self) -> Self::Output {
         Self {
             x: -self.x,
             y: -self.y,
-            z: -self.z
+            z: -self.z,
         }
     }
 }

@@ -2,27 +2,30 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
-pub struct Vec2{
+pub struct Vec2 {
     pub x: f32,
-    pub y: f32
+    pub y: f32,
 }
 
-impl Vec2{
+impl Vec2 {
     #[allow(dead_code)]
-    pub fn new() -> Vec2{
-        Vec2 { x: 0.0f32, y: 0.0f32 }
+    pub fn new() -> Vec2 {
+        Vec2 {
+            x: 0.0f32,
+            y: 0.0f32,
+        }
     }
     #[allow(dead_code)]
     pub fn dot(self, other: Vec2) -> f32 {
-        self.x*other.x + self.y*other.y
+        self.x * other.x + self.y * other.y
     }
     #[allow(dead_code)]
     pub fn magnitude(self) -> f32 {
-        (self.x.powi(2)+self.y.powi(2)).sqrt()
+        (self.x.powi(2) + self.y.powi(2)).sqrt()
     }
     #[allow(dead_code)]
     pub fn vec_vec_angle(self, other: Vec2) -> f32 {
-        self.dot(other)/(self.magnitude()*other.magnitude())
+        self.dot(other) / (self.magnitude() * other.magnitude())
     }
 }
 
