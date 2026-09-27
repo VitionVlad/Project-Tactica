@@ -1,12 +1,5 @@
 use crate::engine::{
-    engine::Engine,
-    image::Image,
-    loader::rw::readfs,
-    material::Material,
-    math::vec3::Vec3,
-    render::render::{CullMode, MeshUsage, TextureFormat},
-    scene::Scene,
-    ui::{UIplane, UItext},
+    engine::Engine, image::Image, light::{Light, LightType}, loader::rw::readfs, material::Material, math::vec3::Vec3, render::render::{CullMode, MeshUsage, TextureFormat}, scene::Scene, ui::{UIplane, UItext},
 };
 
 use super::{Awarness, Enemy, GameSession, Pivot, TBTplate};
@@ -67,7 +60,7 @@ pub fn initialize() -> GameSession {
     );
     fpscnt.new_line_symbol = b'|';
 
-    let mut scn = Scene::load_from_gltf(&mut eng, "assets/test.glb", matgeneral, false, 0.2);
+    let mut scn = Scene::load_from_gltf(&mut eng, "assets/cpc.glb", matgeneral, false, 0.2);
     let black3d = Image::new(
         &eng,
         [1, 1, 1],
@@ -88,21 +81,22 @@ pub fn initialize() -> GameSession {
     scn.voxel_representation.data.resize(0, 0);
 
     eng.render.shadow_map_count = 0;
-    eng.used_light_count = 1;
-    eng.lights[0].shadow = false;
-    eng.lights[0].light_type = crate::engine::light::LightType::Spot;
-    eng.lights[0].pos = Vec3 {
-        x: 0.0,
-        y: 5.0,
-        z: 0.0,
-    };
-    eng.lights[0].color = Vec3 {
-        x: 1.25,
-        y: 1.25,
-        z: 1.25,
-    };
+    eng.used_light_count = 0;
+    eng.lights = Vec::new();
+    //eng.lights[0].shadow = false;
+    //eng.lights[0].light_type = crate::engine::light::LightType::Spot;
+    //eng.lights[0].pos = Vec3 {
+    //    x: 0.0,
+    //    y: 5.0,
+    //    z: 0.0,
+    //};
+    //eng.lights[0].color = Vec3 {
+    //    x: 1.25,
+    //    y: 1.25,
+    //    z: 1.25,
+    //};
     eng.cameras[0].physic_object.pos.y = 5.0;
-    eng.cameras[0].fov = 30.0;
+    eng.cameras[0].fov = 40.0;
 
     let mut pivot = Pivot {
         id: 0,
@@ -119,22 +113,23 @@ pub fn initialize() -> GameSession {
             pivot.id = i;
             pivot.start_pos = scn.objects[i].physic_object.pos;
             configure_actor(&mut scn.objects[i].physic_object);
-        } else if name.contains("tactica_") {
+        }else if name.contains("tactica_") {
             tbtplates.push(TBTplate {
                 id: i,
                 safe: false,
                 enemy_id: None,
             });
-        } else if name.contains("safe_") {
+        }else if name.contains("safe_") {
             tbtplates.push(TBTplate {
                 id: i,
                 safe: true,
                 enemy_id: None,
             });
-        } else if name.contains("ph_") {
+        }else if name.contains("ph_") {
             scn.objects[i].physic_object.is_static = false;
+            scn.objects[i].physic_object.compute_torque = false;
             physics_objects.push((i, scn.objects[i].physic_object.pos));
-        } else if name.contains("enemy") {
+        }else if name.contains("enemy_") {
             enemies.push(Enemy {
                 id: i,
                 direction: Vec3 {
@@ -148,6 +143,18 @@ pub fn initialize() -> GameSession {
                 initial_tile_id: None,
             });
             configure_actor(&mut scn.objects[i].physic_object);
+        }else if name.contains("light1_") {
+            eng.lights.push(Light::new(LightType::Spot));
+            let lastltmt = eng.lights.last_mut().unwrap();
+            lastltmt.pos = scn.objects[i].physic_object.pos;
+            lastltmt.rot = Vec3{ x: -1.5708, y: 0.0, z: 0.0}.to_quat();
+            lastltmt.color = Vec3 {
+                x: 1.25,
+                y: 0.56,
+                z: 0.33,
+            };
+            lastltmt.shadow = false;
+            eng.used_light_count += 1;
         }
     }
 

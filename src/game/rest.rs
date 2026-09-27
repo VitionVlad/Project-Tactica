@@ -4,7 +4,7 @@ use super::{GameSession, tile_test};
 
 pub fn update(session: &mut GameSession) {
     let pivot_position = session.scn.objects[session.pivot.id].physic_object.pos;
-    session.eng.cameras[0].physic_object.pos.x = pivot_position.x + 5.0;
+    session.eng.cameras[0].physic_object.pos.x = pivot_position.x - 5.0;
     session.eng.cameras[0].physic_object.pos.y = pivot_position.y + 7.5;
     session.eng.cameras[0].physic_object.pos.z = pivot_position.z + 10.0;
     session.eng.cameras[0].look_at(
