@@ -47,8 +47,8 @@ void main() {
     T = normalize(T - N * dot(N, T));
     vec3 B = cross(N, T);
 
-    mat3 TBN = mat3(T, B, N);
-    vec3 n = texture(sampler2DArray(tex, imageSampler), vec3(luv, 3)).rgb * 2.0 - 1.0;
-    outNormal = vec4(TBN * n, 1.0);
-    //outNormal = vec4(fnormal, 1.0);
+    //mat3 TBN = mat3(T, B, N);
+    //vec3 n = texture(sampler2DArray(tex, imageSampler), vec3(luv, 3)).rgb * 2.0 - 1.0;
+    //outNormal = vec4(TBN * n, 1.0);
+    outNormal = vec4(fnormal, 1.0);
 }

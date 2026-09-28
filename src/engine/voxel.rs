@@ -19,6 +19,30 @@ pub struct Rledata {
 }
 
 #[derive(Clone, Copy)]
+pub struct VoxelizerSettings {
+    pub size: Option<Ivec3>,
+    pub origin: Option<Vec3>,
+    pub voxel_size: f32,
+}
+
+impl VoxelizerSettings {
+    pub fn new(voxel_size: f32) -> VoxelizerSettings {
+        VoxelizerSettings {
+            size: None,
+            origin: None,
+            voxel_size,
+        }
+    }
+    pub fn new_with_size(voxel_size: f32, size: Ivec3) -> VoxelizerSettings {
+        VoxelizerSettings {
+            size: Some(size),
+            origin: None,
+            voxel_size,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
 pub struct Voxel {
     pos: Ivec3,
     color: [u8; 4],
@@ -538,6 +562,21 @@ impl VoxelScene {
         color: [u8; 4],
         voxel_set: bool,
     ) {
+        self.voxelize_triangle_in_bounds(v0, v1, v2, color, voxel_set, self.size, self.origin);
+    }
+    fn voxelize_triangle_in_bounds(
+        &mut self,
+        v0: Vec3,
+        v1: Vec3,
+        v2: Vec3,
+        color: [u8; 4],
+        voxel_set: bool,
+        virtual_size: [u32; 3],
+        virtual_origin: Vec3,
+    ) {
+        if virtual_size.iter().any(|dimension| *dimension == 0) {
+            return;
+        }
         let edge0 = v1 - v0;
         let edge1 = v2 - v0;
         let normal = edge0.cross(edge1);
@@ -553,18 +592,25 @@ impl VoxelScene {
         let tri_min = v0.min(v1).min(v2);
         let tri_max = v0.max(v1).max(v2);
 
-        let (min_vx, min_vy, min_vz) = self.world_to_voxel(tri_min);
-        let (max_vx, max_vy, max_vz) = self.world_to_voxel(tri_max);
-        let x0 = (min_vx).max(0) as usize;
-        let y0 = (min_vy).max(0) as usize;
-        let z0 = (min_vz).max(0) as usize;
-        let x1 = (max_vx + 1).min(self.size[0] as isize - 1) as usize;
-        let y1 = (max_vy + 1).min(self.size[1] as isize - 1) as usize;
-        let z1 = (max_vz + 1).min(self.size[2] as isize - 1) as usize;
+        let min_vx = ((tri_min.x - virtual_origin.x) / self.voxel_size).floor() as isize;
+        let min_vy = ((tri_min.y - virtual_origin.y) / self.voxel_size).floor() as isize;
+        let min_vz = ((tri_min.z - virtual_origin.z) / self.voxel_size).floor() as isize;
+        let max_vx = ((tri_max.x - virtual_origin.x) / self.voxel_size).floor() as isize;
+        let max_vy = ((tri_max.y - virtual_origin.y) / self.voxel_size).floor() as isize;
+        let max_vz = ((tri_max.z - virtual_origin.z) / self.voxel_size).floor() as isize;
+        let x0 = min_vx.max(0);
+        let y0 = min_vy.max(0);
+        let z0 = min_vz.max(0);
+        let x1 = max_vx.min(virtual_size[0] as isize - 1);
+        let y1 = max_vy.min(virtual_size[1] as isize - 1);
+        let z1 = max_vz.min(virtual_size[2] as isize - 1);
+        if x0 > x1 || y0 > y1 || z0 > z1 {
+            return;
+        }
         for vz in z0..=z1 {
             for vy in y0..=y1 {
                 for vx in x0..=x1 {
-                    let voxel_center = self.origin
+                    let voxel_center = virtual_origin
                         + Vec3 {
                             x: (vx as f32 + 0.5) * self.voxel_size,
                             y: (vy as f32 + 0.5) * self.voxel_size,
@@ -579,15 +625,78 @@ impl VoxelScene {
                         v2,
                         dominant_axis,
                     ) {
-                        self.set(vx as u32, vy as u32, vz as u32, color, voxel_set);
+                        let cell_min = virtual_origin
+                            + Vec3 {
+                                x: vx as f32 * self.voxel_size,
+                                y: vy as f32 * self.voxel_size,
+                                z: vz as f32 * self.voxel_size,
+                            };
+                        let x_range = Self::overlapping_voxel_range(
+                            cell_min.x,
+                            cell_min.x + self.voxel_size,
+                            self.origin.x,
+                            self.voxel_size,
+                            self.size[0],
+                        );
+                        let y_range = Self::overlapping_voxel_range(
+                            cell_min.y,
+                            cell_min.y + self.voxel_size,
+                            self.origin.y,
+                            self.voxel_size,
+                            self.size[1],
+                        );
+                        let z_range = Self::overlapping_voxel_range(
+                            cell_min.z,
+                            cell_min.z + self.voxel_size,
+                            self.origin.z,
+                            self.voxel_size,
+                            self.size[2],
+                        );
+                        if let (Some((x0, x1)), Some((y0, y1)), Some((z0, z1))) =
+                            (x_range, y_range, z_range)
+                        {
+                            for out_z in z0..=z1 {
+                                for out_y in y0..=y1 {
+                                    for out_x in x0..=x1 {
+                                        self.set(out_x, out_y, out_z, color, voxel_set);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
+    fn overlapping_voxel_range(
+        cell_min: f32,
+        cell_max: f32,
+        output_origin: f32,
+        voxel_size: f32,
+        output_size: u32,
+    ) -> Option<(u32, u32)> {
+        if output_size == 0 {
+            return None;
+        }
+        let start = ((cell_min - output_origin) / voxel_size).floor() as isize;
+        let end = ((cell_max - output_origin) / voxel_size).ceil() as isize - 1;
+        let start = start.max(0);
+        let end = end.min(output_size as isize - 1);
+        (start <= end).then_some((start as u32, end as u32))
+    }
     pub fn voxelize_triangles(&mut self, vertices: Vec<f32>, tricolor: Vec<u8>, voxel_set: bool) {
+        self.voxelize_triangles_in_bounds(vertices, tricolor, voxel_set, self.size, self.origin);
+    }
+    fn voxelize_triangles_in_bounds(
+        &mut self,
+        vertices: Vec<f32>,
+        tricolor: Vec<u8>,
+        voxel_set: bool,
+        virtual_size: [u32; 3],
+        virtual_origin: Vec3,
+    ) {
         for i in (0..vertices.len()).step_by(9) {
-            self.voxelize_triangle(
+            self.voxelize_triangle_in_bounds(
                 Vec3 {
                     x: vertices[i],
                     y: vertices[i + 1],
@@ -610,6 +719,8 @@ impl VoxelScene {
                     tricolor[(i / 9) * 4 + 3],
                 ],
                 voxel_set,
+                virtual_size,
+                virtual_origin,
             );
         }
     }
@@ -630,28 +741,60 @@ impl VoxelScene {
         }
     }
     pub fn from_vertices(vertices: Vec<f32>, voxel_size: f32, tricolor: Vec<u8>) -> VoxelScene {
-        let bond = Self::get_boundaries(vertices.clone());
-        let size = [
-            ((bond.1[0] - bond.0[0]).abs() as f32 / voxel_size) as u32,
-            ((bond.1[1] - bond.0[1]).abs() as f32 / voxel_size) as u32,
-            ((bond.1[2] - bond.0[2]).abs() as f32 / voxel_size) as u32,
+        Self::from_vertices_with_settings(vertices, VoxelizerSettings::new(voxel_size), tricolor)
+    }
+    pub fn from_vertices_with_settings(
+        vertices: Vec<f32>,
+        settings: VoxelizerSettings,
+        tricolor: Vec<u8>,
+    ) -> VoxelScene {
+        let voxel_size = settings.voxel_size;
+        if voxel_size <= 0.0 || !voxel_size.is_finite() || vertices.len() < 9 {
+            return Self::new_blank();
+        }
+        let mut scene_min = Vec3 {
+            x: f32::INFINITY,
+            y: f32::INFINITY,
+            z: f32::INFINITY,
+        };
+        let mut scene_max = Vec3 {
+            x: f32::NEG_INFINITY,
+            y: f32::NEG_INFINITY,
+            z: f32::NEG_INFINITY,
+        };
+        for vertex in vertices.chunks_exact(3) {
+            let point = Vec3 {
+                x: vertex[0],
+                y: vertex[1],
+                z: vertex[2],
+            };
+            scene_min = scene_min.min(point);
+            scene_max = scene_max.max(point);
+        }
+        let virtual_origin = Vec3 {
+            x: (scene_min.x / voxel_size).floor() * voxel_size,
+            y: (scene_min.y / voxel_size).floor() * voxel_size,
+            z: (scene_min.z / voxel_size).floor() * voxel_size,
+        };
+        let virtual_size = [
+            ((scene_max.x - virtual_origin.x) / voxel_size).floor() as u32 + 1,
+            ((scene_max.y - virtual_origin.y) / voxel_size).floor() as u32 + 1,
+            ((scene_max.z - virtual_origin.z) / voxel_size).floor() as u32 + 1,
         ];
-        let mut scn = Self::new(
-            vec![],
-            voxel_size,
-            size,
-            Vec3 {
-                x: bond.0[0] as f32,
-                y: bond.0[1] as f32,
-                z: bond.0[2] as f32,
-            },
-            0,
-        );
+        let origin = settings.origin.unwrap_or(virtual_origin);
+        let size = settings.size.map_or(virtual_size, |size| {
+            [
+                size.x.max(0) as u32,
+                size.y.max(0) as u32,
+                size.z.max(0) as u32,
+            ]
+        });
+        let mut scn = Self::new(vec![], voxel_size, size, origin, 0);
         scn.data.resize(
-            ((size[0] * size[1] * size[2] * 4) as f32 / voxel_size.powi(3)) as usize,
+            size[0] as usize * size[1] as usize * size[2] as usize * 4,
             0,
         );
-        scn.voxelize_triangles(vertices, tricolor, false);
+        scn.voxelize_triangles_in_bounds(vertices, tricolor, false, virtual_size, virtual_origin);
         scn
     }
     pub fn from_vertices_svo(vertices: Vec<f32>, tricolor: Vec<u8>, levels: u32) -> VoxelScene {
@@ -822,5 +965,52 @@ impl VoxelScene {
         }
 
         writefs(path, rwd);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{VoxelScene, VoxelizerSettings};
+    use crate::engine::math::{ivec3::Ivec3, vec3::Vec3};
+
+    fn triangle() -> Vec<f32> {
+        vec![0.1, 0.1, 0.2, 0.9, 0.1, 0.2, 0.1, 0.9, 0.2]
+    }
+
+    #[test]
+    fn computes_output_bounds_when_settings_are_unset() {
+        let color = [10, 20, 30, 255];
+        let scene = VoxelScene::from_vertices_with_settings(
+            triangle(),
+            VoxelizerSettings::new(1.0),
+            color.to_vec(),
+        );
+
+        assert_eq!(scene.size, [1, 1, 1]);
+        assert_eq!(scene.origin.x, 0.0);
+        assert_eq!(scene.data, color);
+    }
+
+    #[test]
+    fn clips_virtual_voxels_to_explicit_output_bounds() {
+        let color = [10, 20, 30, 255];
+        let mut settings = VoxelizerSettings::new_with_size(1.0, Ivec3 { x: 1, y: 1, z: 1 });
+        settings.origin = Some(Vec3 {
+            x: 0.5,
+            y: 0.0,
+            z: 0.0,
+        });
+        let scene = VoxelScene::from_vertices_with_settings(triangle(), settings, color.to_vec());
+
+        assert_eq!(scene.size, [1, 1, 1]);
+        assert_eq!(scene.data, color);
+
+        settings.origin = Some(Vec3 {
+            x: 2.0,
+            y: 0.0,
+            z: 0.0,
+        });
+        let clipped = VoxelScene::from_vertices_with_settings(triangle(), settings, color.to_vec());
+        assert_eq!(clipped.data, vec![0; 4]);
     }
 }

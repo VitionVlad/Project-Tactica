@@ -37,7 +37,7 @@ layout(binding = 10) uniform sampler        noiseSampler;
 
 const float PI           = 3.14159265359;
 const float GOLDEN_RATIO = 0.61803398875;
-const int   MAX_STEPS    = 128;
+const int   MAX_STEPS    = 512;
 const float EPS          = 1e-5;
 const float SS_THICKNESS = 0.3;
 const vec3  SKY_COLOR    = vec3(0.02, 0.02, 0.05);

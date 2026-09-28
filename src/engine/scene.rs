@@ -5,7 +5,7 @@ use crate::engine::{
     loader::{glscene::Glscene, imageasset::ImageAsset, rw::checkfs},
     math::{mat4::Mat4, vec2::Vec2, vec3::Vec3, vec4::Vec4},
     render::render::TextureFormat,
-    voxel::VoxelScene,
+    voxel::{VoxelScene, VoxelizerSettings},
 };
 
 use super::{
@@ -49,6 +49,21 @@ impl Scene {
         material: Material,
         voxelize: bool,
         voxel_size: f32,
+    ) -> Scene {
+        Self::load_from_obj_with_voxelizer_settings(
+            eng,
+            path,
+            material,
+            voxelize,
+            VoxelizerSettings::new(voxel_size),
+        )
+    }
+    pub fn load_from_obj_with_voxelizer_settings(
+        eng: &mut Engine,
+        path: &str,
+        material: Material,
+        voxelize: bool,
+        voxelizer_settings: VoxelizerSettings,
     ) -> Scene {
         let mut pakpath = path.to_string();
         let pke = pakpath.len();
@@ -153,7 +168,7 @@ impl Scene {
             if pak3e {
                 vrp = VoxelScene::from_file(&pakpath);
             } else {
-                vrp = VoxelScene::from_vertices(totvrt, voxel_size, tricolor);
+                vrp = VoxelScene::from_vertices_with_settings(totvrt, voxelizer_settings, tricolor);
                 vrp.save_file(&pakpath);
             }
         }
@@ -200,6 +215,21 @@ impl Scene {
         material: Material,
         voxelize: bool,
         voxel_size: f32,
+    ) -> Scene {
+        Self::load_from_gltf_with_voxelizer_settings(
+            eng,
+            path,
+            material,
+            voxelize,
+            VoxelizerSettings::new(voxel_size),
+        )
+    }
+    pub fn load_from_gltf_with_voxelizer_settings(
+        eng: &mut Engine,
+        path: &str,
+        material: Material,
+        voxelize: bool,
+        voxelizer_settings: VoxelizerSettings,
     ) -> Scene {
         let mut scn = Scene::new_blank();
 
@@ -304,14 +334,15 @@ impl Scene {
                     ubm.trans(scn.objects[lobj].physic_object.pos);
                     lubm = ubm.clone();
 
-                    let mut t: Mat4 = Mat4::new();
+                    //let mut t: Mat4 = Mat4::new();
                     ubm = Mat4::new();
-                    ubm.xrot(scn.objects[lobj].physic_object.rot.x);
-                    t.yrot(scn.objects[lobj].physic_object.rot.y);
-                    ubm *= t;
-                    t = Mat4::new();
-                    t.zrot(scn.objects[lobj].physic_object.rot.z);
-                    ubm *= t;
+                    ubm.quat_rot(scn.objects[lobj].physic_object.rot);
+                    //ubm.xrot(scn.objects[lobj].physic_object.rot.x);
+                    //t.yrot(scn.objects[lobj].physic_object.rot.y);
+                    //ubm *= t;
+                    //t = Mat4::new();
+                    //t.zrot(scn.objects[lobj].physic_object.rot.z);
+                    //ubm *= t;
 
                     lubm *= ubm;
 
@@ -391,8 +422,11 @@ impl Scene {
             if pak3e {
                 scn.voxel_representation = VoxelScene::from_file(&pakpath);
             } else {
-                scn.voxel_representation =
-                    VoxelScene::from_vertices(totvrt.clone(), voxel_size, tricolor);
+                scn.voxel_representation = VoxelScene::from_vertices_with_settings(
+                    totvrt.clone(),
+                    voxelizer_settings,
+                    tricolor,
+                );
                 scn.voxel_representation.save_file(&pakpath);
             }
         }

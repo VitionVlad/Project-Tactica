@@ -1,5 +1,5 @@
 use crate::engine::{
-    engine::Engine, image::Image, light::{Light, LightType}, loader::rw::readfs, material::Material, math::vec3::Vec3, render::render::{CullMode, MeshUsage, TextureFormat}, scene::Scene, ui::{UIplane, UItext},
+    engine::Engine, image::Image, light::{Light, LightType}, loader::rw::readfs, material::Material, math::{ivec3::Ivec3, vec3::Vec3}, render::render::{CullMode, MeshUsage, TextureFormat}, scene::Scene, ui::{UIplane, UItext}, voxel::VoxelizerSettings,
 };
 
 use super::{Awarness, Enemy, GameSession, Pivot, TBTplate};
@@ -13,7 +13,7 @@ pub fn initialize() -> GameSession {
     let frag = readfs("shaders/frag");
     let dvert = readfs("shaders/vdeffered");
     let dfrag = readfs("shaders/fdeffered");
-    let lfrag = readfs("shaders/klight");
+    let lfrag = readfs("shaders/fslight");
     let shadow = readfs("shaders/shadow");
     let textf = readfs("shaders/ftext");
 
@@ -60,15 +60,25 @@ pub fn initialize() -> GameSession {
     );
     fpscnt.new_line_symbol = b'|';
 
-    let mut scn = Scene::load_from_gltf(&mut eng, "assets/cpc.glb", matgeneral, false, 0.2);
-    let black3d = Image::new(
-        &eng,
-        [1, 1, 1],
-        vec![u8::MAX; 4],
-        true,
-        TextureFormat::R8g8b8a8Unorm,
-        false,
+    let mut scn = Scene::load_from_gltf_with_voxelizer_settings(&mut eng, "assets/cpc.glb", matgeneral, true, 
+        VoxelizerSettings{ 
+            size: Some(Ivec3{ x: 800, y: 420, z: 280}), 
+            origin: Some(Vec3 { x: -21.5, y: -0.2, z: -7.8 }),
+            //size: None, 
+            //origin: None,
+            voxel_size: 0.05,
+        }
     );
+    let black3d = Image::new(&eng, scn.voxel_representation.size, scn.voxel_representation.data.clone(), true, TextureFormat::R8g8b8a8Unorm, false);
+    println!("voxelized scene size: {}MB", scn.voxel_representation.data.len() as f32/1048576.0);
+    //let black3d = Image::new(
+    //    &eng,
+    //    [1, 1, 1],
+    //    vec![u8::MAX; 4],
+    //    true,
+    //    TextureFormat::R8g8b8a8Unorm,
+    //    false,
+    //);
     let bluenoise = Image::new_from_files(&eng, vec!["assets/noise.png".to_string()]);
     let mut ltviewport = UIplane::new(
         &mut eng,
@@ -160,10 +170,9 @@ pub fn initialize() -> GameSession {
 
     eng.cameras[0].physic_object.solid = false;
     eng.cameras[0].physic_object.gravity = false;
-    println!(
-        "shadowmapresolution(ignore if shadowmaps are off): {}",
-        eng.render.shadow_map_resolution
-    );
+    println!("shadowmapresolution(ignore if shadowmaps are off): {}", eng.render.shadow_map_resolution);
+
+    eng.render.resolution_scale = 0.5;
 
     GameSession {
         eng,

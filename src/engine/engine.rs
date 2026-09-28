@@ -124,17 +124,18 @@ impl Engine {
                 self.cameras[i as usize].physic_object.pos.z,
             );
             self.render.set_deffered_uniform_data(i * 4 + 323, 0.0);
+            let euler_rot = -self.cameras[i as usize].physic_object.rot.to_euler();
             self.render.set_deffered_uniform_data(
                 i * 4 + 360,
-                self.cameras[i as usize].physic_object.rot.x,
+                euler_rot.x,
             );
             self.render.set_deffered_uniform_data(
                 i * 4 + 361,
-                self.cameras[i as usize].physic_object.rot.y,
+                euler_rot.y,
             );
             self.render.set_deffered_uniform_data(
                 i * 4 + 362,
-                self.cameras[i as usize].physic_object.rot.z,
+                euler_rot.z,
             );
             self.render
                 .set_deffered_uniform_data(i * 4 + 363, self.cameras[i as usize].fov);
