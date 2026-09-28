@@ -98,6 +98,61 @@ vec2 RayDirToUV(vec3 rayDir, vec3 camForward, vec3 camRight, vec3 camUp, float a
     return vec2(x, y) * 0.5 + 0.5;
 }
 
+// ── Shadowmaps ────────────────────────────────────────────────────────────────
+
+const float SHADOW_DEPTH_BIAS    = 0.0005; // constant bias in shadowmap depth space (tune)
+const float SHADOW_NORMAL_TEXELS = 1.5;    // normal offset, in shadowmap texels at the receiver's depth
+const float SHADOW_EDGE_FADE     = 0.04;   // spot "cone" softness: fade over this fraction of shadowmap UV
+const int   SHADOW_PCF_RADIUS    = 1;      // 1 = 3x3 (9 taps), 0 = single tap
+
+// World-space size of one shadowmap texel at clip-space depth clipW.
+// For M = P * V (V a pure rotation+translation), |row0(M).xyz| == P[0][0].
+float ShadowTexelWorldSize(mat4 M, float clipW) {
+    float xScale = length(vec3(M[0][0], M[1][0], M[2][0]));
+    return (2.0 / mi.resolutions.z) * clipW / max(xScale, 1e-6);
+}
+
+// Returns light visibility in [0,1] for shadowmap layer `si`.
+// Includes the spot frustum edge fade, so the shadow frustum acts as the light cone.
+//   NdotL       - dot(N, L) of the receiver, used to scale the normal offset
+//   extraOffset - additional world-space offset along N (e.g. voxelSize for voxel bounce hits)
+float ShadowVisibility(vec3 worldPos, vec3 N, float NdotL, int si, float extraOffset) {
+    mat4 M = smi.shadowViews[si];
+
+    // clip.w at the un-offset position gives the texel size in world units
+    float w0 = dot(vec4(M[0][3], M[1][3], M[2][3], M[3][3]), vec4(worldPos, 1.0));
+    if (w0 <= 0.0) return 0.0;                       // behind the light
+
+    // normal-offset bias: grows at grazing angles, never fully zero
+    float sinTheta = sqrt(max(1.0 - NdotL * NdotL, 0.0));
+    float offset   = ShadowTexelWorldSize(M, w0) * SHADOW_NORMAL_TEXELS * mix(0.5, 1.0, sinTheta)
+                   + extraOffset;
+    vec3  p        = worldPos + N * offset;
+
+    vec4 smv = M * vec4(p, 1.0);
+    if (smv.w <= 0.0) return 0.0;
+    vec3 ndc = smv.xyz / smv.w;
+    if (ndc.z < 0.0 || ndc.z > 1.0) return 0.0;      // outside light depth range
+
+    // same sampling coordinates as the old shcalcpl (u = x*0.5+0.5, v = y*0.5+0.5)
+    vec2 uv = ndc.xy * 0.5 + 0.5;
+    vec2 edgeDist = min(uv, 1.0 - uv);
+    float fade = smoothstep(0.0, SHADOW_EDGE_FADE, min(edgeDist.x, edgeDist.y));
+    if (fade <= 0.0) return 0.0;                     // outside the spot frustum
+
+    float texel = 1.0 / mi.resolutions.z;
+    float lit   = 0.0;
+    for (int y = -SHADOW_PCF_RADIUS; y <= SHADOW_PCF_RADIUS; y++) {
+        for (int x = -SHADOW_PCF_RADIUS; x <= SHADOW_PCF_RADIUS; x++) {
+            vec2  tap = uv + vec2(float(x), float(y)) * texel;
+            float sd  = texture(sampler2DArray(shadowTexture, attachmentSampler), vec3(tap, float(si))).r;
+            lit += (ndc.z - SHADOW_DEPTH_BIAS < sd) ? 1.0 : 0.0;
+        }
+    }
+    lit /= float((2 * SHADOW_PCF_RADIUS + 1) * (2 * SHADOW_PCF_RADIUS + 1));
+    return lit * fade;
+}
+
 // ── PBR ───────────────────────────────────────────────────────────────────────
 
 vec3 FresnelSchlick(float cosTheta, vec3 F0) {
@@ -280,69 +335,24 @@ vec4 voxelRaycast(inout vec3 rayOrigin, vec3 rayDir, out vec3 outn) {
     return vec4(0.0);
 }
 
-bool VoxelShadowRay(vec3 rayOrigin, vec3 lightPos) {
-    vec3  toLight   = lightPos - rayOrigin;
-    float lightDist = length(toLight);
-    vec3  rayDir    = toLight / lightDist;
-    float voxelSize = mi.rtinfo.w;
-    vec3  gridMin   = mi.rtinfo.xyz;
-    vec3  gridSize  = mi.addinfo.yzw;
-    vec3  gridMax   = gridMin + gridSize * voxelSize;
-    float solidDepth = 0.0;
-    for (int probe = 0; probe < 4; probe++) {
-        vec3  pp  = rayOrigin + rayDir * voxelSize * float(probe);
-        vec3  pUV = (pp - gridMin) / (voxelSize * gridSize);
-        float occ = texture(sampler3D(texTexture, attachmentSampler), pUV).a;
-        if (occ > 0.5) solidDepth += 1.0;
-        else break;
-    }
-    rayOrigin += rayDir * voxelSize * (solidDepth + 1.0);
-    vec3  invDir = 1.0 / (rayDir + vec3(1e-6));
-    vec3  t0 = (gridMin - rayOrigin) * invDir;
-    vec3  t1 = (gridMax - rayOrigin) * invDir;
-    vec3  tMinV = min(t0, t1);
-    vec3  tMaxV2 = max(t0, t1);
-    float tEnter = max(max(tMinV.x, tMinV.y), tMinV.z);
-    float tExit = min(min(tMaxV2.x, tMaxV2.y), tMaxV2.z);
-    if (tEnter > tExit || tExit < 0.0) return false;
-    float t        = max(tEnter, 0.0);
-    vec3  localPos = (rayOrigin + rayDir * (t + 1e-4) - gridMin) / voxelSize;
-    ivec3 voxel = clamp(ivec3(floor(localPos)), ivec3(0), ivec3(gridSize) - 1);
-    ivec3 vstep = ivec3(sign(rayDir));
-    vec3  tDelta = abs(voxelSize / rayDir);
-    vec3  frac = localPos - floor(localPos);
-    vec3 tMaxV;
-    tMaxV.x = (rayDir.x > 0.0 ? 1.0 - frac.x : frac.x) * tDelta.x;
-    tMaxV.y = (rayDir.y > 0.0 ? 1.0 - frac.y : frac.y) * tDelta.y;
-    tMaxV.z = (rayDir.z > 0.0 ? 1.0 - frac.z : frac.z) * tDelta.z;
-    int maxSteps = min(int(lightDist / voxelSize) + 2, MAX_STEPS);
-
-    for (int i = 0; i < maxSteps; i++) {
-        if (any(lessThan(voxel, ivec3(0))) || any(greaterThanEqual(voxel, ivec3(gridSize)))) return false;
-
-        float currentT = min(tMaxV.x, min(tMaxV.y, tMaxV.z));
-        if (currentT * voxelSize >= lightDist) return false;
-        vec3  uvw = (vec3(voxel) + 0.5) / gridSize;
-        float occ = texture(sampler3D(texTexture, attachmentSampler), uvw).a;
-        if (occ > 0.5) return true;
-
-        if (tMaxV.x < tMaxV.y && tMaxV.x < tMaxV.z) {
-            tMaxV.x += tDelta.x; voxel.x += vstep.x;
-        } else if (tMaxV.y < tMaxV.z) {
-            tMaxV.y += tDelta.y; voxel.y += vstep.y;
-        } else {
-            tMaxV.z += tDelta.z; voxel.z += vstep.z;
-        }
-    }
-    return false;
-}
-
-vec3 EvaluateDirectLighting(vec3 pos, vec3 N, vec3 V, vec3 albedo, float roughness, float metallic) {
+// shadowOffset: extra world-space normal offset for the shadowmap lookup
+//               (0 for G-buffer surfaces, ~voxelSize for voxel raycast hits)
+vec3 EvaluateDirectLighting(vec3 pos, vec3 N, vec3 V, vec3 albedo, float roughness, float metallic,
+                            float shadowOffset) {
     int   lightCount = clamp(int(mi.lightinfo.w), 0, 100);
     vec3  F0         = mix(vec3(0.04), albedo, metallic);
     vec3  total      = vec3(0.0);
+    int   shadowIdx  = 0;   // next free shadowmap layer
 
     for (int li = 0; li < lightCount; li++) {
+        // Claim the shadowmap layer BEFORE any early-out, otherwise skipped
+        // lights would shift the layer index of every later shadowed light.
+        int si = -1;
+        if (smi.lightcol[li].w > 0.5) {
+            si = shadowIdx;
+            shadowIdx++;
+        }
+
         vec3  lpos    = smi.lightpos[li].xyz;
         vec3  lcol    = smi.lightcol[li].xyz;
         float lintens = 2.0;
@@ -351,8 +361,13 @@ vec3 EvaluateDirectLighting(vec3 pos, vec3 N, vec3 V, vec3 albedo, float roughne
         vec3  L         = toLight / lightDist;
         float NdotL     = max(dot(N, L), 0.0);
         if (NdotL <= 0.0) continue;
-        bool occluded = VoxelShadowRay(pos + N * mi.rtinfo.w, lpos);
-        if (occluded) continue;
+
+        float visibility = 1.0;
+        if (si >= 0) {
+            visibility = ShadowVisibility(pos, N, NdotL, si, shadowOffset);
+            if (visibility <= 0.0) continue;
+        }
+
         vec3  H     = normalize(V + L);
         float NdotV = max(dot(N, V),    0.0001);
         float NdotH = max(dot(N, H),    0.0001);
@@ -364,7 +379,7 @@ vec3 EvaluateDirectLighting(vec3 pos, vec3 N, vec3 V, vec3 albedo, float roughne
         vec3  kD = (1.0 - F) * (1.0 - metallic);
         vec3  diffuse = kD * albedo / PI;
         float atten = lintens / (1.0 + lightDist * lightDist * 0.05);
-        total += (diffuse + specular) * lcol * atten * NdotL;
+        total += (diffuse + specular) * lcol * atten * NdotL * visibility;
     }
 
     return total;
@@ -400,7 +415,7 @@ vec3 voxelplusssrt() {
         throughput     *= brdf.weight;
         vec3 direct = EvaluateDirectLighting(
             wrldpos + normal * 0.05, normal, V,
-            albedo, roughness, metallic
+            albedo, roughness, metallic, 0.0
         );
         result += direct;
         vec3  bouncePos    = wrldpos;
@@ -409,6 +424,7 @@ vec3 voxelplusssrt() {
         float bounceRough  = 0.85;
         float bounceMetal  = 0.0;
         bool  bounceHit    = false;
+        float bounceShadowOff = 0.0;   // >0 only for voxel hits (blocky surface)
         vec2 nextUV = RayDirToUV(rayDir, camForward, camRight, camUp, aspect, fovDeg);
         bool onScreen = nextUV.x >= 0.0 && nextUV.x <= 1.0 && nextUV.y >= 0.0 && nextUV.y <= 1.0;
         bool awayFromCam = dot(rayDir, normal) > 0.0;
@@ -441,6 +457,7 @@ vec3 voxelplusssrt() {
                     bouncePos    = voxOrigin;
                     bounceNormal = voxNormal;
                     bounceAlbedo = voxHit.rgb;
+                    bounceShadowOff = mi.rtinfo.w;
                     bounceHit    = true;
                 }
             }
@@ -452,6 +469,7 @@ vec3 voxelplusssrt() {
                 bouncePos    = voxOrigin;
                 bounceNormal = voxNormal;
                 bounceAlbedo = voxHit.rgb;
+                bounceShadowOff = mi.rtinfo.w;
                 bounceHit    = true;
             }
         }
@@ -462,7 +480,7 @@ vec3 voxelplusssrt() {
         vec3 bounceV      = -rayDir;
         vec3 bounceDirect = EvaluateDirectLighting(
             bouncePos + bounceNormal * 0.05, bounceNormal, bounceV,
-            bounceAlbedo, bounceRough, bounceMetal
+            bounceAlbedo, bounceRough, bounceMetal, bounceShadowOff
         );
         result += throughput * bounceDirect;
     }

@@ -163,7 +163,7 @@ pub fn initialize() -> GameSession {
                 y: 0.56,
                 z: 0.33,
             };
-            lastltmt.shadow = false;
+            lastltmt.shadow = true;
             eng.used_light_count += 1;
         }
     }
@@ -172,7 +172,7 @@ pub fn initialize() -> GameSession {
     eng.cameras[0].physic_object.gravity = false;
     println!("shadowmapresolution(ignore if shadowmaps are off): {}", eng.render.shadow_map_resolution);
 
-    eng.render.resolution_scale = 0.5;
+    //eng.render.resolution_scale = 0.5;
 
     GameSession {
         eng,
