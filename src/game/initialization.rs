@@ -62,8 +62,8 @@ pub fn initialize() -> GameSession {
 
     let mut scn = Scene::load_from_gltf_with_voxelizer_settings(&mut eng, "assets/cpc.glb", matgeneral, true, 
         VoxelizerSettings{ 
-            size: Some(Ivec3{ x: 800, y: 420, z: 280}), 
-            origin: Some(Vec3 { x: -21.5, y: -0.2, z: -7.8 }),
+            size: Some(Ivec3{ x: 800, y: 450, z: 280}), 
+            origin: Some(Vec3 { x: -21.5, y: -1.0, z: -7.8 }),
             //size: None, 
             //origin: None,
             voxel_size: 0.05,
@@ -168,6 +168,7 @@ pub fn initialize() -> GameSession {
         }
     }
 
+    eng.render.resolution_scale = 0.75;
     eng.cameras[0].physic_object.solid = false;
     eng.cameras[0].physic_object.gravity = false;
     println!("shadowmapresolution(ignore if shadowmaps are off): {}", eng.render.shadow_map_resolution);

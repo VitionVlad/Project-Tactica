@@ -104,6 +104,7 @@ const float SHADOW_DEPTH_BIAS    = 0.0005; // constant bias in shadowmap depth s
 const float SHADOW_NORMAL_TEXELS = 1.5;    // normal offset, in shadowmap texels at the receiver's depth
 const float SHADOW_EDGE_FADE     = 0.04;   // spot "cone" softness: fade over this fraction of shadowmap UV
 const int   SHADOW_PCF_RADIUS    = 1;      // 1 = 3x3 (9 taps), 0 = single tap
+const float LIGHT_CONTRIB_EPS    = 0.01;   // skip a light's shadow lookup + BRDF below this max contribution
 
 // World-space size of one shadowmap texel at clip-space depth clipW.
 // For M = P * V (V a pure rotation+translation), |row0(M).xyz| == P[0][0].
@@ -112,11 +113,41 @@ float ShadowTexelWorldSize(mat4 M, float clipW) {
     return (2.0 / mi.resolutions.z) * clipW / max(xScale, 1e-6);
 }
 
-// Returns light visibility in [0,1] for shadowmap layer `si`.
-// Includes the spot frustum edge fade, so the shadow frustum acts as the light cone.
+// Shared projection + PCF core, reused by the surface path (with normal-offset
+// bias) and the volumetric march (raw position, no surface to offset along).
+// pcfRadius is dynamic (not SHADOW_PCF_RADIUS) so callers can trade quality for
+// bandwidth: 1 (3x3) for primary hits, 0 (single tap) for bounce and volumetrics.
+float ShadowProject(vec3 worldPos, int si, float depthBias, int pcfRadius) {
+    mat4 M   = smi.shadowViews[si];
+    vec4 smv = M * vec4(worldPos, 1.0);
+    if (smv.w <= 0.0) return 0.0;                    // behind the light
+    vec3 ndc = smv.xyz / smv.w;
+    if (ndc.z < 0.0 || ndc.z > 1.0) return 0.0;      // outside light depth range
+
+    // same sampling coordinates as the old shcalcpl (u = x*0.5+0.5, v = y*0.5+0.5)
+    vec2 uv = ndc.xy * 0.5 + 0.5;
+    vec2 edgeDist = min(uv, 1.0 - uv);
+    float fade = smoothstep(0.0, SHADOW_EDGE_FADE, min(edgeDist.x, edgeDist.y));
+    if (fade <= 0.0) return 0.0;                     // outside the spot frustum
+
+    float texel = 1.0 / mi.resolutions.z;
+    float lit   = 0.0;
+    int   taps  = 0;
+    for (int y = -pcfRadius; y <= pcfRadius; y++) {
+        for (int x = -pcfRadius; x <= pcfRadius; x++) {
+            vec2  tap = uv + vec2(float(x), float(y)) * texel;
+            float sd  = texture(sampler2DArray(shadowTexture, attachmentSampler), vec3(tap, float(si))).r;
+            lit  += (ndc.z - depthBias < sd) ? 1.0 : 0.0;
+            taps += 1;
+        }
+    }
+    return (lit / float(taps)) * fade;
+}
+
+// Returns light visibility in [0,1] for shadowmap layer `si`, for a shaded surface point.
 //   NdotL       - dot(N, L) of the receiver, used to scale the normal offset
 //   extraOffset - additional world-space offset along N (e.g. voxelSize for voxel bounce hits)
-float ShadowVisibility(vec3 worldPos, vec3 N, float NdotL, int si, float extraOffset) {
+float ShadowVisibility(vec3 worldPos, vec3 N, float NdotL, int si, float extraOffset, int pcfRadius) {
     mat4 M = smi.shadowViews[si];
 
     // clip.w at the un-offset position gives the texel size in world units
@@ -129,28 +160,7 @@ float ShadowVisibility(vec3 worldPos, vec3 N, float NdotL, int si, float extraOf
                    + extraOffset;
     vec3  p        = worldPos + N * offset;
 
-    vec4 smv = M * vec4(p, 1.0);
-    if (smv.w <= 0.0) return 0.0;
-    vec3 ndc = smv.xyz / smv.w;
-    if (ndc.z < 0.0 || ndc.z > 1.0) return 0.0;      // outside light depth range
-
-    // same sampling coordinates as the old shcalcpl (u = x*0.5+0.5, v = y*0.5+0.5)
-    vec2 uv = ndc.xy * 0.5 + 0.5;
-    vec2 edgeDist = min(uv, 1.0 - uv);
-    float fade = smoothstep(0.0, SHADOW_EDGE_FADE, min(edgeDist.x, edgeDist.y));
-    if (fade <= 0.0) return 0.0;                     // outside the spot frustum
-
-    float texel = 1.0 / mi.resolutions.z;
-    float lit   = 0.0;
-    for (int y = -SHADOW_PCF_RADIUS; y <= SHADOW_PCF_RADIUS; y++) {
-        for (int x = -SHADOW_PCF_RADIUS; x <= SHADOW_PCF_RADIUS; x++) {
-            vec2  tap = uv + vec2(float(x), float(y)) * texel;
-            float sd  = texture(sampler2DArray(shadowTexture, attachmentSampler), vec3(tap, float(si))).r;
-            lit += (ndc.z - SHADOW_DEPTH_BIAS < sd) ? 1.0 : 0.0;
-        }
-    }
-    lit /= float((2 * SHADOW_PCF_RADIUS + 1) * (2 * SHADOW_PCF_RADIUS + 1));
-    return lit * fade;
+    return ShadowProject(p, si, SHADOW_DEPTH_BIAS, pcfRadius);
 }
 
 // ── PBR ───────────────────────────────────────────────────────────────────────
@@ -337,8 +347,11 @@ vec4 voxelRaycast(inout vec3 rayOrigin, vec3 rayDir, out vec3 outn) {
 
 // shadowOffset: extra world-space normal offset for the shadowmap lookup
 //               (0 for G-buffer surfaces, ~voxelSize for voxel raycast hits)
+// pcfRadius:    shadow filter radius (1 = 3x3, 0 = single tap). Use 0 for the
+//               low-frequency bounce term; the denoiser hides the extra noise
+//               there for a fraction of the shadow-fetch cost.
 vec3 EvaluateDirectLighting(vec3 pos, vec3 N, vec3 V, vec3 albedo, float roughness, float metallic,
-                            float shadowOffset) {
+                            float shadowOffset, int pcfRadius) {
     int   lightCount = clamp(int(mi.lightinfo.w), 0, 100);
     vec3  F0         = mix(vec3(0.04), albedo, metallic);
     vec3  total      = vec3(0.0);
@@ -353,18 +366,28 @@ vec3 EvaluateDirectLighting(vec3 pos, vec3 N, vec3 V, vec3 albedo, float roughne
             shadowIdx++;
         }
 
-        vec3  lpos    = smi.lightpos[li].xyz;
-        vec3  lcol    = smi.lightcol[li].xyz;
-        float lintens = 2.0;
+        vec3  lpos      = smi.lightpos[li].xyz;
+        vec3  lcol      = smi.lightcol[li].xyz;
+        float lintens   = 2.0;
         vec3  toLight   = lpos - pos;
-        float lightDist = length(toLight);
+        float lightDist2 = dot(toLight, toLight);
+        float atten      = lintens / (1.0 + lightDist2 * 0.05);
+
+        // Cheap reject BEFORE the shadow lookup: a light whose maximum possible
+        // contribution (ignoring NdotL/visibility) is negligible isn't worth a
+        // texture-array fetch. This is the single most common skip for lights
+        // far from `pos`.
+        float maxContrib = atten * max(lcol.r, max(lcol.g, lcol.b));
+        if (maxContrib < LIGHT_CONTRIB_EPS) continue;
+
+        float lightDist = sqrt(lightDist2);
         vec3  L         = toLight / lightDist;
         float NdotL     = max(dot(N, L), 0.0);
         if (NdotL <= 0.0) continue;
 
         float visibility = 1.0;
         if (si >= 0) {
-            visibility = ShadowVisibility(pos, N, NdotL, si, shadowOffset);
+            visibility = ShadowVisibility(pos, N, NdotL, si, shadowOffset, pcfRadius);
             if (visibility <= 0.0) continue;
         }
 
@@ -378,29 +401,99 @@ vec3 EvaluateDirectLighting(vec3 pos, vec3 N, vec3 V, vec3 albedo, float roughne
         vec3  specular = (D * G * F) / max(4.0 * NdotV * NdotL, 1e-5);
         vec3  kD = (1.0 - F) * (1.0 - metallic);
         vec3  diffuse = kD * albedo / PI;
-        float atten = lintens / (1.0 + lightDist * lightDist * 0.05);
         total += (diffuse + specular) * lcol * atten * NdotL * visibility;
     }
 
     return total;
 }
 
+// ── Volumetric light scatter ────────────────────────────────────────────────
+// In-scattered light along the view ray, shaped by each light's shadowmap.
+// Only shadowed lights (lightcol.w > 0.5) participate — occlusion is what
+// turns this into beams (window slits, doorways) rather than a uniform haze.
+// All constants are scene-scale dependent; tune against your world units.
+const int   VOL_STEPS      = 12;     // view-ray march steps
+const float VOL_DENSITY    = 0.05;   // extinction coefficient (higher = hazier, shorter throw)
+const float VOL_ANISOTROPY = 0.6;    // Henyey-Greenstein g; >0 favors forward scattering toward the eye
+const float VOL_INTENSITY  = 0.5;    // overall strength multiplier on the accumulated scatter
+const float VOL_SHADOW_BIAS = 0.0015;// depth bias for unoffset march samples (not a surface, so small is fine)
+const float VOL_SKY_DIST   = 40.0;   // march distance used when the primary ray hits no surface
+
+float HGPhase(float cosTheta, float g) {
+    float g2    = g * g;
+    float denom = max(1.0 + g2 + 2.0 * g * cosTheta, 1e-4);
+    return (1.0 - g2) / (4.0 * PI * denom * sqrt(denom));
+}
+
+// origin/rayDir - camera position and primary ray direction (world space)
+// maxDist       - distance to march: to the surface hit, or VOL_SKY_DIST for sky
+// dither        - jitter in 0..1 for the first sample, hides step banding
+vec3 VolumetricLightScatter(vec3 origin, vec3 rayDir, float maxDist, float dither) {
+    int   lightCount     = clamp(int(mi.lightinfo.w), 0, 100);
+    float stepSize       = maxDist / float(VOL_STEPS);
+    float t              = stepSize * dither;
+    float transmittance  = 1.0;
+    vec3  scatter        = vec3(0.0);
+
+    for (int s = 0; s < VOL_STEPS; s++) {
+        vec3 p = origin + rayDir * t;
+        int  shadowIdx = 0;
+
+        for (int li = 0; li < lightCount; li++) {
+            int si = -1;
+            if (smi.lightcol[li].w > 0.5) {
+                si = shadowIdx;
+                shadowIdx++;
+            }
+            if (si < 0) continue;   // unshadowed lights can't be occluded into a beam shape
+
+            vec3  toLight = smi.lightpos[li].xyz - p;
+            float dist2   = dot(toLight, toLight);
+            vec3  L       = toLight * inversesqrt(max(dist2, 1e-6));
+
+            float vis = ShadowProject(p, si, VOL_SHADOW_BIAS, 0);
+            if (vis <= 0.0) continue;
+
+            float atten = 2.0 / (1.0 + dist2 * 0.05);   // same falloff as EvaluateDirectLighting
+            float phase = HGPhase(dot(L, -rayDir), VOL_ANISOTROPY);
+            scatter += smi.lightcol[li].xyz * atten * vis * phase * transmittance;
+        }
+
+        transmittance *= exp(-VOL_DENSITY * stepSize);
+        t += stepSize;
+    }
+
+    return scatter * VOL_INTENSITY * stepSize;
+}
+
 vec3 voxelplusssrt() {
     vec2 uv = vec2(fuv.x, 1.0 - fuv.y);
 
+    vec3  camForward, camRight, camUp;
+    float fovDeg = dmi.deffrot[0].w;
+    float aspect = mi.resolutions.x / mi.resolutions.y;
+    vec3  primaryRay = get_raydir(uv, fovDeg, camForward, camRight, camUp);
+    vec3  camOrigin  = dmi.deffpos[0].xyz;   // ASSUMPTION: deffpos[0].xyz is the camera's world position
+    vec3  V = -primaryRay;
+
+    // Dedicated dither sample for the volumetric march, decorrelated from the
+    // BRDF's blue-noise sample below so their noise patterns don't stack.
+    vec2 volBnUV = mod(uv * 2.0 + (mi.addinfo.x * GOLDEN_RATIO + 0.37), 1.0);
+    float volDither = texture(sampler2D(noiseTexture, attachmentSampler), volBnUV).w;
+
     float d = SampleDepth(uv);
-    if (d >= 0.9999) return SKY_COLOR;
+    bool  hitSurface = d < 0.9999;
+    vec3  wrldpos = hitSurface ? WorldPosFromDepth(d, uv, dmi.defferedMVPInverse[0]) : vec3(0.0);
+    float volDist = hitSurface ? distance(camOrigin, wrldpos) : VOL_SKY_DIST;
+    vec3  volume  = VolumetricLightScatter(camOrigin, primaryRay, volDist, volDither);
+
+    if (!hitSurface) return SKY_COLOR + volume;
+
     vec3 albedo = SampleAlbedo(uv);
     vec3 rma    = SampleRMA(uv);
     vec3 normal = SampleNormal(uv);
-    vec3 wrldpos = WorldPosFromDepth(d, uv, dmi.defferedMVPInverse[0]);
     float roughness = rma.r;
     float metallic  = rma.g;
-    vec3 camForward, camRight, camUp;
-    float fovDeg = dmi.deffrot[0].w;
-    float aspect = mi.resolutions.x / mi.resolutions.y;
-    vec3 primaryRay = get_raydir(uv, fovDeg, camForward, camRight, camUp);
-    vec3 V = -primaryRay;
 
     int spp = 1;
 
@@ -415,7 +508,7 @@ vec3 voxelplusssrt() {
         throughput     *= brdf.weight;
         vec3 direct = EvaluateDirectLighting(
             wrldpos + normal * 0.05, normal, V,
-            albedo, roughness, metallic, 0.0
+            albedo, roughness, metallic, 0.0, SHADOW_PCF_RADIUS
         );
         result += direct;
         vec3  bouncePos    = wrldpos;
@@ -480,11 +573,12 @@ vec3 voxelplusssrt() {
         vec3 bounceV      = -rayDir;
         vec3 bounceDirect = EvaluateDirectLighting(
             bouncePos + bounceNormal * 0.05, bounceNormal, bounceV,
-            bounceAlbedo, bounceRough, bounceMetal, bounceShadowOff
+            bounceAlbedo, bounceRough, bounceMetal, bounceShadowOff, 0
         );
         result += throughput * bounceDirect;
     }
     result /= float(spp);
+    result += volume;
     result = min(result, vec3(FIREFLY_CAP));
     return result;
 }
