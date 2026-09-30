@@ -7,5 +7,5 @@ sh:
 	glslc shaders/text.frag -o shaders/ftext
 	glslc shaders/image.frag -o shaders/fimg
 	glslc shaders/light.frag -o shaders/flight
-	glslc shaders/simplelight.frag -o shaders/fslight
-	glslc shaders/keinlight.frag -o shaders/klight
+	glslc shaders/simplelight_shadowmaps.frag -o shaders/fslight
+	glslc shaders/keinlight_3d.frag -o shaders/klight

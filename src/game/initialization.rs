@@ -62,8 +62,8 @@ pub fn initialize() -> GameSession {
 
     let mut scn = Scene::load_from_gltf_with_voxelizer_settings(&mut eng, "assets/cpc.glb", matgeneral, true, 
         VoxelizerSettings{ 
-            size: Some(Ivec3{ x: 800, y: 450, z: 280}), 
-            origin: Some(Vec3 { x: -21.5, y: -1.0, z: -7.8 }),
+            size: Some(Ivec3{ x: 800, y: 450, z: 480}), 
+            origin: Some(Vec3 { x: -21.5, y: -1.0, z: -17.0 }),
             //size: None, 
             //origin: None,
             voxel_size: 0.05,
@@ -166,14 +166,19 @@ pub fn initialize() -> GameSession {
             lastltmt.shadow = true;
             eng.used_light_count += 1;
         }
+        if name.contains("ns_") {
+            scn.objects[i].physic_object.solid = false;
+        }
     }
 
-    eng.render.resolution_scale = 0.75;
+    eng.render.shadow_map_resolution = 512;
+
+    //eng.render.resolution_scale = 0.75;
     eng.cameras[0].physic_object.solid = false;
     eng.cameras[0].physic_object.gravity = false;
     println!("shadowmapresolution(ignore if shadowmaps are off): {}", eng.render.shadow_map_resolution);
 
-    //eng.render.resolution_scale = 0.5;
+    eng.render.resolution_scale = 0.5;
 
     GameSession {
         eng,
@@ -198,7 +203,8 @@ pub fn initialize() -> GameSession {
 
 fn configure_actor(object: &mut crate::engine::physics::physics::PhysicsObject) {
     object.compute_torque = false;
-    object.gravity = false;
+    //object.gravity = false;
+    object.step_height = 0.25;
     object.is_static = false;
     object.compute_force = false;
 }

@@ -40,7 +40,7 @@ const float GOLDEN_RATIO = 0.61803398875;
 const int   MAX_STEPS    = 128;
 const float EPS          = 1e-5;
 const float SS_THICKNESS = 0.3;
-const vec3  SKY_COLOR    = vec3(0.02, 0.02, 0.05);
+const vec3  SKY_COLOR    = vec3(0.005, 0.005, 0.0125);
 //const vec3  SKY_COLOR    = vec3(0.67, 0.84, 0.89);
 const float FIREFLY_CAP  = 10.0;                  
 
@@ -100,7 +100,7 @@ vec2 RayDirToUV(vec3 rayDir, vec3 camForward, vec3 camRight, vec3 camUp, float a
 
 // ── Shadowmaps ────────────────────────────────────────────────────────────────
 
-const float SHADOW_DEPTH_BIAS    = 0.0005; // constant bias in shadowmap depth space (tune)
+const float SHADOW_DEPTH_BIAS    = 0.0; // constant bias in shadowmap depth space (tune)
 const float SHADOW_NORMAL_TEXELS = 1.5;    // normal offset, in shadowmap texels at the receiver's depth
 const float SHADOW_EDGE_FADE     = 0.04;   // spot "cone" softness: fade over this fraction of shadowmap UV
 const int   SHADOW_PCF_RADIUS    = 1;      // 1 = 3x3 (9 taps), 0 = single tap
@@ -466,6 +466,35 @@ vec3 VolumetricLightScatter(vec3 origin, vec3 rayDir, float maxDist, float dithe
     return scatter * VOL_INTENSITY * stepSize;
 }
 
+// ── Boundary fog ────────────────────────────────────────────────────────────
+// Fades anything outside the voxel grid's X/Z footprint to sky color, so the
+// edge of the playable area dissolves into haze instead of showing whatever
+// geometry sits beyond it. Height (Y) is intentionally left alone -- looking
+// straight up or down never triggers this, only lateral distance past the box.
+const float FOG_EDGE_FADE_FRACTION = 0.06; // fade width, as a fraction of the grid's shorter horizontal extent
+
+// Signed distance from p to an axis-aligned box [bmin,bmax] in 2D (negative inside, 0 on the edge).
+float sdBoxXZ(vec2 p, vec2 bmin, vec2 bmax) {
+    vec2 center = (bmin + bmax) * 0.5;
+    vec2 halfSize = (bmax - bmin) * 0.5;
+    vec2 d = abs(p - center) - halfSize;
+    return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+}
+
+// 0 well inside the grid's X/Z footprint, ramping to 1 as worldXZ approaches
+// the edge, staying 1 anywhere past it (same gridMin/gridSize/voxelSize the
+// voxel raycast uses, so the fog boundary always matches the traced volume).
+float BoundaryFogFactor(vec2 worldXZ) {
+    vec3 gridMin  = mi.rtinfo.xyz;
+    vec3 gridSize = mi.addinfo.yzw;
+    vec2 bmin = gridMin.xz;
+    vec2 bmax = gridMin.xz + gridSize.xz * mi.rtinfo.w;
+
+    float fadeDist = FOG_EDGE_FADE_FRACTION * min(bmax.x - bmin.x, bmax.y - bmin.y);
+    float dist = sdBoxXZ(worldXZ, bmin, bmax);
+    return smoothstep(-fadeDist, 0.0, dist);
+}
+
 vec3 voxelplusssrt() {
     vec2 uv = vec2(fuv.x, 1.0 - fuv.y);
 
@@ -494,6 +523,9 @@ vec3 voxelplusssrt() {
     vec3 normal = SampleNormal(uv);
     float roughness = rma.r;
     float metallic  = rma.g;
+
+    float fog = BoundaryFogFactor(wrldpos.xz);
+    albedo = mix(albedo, SKY_COLOR, fog);
 
     int spp = 1;
 
@@ -580,6 +612,7 @@ vec3 voxelplusssrt() {
     result /= float(spp);
     result += volume;
     result = min(result, vec3(FIREFLY_CAP));
+
     return result;
 }
 
