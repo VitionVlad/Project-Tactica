@@ -1,5 +1,5 @@
 use crate::engine::{
-    engine::Engine, image::Image, light::{Light, LightType}, loader::rw::readfs, material::Material, math::{ivec3::Ivec3, vec3::Vec3}, render::render::{CullMode, MeshUsage, TextureFormat}, scene::Scene, ui::{UIplane, UItext}, voxel::VoxelizerSettings,
+    engine::Engine, image::Image, light::{Light, LightType}, loader::rw::readfs, material::Material, math::{ivec3::Ivec3, vec3::Vec3}, render::render::{CullMode, MeshUsage, TextureFormat}, scene::{Scene, SceneVoxelizer}, ui::{UIplane, UItext}, voxel::VoxelizerSettings,
 };
 
 use super::{Awarness, Enemy, GameSession, Pivot, TBTplate};
@@ -60,15 +60,24 @@ pub fn initialize() -> GameSession {
     );
     fpscnt.new_line_symbol = b'|';
 
-    let mut scn = Scene::load_from_gltf_with_voxelizer_settings(&mut eng, "assets/cpc.glb", matgeneral, true, 
-        VoxelizerSettings{ 
-            size: Some(Ivec3{ x: 800, y: 450, z: 480}), 
+    let mut scn = Scene::load_from_gltf(&mut eng, "assets/cpc.glb", matgeneral, Some(SceneVoxelizer {
+        settings: VoxelizerSettings{ 
+            size: Some(Ivec3{ x: 400, y: 225, z: 240}), 
             origin: Some(Vec3 { x: -21.5, y: -1.0, z: -17.0 }),
+            voxel_size: 0.1,
+            //size: Some(Ivec3{ x: 800, y: 450, z: 480}), 
+            //origin: Some(Vec3 { x: -21.5, y: -1.0, z: -17.0 }),
+            //voxel_size: 0.05,
             //size: None, 
             //origin: None,
-            voxel_size: 0.05,
-        }
-    );
+        },
+        object_filters: vec![
+            ("pivot".to_string(), false),
+            ("ph_".to_string(), false),
+            ("enemy1_".to_string(), false),
+            ("light1_".to_string(), false),
+        ],
+    }));
     let black3d = Image::new(&eng, scn.voxel_representation.size, scn.voxel_representation.data.clone(), true, TextureFormat::R8g8b8a8Unorm, false);
     println!("voxelized scene size: {}MB", scn.voxel_representation.data.len() as f32/1048576.0);
     //let black3d = Image::new(
@@ -139,7 +148,7 @@ pub fn initialize() -> GameSession {
             scn.objects[i].physic_object.is_static = false;
             scn.objects[i].physic_object.compute_torque = false;
             physics_objects.push((i, scn.objects[i].physic_object.pos));
-        }else if name.contains("enemy_") {
+        }else if name.contains("enemy1_") {
             enemies.push(Enemy {
                 id: i,
                 direction: Vec3 {

@@ -13,6 +13,27 @@ use super::{
     object::Object,
 };
 
+pub struct SceneVoxelizer {
+    pub settings: VoxelizerSettings,
+    pub object_filters: Vec<(String, bool)>,
+}
+
+impl SceneVoxelizer {
+    fn includes_object(&self, name: &str) -> bool {
+        let has_whitelist = self.object_filters.iter().any(|(_, is_whitelist)| *is_whitelist);
+        let matches_whitelist = self
+            .object_filters
+            .iter()
+            .any(|(filter, is_whitelist)| *is_whitelist && name.contains(filter));
+        let matches_blacklist = self
+            .object_filters
+            .iter()
+            .any(|(filter, is_whitelist)| !*is_whitelist && name.contains(filter));
+
+        !matches_blacklist && (!has_whitelist || matches_whitelist)
+    }
+}
+
 pub struct Scene {
     pub objects: Vec<Object>,
     pub images: Vec<Image>,
@@ -47,23 +68,7 @@ impl Scene {
         eng: &mut Engine,
         path: &str,
         material: Material,
-        voxelize: bool,
-        voxel_size: f32,
-    ) -> Scene {
-        Self::load_from_obj_with_voxelizer_settings(
-            eng,
-            path,
-            material,
-            voxelize,
-            VoxelizerSettings::new(voxel_size),
-        )
-    }
-    pub fn load_from_obj_with_voxelizer_settings(
-        eng: &mut Engine,
-        path: &str,
-        material: Material,
-        voxelize: bool,
-        voxelizer_settings: VoxelizerSettings,
+        voxelizer: Option<SceneVoxelizer>,
     ) -> Scene {
         let mut pakpath = path.to_string();
         let pke = pakpath.len();
@@ -83,7 +88,7 @@ impl Scene {
         for i in 0..obj.mtl.matinfo.len() {
             mdtx.push(Image::new_from_files(&eng, obj.mtl.matinfo[i].clone()));
         }
-        if voxelize && !pak3e {
+        if voxelizer.is_some() && !pak3e {
             let lastelem = obj.mtl.matinfo.len() - 1;
             for i in 0..obj.mtl.matinfo.len() {
                 //mdtx.push(Image::new_from_files(&eng, obj.mtl.matinfo[i].clone()));
@@ -100,7 +105,11 @@ impl Scene {
 
         for i in 0..obj.vertices.len() {
             mdst.push(Model::new(&eng, obj.vertices[i].clone()));
-            if !pak3e && voxelize {
+            if !pak3e
+                && voxelizer
+                    .as_ref()
+                    .map_or(false, |voxelizer| voxelizer.includes_object(&obj.obn[i]))
+            {
                 let mut mat = 0usize;
                 for j in 0..mdtx.len() {
                     if obj.mtl.matnam[j] == obj.matnam[i] {
@@ -164,11 +173,15 @@ impl Scene {
 
         let mut vrp = VoxelScene::new_blank();
 
-        if voxelize {
+        if let Some(voxelizer) = voxelizer {
             if pak3e {
                 vrp = VoxelScene::from_file(&pakpath);
             } else {
-                vrp = VoxelScene::from_vertices_with_settings(totvrt, voxelizer_settings, tricolor);
+                vrp = VoxelScene::from_vertices_with_settings(
+                    totvrt,
+                    voxelizer.settings,
+                    tricolor,
+                );
                 vrp.save_file(&pakpath);
             }
         }
@@ -213,23 +226,7 @@ impl Scene {
         eng: &mut Engine,
         path: &str,
         material: Material,
-        voxelize: bool,
-        voxel_size: f32,
-    ) -> Scene {
-        Self::load_from_gltf_with_voxelizer_settings(
-            eng,
-            path,
-            material,
-            voxelize,
-            VoxelizerSettings::new(voxel_size),
-        )
-    }
-    pub fn load_from_gltf_with_voxelizer_settings(
-        eng: &mut Engine,
-        path: &str,
-        material: Material,
-        voxelize: bool,
-        voxelizer_settings: VoxelizerSettings,
+        voxelizer: Option<SceneVoxelizer>,
     ) -> Scene {
         let mut scn = Scene::new_blank();
 
@@ -255,7 +252,7 @@ impl Scene {
                 for j in 0..gltfsc.material_data[i].len() {
                     totdata.extend_from_slice(&gltfsc.material_data[i][j].data);
                 }
-                if voxelize && !pak3e {
+                if voxelizer.is_some() && !pak3e {
                     texsv.push(gltfsc.material_data[i][0].clone());
                 }
                 ldmt.push(Image::new(
@@ -287,7 +284,7 @@ impl Scene {
                 for j in 0..gltfsc.material_uri[i].len() {
                     totdata.push(gltfsc.material_uri[i][j].clone());
                 }
-                if voxelize && !pak3e {
+                if voxelizer.is_some() && !pak3e {
                     let texdt = ImageAsset::other_load(&gltfsc.material_uri[i][0]);
                     texsv.push(texdt.clone());
                 }
@@ -319,7 +316,11 @@ impl Scene {
             scn.objects[lobj].physic_object.scale = gltfsc.objs[i].scale;
             scn.objects[lobj].physic_object.rot = gltfsc.objs[i].rot;
 
-            if !pak3e && voxelize {
+            if !pak3e
+                && voxelizer
+                    .as_ref()
+                    .map_or(false, |voxelizer| voxelizer.includes_object(&gltfsc.objs[i].name))
+            {
                 let reqlen = (gltfsc.objs[i].vertices.len() / 8) * 3;
                 for j in (0..reqlen).step_by(3) {
                     let v4 = Vec4 {
@@ -418,13 +419,13 @@ impl Scene {
         }
 
         //let bd = VoxelScene::get_boundaries(totvrt.clone());
-        if voxelize {
+        if let Some(voxelizer) = voxelizer {
             if pak3e {
                 scn.voxel_representation = VoxelScene::from_file(&pakpath);
             } else {
                 scn.voxel_representation = VoxelScene::from_vertices_with_settings(
                     totvrt.clone(),
-                    voxelizer_settings,
+                    voxelizer.settings,
                     tricolor,
                 );
                 scn.voxel_representation.save_file(&pakpath);
