@@ -55,7 +55,7 @@ pub struct GameSession {
     pub awareness: Awarness,
     pub max_awareness: i8,
     pub making_step: bool,
-    pub object_holding: Option<Vec3>,
+    pub object_holding: Option<(Option<usize>, Vec3)>,
     pub current_dir: Vec3,
     pub action_cooldown: f32,
     pub frame_count: u32,

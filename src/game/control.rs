@@ -139,13 +139,15 @@ fn update_adventure_controls(session: &mut GameSession) {
     }
     if session.eng.control.get_key_state(KEYS[4]) && session.action_cooldown <= 0.0 {
         if session.object_holding.is_none() {
-            session.object_holding = Some(session.current_dir);
+            session.object_holding = Some((None, session.current_dir));
             let point = session.scn.objects[pivot_id].physic_object.pos + session.current_dir;
             for object_id in &session.physics_objects {
                 let object = &mut session.scn.objects[object_id.0].physic_object;
                 if (object.pos - point).length_squared().sqrt() <= 1.8 {
                     object.pos.y += 0.1;
                     object.acceleration = (point - object.pos) * 100.0;
+                    session.object_holding = Some((Some(object_id.0), session.current_dir));
+                    break;
                 }
             }
         } else {

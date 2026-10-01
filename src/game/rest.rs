@@ -59,11 +59,18 @@ pub fn update(session: &mut GameSession) {
     }
 
     if let Some(direction) = session.object_holding {
-        let point = session.scn.objects[session.pivot.id].physic_object.pos + direction;
-        for object_id in &session.physics_objects {
-            let object = &mut session.scn.objects[object_id.0].physic_object;
-            if (object.pos - point).length_squared().sqrt() <= 1.8 {
-                object.acceleration = (point - object.pos) * 100.0;
+        let point = session.scn.objects[session.pivot.id].physic_object.pos + direction.1;
+        if direction.0.is_some() {
+            let object = &mut session.scn.objects[direction.0.unwrap()].physic_object;
+            object.acceleration = (point - object.pos) * 100.0;
+        }else{
+            for object_id in &session.physics_objects {
+                let object = &mut session.scn.objects[object_id.0].physic_object;
+                if (object.pos - point).length_squared().sqrt() <= 1.8 {
+                    object.acceleration = (point - object.pos) * 100.0;
+                }
+                session.object_holding = Some((Some(object_id.0), direction.1));
+                break;
             }
         }
     }
