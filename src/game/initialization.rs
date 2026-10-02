@@ -1,5 +1,5 @@
 use crate::engine::{
-    engine::Engine, image::Image, light::{Light, LightType}, loader::rw::readfs, material::Material, math::{ivec3::Ivec3, vec3::Vec3}, render::render::{CullMode, MeshUsage, TextureFormat}, scene::{Scene, SceneVoxelizer}, ui::{UIplane, UItext}, voxel::VoxelizerSettings,
+    engine::Engine, image::Image, light::{Light, LightType}, loader::rw::readfs, material::Material, math::{ivec3::Ivec3, vec3::Vec3}, render::render::{CullMode, MeshUsage, TextureFormat}, scene::{Scene, SceneVoxelizer}, speaker::Speaker, ui::{UIplane, UItext}, voxel::VoxelizerSettings,
 };
 
 use super::{Awarness, Enemy, GameSession, Pivot, TBTplate};
@@ -189,6 +189,30 @@ pub fn initialize() -> GameSession {
 
     eng.render.resolution_scale = 0.5;
 
+    let audiofl = [
+        "assets/audio/bell.mp3",
+        "assets/audio/paper.mp3",
+        "assets/audio/type.mp3",
+        "assets/audio/walking.mp3",
+        "assets/audio/knife.mp3",
+    ];
+
+    let mut speakers = Vec::new();
+
+    for fl in audiofl {
+        let mut sp = Speaker::new(&mut eng, fl);
+        sp.volume = 0.5;
+        sp.loopsound = false;
+        sp.play = false;
+        sp.use_pan = false;
+        sp.pos_dependency = false;
+        speakers.push(sp);
+    }
+
+    speakers[3].loopsound = true;
+    speakers[3].play = true;
+    speakers[3].volume = 0.0;
+
     GameSession {
         eng,
         scn,
@@ -207,6 +231,7 @@ pub fn initialize() -> GameSession {
         current_dir: Vec3::new(),
         action_cooldown: 0.0,
         frame_count: 0,
+        speakers: speakers,
     }
 }
 

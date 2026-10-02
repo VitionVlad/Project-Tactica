@@ -30,7 +30,7 @@ uint32_t newmozart(){
     ma_result result;
     result = ma_engine_init(NULL, &mz.mh[mhi].engine);
     if (result != MA_SUCCESS) {
-        printf("\e[1;36mMozart\e[0;37m: Miniaudio engine init failm result = %d \n", result);
+        printf("\e[1;36mMozart\e[0;37m: Miniaudio engine init fail result = %d \n", result);
     }
 
     return mhi;

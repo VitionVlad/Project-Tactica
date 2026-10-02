@@ -79,10 +79,14 @@ fn update_tbt_controls(session: &mut GameSession) {
                 if occupied {
                     let enemy_id = session.tbtplates[plate_id].enemy_id.unwrap();
                     session.enemies[enemy_id].alive = false;
-                    tbt::increase_awareness(&mut session.awareness, session.max_awareness);
+                    for _ in 0..(session.max_awareness+1){
+                        tbt::increase_awareness(&mut session.awareness, session.max_awareness);
+                    }
                     let object_id = session.enemies[enemy_id].id;
                     session.scn.objects[object_id].physic_object.pos.x = -1000.0;
                     session.scn.objects[object_id].draw = false;
+                    session.speakers[4].play = true;
+                    session.speakers[4].move_sound_cursor(0.0);
                 }
                 session.making_step = true;
                 break;
@@ -93,6 +97,8 @@ fn update_tbt_controls(session: &mut GameSession) {
             session.making_step = true;
             session.action_cooldown = 0.5;
         }
+    }else{
+        session.speakers[3].volume = 0.25;
     }
 
     let target = session.scn.objects[session.tbtplates[session.actual_plate_id].id]
@@ -112,6 +118,7 @@ fn update_adventure_controls(session: &mut GameSession) {
             y: 1.4,
             z: 1.0,
         };
+        session.speakers[3].volume = 0.25;
     }
     if session.eng.control.get_key_state(KEYS[1]) {
         session.scn.objects[pivot_id].physic_object.acceleration.z -= SPEED;
@@ -120,6 +127,7 @@ fn update_adventure_controls(session: &mut GameSession) {
             y: 1.4,
             z: -1.0,
         };
+        session.speakers[3].volume = 0.25;
     }
     if session.eng.control.get_key_state(KEYS[2]) {
         session.scn.objects[pivot_id].physic_object.acceleration.x += SPEED;
@@ -128,6 +136,7 @@ fn update_adventure_controls(session: &mut GameSession) {
             y: 1.4,
             z: 0.0,
         };
+        session.speakers[3].volume = 0.25;
     }
     if session.eng.control.get_key_state(KEYS[3]) {
         session.scn.objects[pivot_id].physic_object.acceleration.x -= SPEED;
@@ -136,6 +145,7 @@ fn update_adventure_controls(session: &mut GameSession) {
             y: 1.4,
             z: 0.0,
         };
+        session.speakers[3].volume = 0.25;
     }
     if session.eng.control.get_key_state(KEYS[4]) && session.action_cooldown <= 0.0 {
         if session.object_holding.is_none() {

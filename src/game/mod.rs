@@ -5,10 +5,7 @@ pub mod rest;
 pub mod tbt;
 
 use crate::engine::{
-    engine::Engine,
-    math::vec3::Vec3,
-    scene::Scene,
-    ui::{UIplane, UItext},
+    engine::Engine, math::vec3::Vec3, scene::Scene, speaker::Speaker, ui::{UIplane, UItext},
 };
 
 #[derive(Clone, Copy)]
@@ -59,6 +56,7 @@ pub struct GameSession {
     pub current_dir: Vec3,
     pub action_cooldown: f32,
     pub frame_count: u32,
+    pub speakers: Vec<Speaker>,
 }
 
 pub fn tile_test(

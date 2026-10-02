@@ -40,6 +40,7 @@ const float GOLDEN_RATIO = 0.61803398875;
 const int   MAX_STEPS    = 128;
 const float EPS          = 1e-5;
 const float SS_THICKNESS = 0.3;
+const float SS_STEP       = 0.1;   // screen-space march step size (world units)
 const vec3  SKY_COLOR    = vec3(0.005, 0.005, 0.0125);
 //const vec3  SKY_COLOR    = vec3(0.67, 0.84, 0.89);
 const float FIREFLY_CAP  = 10.0;                  
@@ -166,7 +167,10 @@ float ShadowVisibility(vec3 worldPos, vec3 N, float NdotL, int si, float extraOf
 // ── PBR ───────────────────────────────────────────────────────────────────────
 
 vec3 FresnelSchlick(float cosTheta, vec3 F0) {
-    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+    float m  = clamp(1.0 - cosTheta, 0.0, 1.0);
+    float m2 = m * m;
+    float m5 = m2 * m2 * m;   // m^5 without pow()
+    return F0 + (1.0 - F0) * m5;
 }
 
 float DistributionGGX(vec3 N, vec3 H, float roughness) {
@@ -418,6 +422,8 @@ const float VOL_ANISOTROPY = 0.6;    // Henyey-Greenstein g; >0 favors forward s
 const float VOL_INTENSITY  = 0.5;    // overall strength multiplier on the accumulated scatter
 const float VOL_SHADOW_BIAS = 0.0015;// depth bias for unoffset march samples (not a surface, so small is fine)
 const float VOL_SKY_DIST   = 40.0;   // march distance used when the primary ray hits no surface
+const int   VOL_MAX_SHADOWED_LIGHTS = 16; // raise if a scene ever has more simultaneous shadowed lights than this
+const float VOL_CONTRIB_EPS = 0.01;  // same cheap reject as EvaluateDirectLighting, applied per march sample
 
 float HGPhase(float cosTheta, float g) {
     float g2    = g * g;
@@ -429,32 +435,50 @@ float HGPhase(float cosTheta, float g) {
 // maxDist       - distance to march: to the surface hit, or VOL_SKY_DIST for sky
 // dither        - jitter in 0..1 for the first sample, hides step banding
 vec3 VolumetricLightScatter(vec3 origin, vec3 rayDir, float maxDist, float dither) {
-    int   lightCount     = clamp(int(mi.lightinfo.w), 0, 100);
+    // A march shorter than a few voxels contributes next to nothing (it's scaled
+    // by stepSize at the end too) but would still cost VOL_STEPS shadow fetches
+    // per shadowed light -- skip it outright. Scales with voxel size, not a
+    // guessed world-unit constant.
+    if (maxDist < mi.rtinfo.w * 4.0) return vec3(0.0);
+
+    // Which lights even have a shadowmap, and at what layer, is the same for
+    // every one of the VOL_STEPS samples below -- resolve it once here instead
+    // of re-scanning every light (shadowed or not) on every step.
+    int lightCount = clamp(int(mi.lightinfo.w), 0, 100);
+    int shadowedLights[VOL_MAX_SHADOWED_LIGHTS];
+    int shadowedCount = 0;
+    for (int li = 0; li < lightCount && shadowedCount < VOL_MAX_SHADOWED_LIGHTS; li++) {
+        if (smi.lightcol[li].w > 0.5) {
+            shadowedLights[shadowedCount] = li;
+            shadowedCount++;
+        }
+    }
+    if (shadowedCount == 0) return vec3(0.0);   // nothing can be occluded into a beam shape
+
     float stepSize       = maxDist / float(VOL_STEPS);
-    float t              = stepSize * dither;
-    float transmittance  = 1.0;
-    vec3  scatter        = vec3(0.0);
+    float t               = stepSize * dither;
+    float transmittance   = 1.0;
+    vec3  scatter         = vec3(0.0);
 
     for (int s = 0; s < VOL_STEPS; s++) {
         vec3 p = origin + rayDir * t;
-        int  shadowIdx = 0;
 
-        for (int li = 0; li < lightCount; li++) {
-            int si = -1;
-            if (smi.lightcol[li].w > 0.5) {
-                si = shadowIdx;
-                shadowIdx++;
-            }
-            if (si < 0) continue;   // unshadowed lights can't be occluded into a beam shape
-
+        for (int k = 0; k < shadowedCount; k++) {
+            int   li      = shadowedLights[k];
+            int   si      = k;   // position in the array == ascending shadow layer index
             vec3  toLight = smi.lightpos[li].xyz - p;
             float dist2   = dot(toLight, toLight);
-            vec3  L       = toLight * inversesqrt(max(dist2, 1e-6));
+            float atten   = 2.0 / (1.0 + dist2 * 0.05);   // same falloff as EvaluateDirectLighting
+
+            // Same cheap reject as EvaluateDirectLighting: skip the shadow fetch
+            // for a light whose maximum possible contribution here is negligible.
+            float maxContrib = atten * max(smi.lightcol[li].x, max(smi.lightcol[li].y, smi.lightcol[li].z));
+            if (maxContrib < VOL_CONTRIB_EPS) continue;
 
             float vis = ShadowProject(p, si, VOL_SHADOW_BIAS, 0);
             if (vis <= 0.0) continue;
 
-            float atten = 2.0 / (1.0 + dist2 * 0.05);   // same falloff as EvaluateDirectLighting
+            vec3  L     = toLight * inversesqrt(max(dist2, 1e-6));
             float phase = HGPhase(dot(L, -rayDir), VOL_ANISOTROPY);
             scatter += smi.lightcol[li].xyz * atten * vis * phase * transmittance;
         }
@@ -556,8 +580,22 @@ vec3 voxelplusssrt() {
         if (onScreen && awayFromCam) {
             vec3 marchPos = wrldpos + normal * 0.05;
             bool ssHit    = false;
-            for (int s = 0; s < 64; s++) {
-                marchPos    += rayDir * 0.1;
+
+            // Upper bound on how far the SS march is worth going: where this ray
+            // exits the voxel grid box (same slab test voxelRaycast uses). A ray
+            // headed into open sky/horizon leaves the grid almost immediately,
+            // so the loop bails out long before spending all 64 steps on nothing.
+            // A miss or exit-behind-origin falls back to the full step budget.
+            vec3  gMin      = mi.rtinfo.xyz;
+            vec3  gMax      = gMin + mi.addinfo.yzw * mi.rtinfo.w;
+            vec3  invRay    = 1.0 / (rayDir + vec3(EPS));
+            vec3  tb0       = (gMin - marchPos) * invRay;
+            vec3  tb1       = (gMax - marchPos) * invRay;
+            float ssMaxT    = min(min(max(tb0.x, tb1.x), max(tb0.y, tb1.y)), max(tb0.z, tb1.z));
+            int   ssMaxStep = ssMaxT > 0.0 ? min(64, int(ceil(ssMaxT / SS_STEP))) : 64;
+
+            for (int s = 0; s < ssMaxStep; s++) {
+                marchPos    += rayDir * SS_STEP;
                 vec3 uvd     = WorldPosToUVDepth(marchPos, dmi.defferedMVP[0]);
                 if (uvd.x < 0.0 || uvd.x > 1.0 || uvd.y < 0.0 || uvd.y > 1.0) break;
                 float sd    = SampleDepth(uvd.xy);

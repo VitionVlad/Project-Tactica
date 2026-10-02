@@ -3,6 +3,11 @@ use crate::engine::math::vec3::Vec3;
 use super::{GameSession, tile_test};
 
 pub fn update(session: &mut GameSession) {
+    for speaker in &mut session.speakers {
+        speaker.exec(&mut session.eng);
+    }
+    session.speakers[3].volume = 0.0;
+
     let pivot_position = session.scn.objects[session.pivot.id].physic_object.pos;
     session.eng.cameras[0].physic_object.pos.x = pivot_position.x - 5.0;
     session.eng.cameras[0].physic_object.pos.y = pivot_position.y + 7.5;
