@@ -21,12 +21,25 @@ pub fn update(session: &mut GameSession) {
             },
     );
 
+    let mut gamepadtxt = "".to_string();
+
+    if session.eng.control.gamepad_connected{
+        gamepadtxt += "Gamepad buttons: ";
+        for i in 0..session.eng.control.gamepad_button_count{
+            gamepadtxt += &format!("|{}: {}", i, session.eng.control.get_gamepad_button_state(i));
+        }
+        gamepadtxt += "|Gamepad axis: ";
+        for i in 0..session.eng.control.gamepad_axis_count{
+            gamepadtxt += &format!("|{}: {}", i, session.eng.control.get_gamepad_axis_state(i));
+        }
+    }
+
     let fps_text = format!(
-        "CPU_fps:{}|GPU_fps:{}|detection_level: {:?}",
-        session.eng.cpu_fps, session.eng.gpu_fps, session.awareness
+        "CPU_fps:{}|GPU_fps:{}|detection_level: {:?}|{}",
+        session.eng.cpu_fps, session.eng.gpu_fps, session.awareness, gamepadtxt
     );
-    session.fpscnt.size.x = 15.0;
-    session.fpscnt.size.y = 30.0;
+    session.fpscnt.size.x = 10.0;
+    session.fpscnt.size.y = 20.0;
     session.fpscnt.pos.x = 0.0;
     session.fpscnt.pos.y = 0.0;
     session.fpscnt.pos.z = 0.1;

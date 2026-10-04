@@ -97,6 +97,9 @@ fn update_tbt_controls(session: &mut GameSession) {
             session.making_step = true;
             session.action_cooldown = 0.5;
         }
+
+        if session.eng.control.gamepad_connected{
+        }
     }else{
         session.speakers[3].volume = 0.25;
     }
@@ -164,5 +167,10 @@ fn update_adventure_controls(session: &mut GameSession) {
             session.object_holding = None;
         }
         session.action_cooldown = 0.25;
+    }
+
+    if session.eng.control.gamepad_connected {
+        session.scn.objects[pivot_id].physic_object.acceleration.z += SPEED * session.eng.control.get_gamepad_axis_state(session.controller_mappings.axis[1] as u8);
+        session.scn.objects[pivot_id].physic_object.acceleration.x += SPEED * session.eng.control.get_gamepad_axis_state(session.controller_mappings.axis[0] as u8);
     }
 }

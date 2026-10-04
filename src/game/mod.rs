@@ -38,6 +38,15 @@ pub struct TBTplate {
     pub enemy_id: Option<usize>,
 }
 
+pub struct ControllerMappings{
+    pub arrows: [usize; 4],
+    pub abxy: [usize; 4],
+    pub axis: [usize; 4],
+    pub bumpers: [usize; 2],
+    pub start: usize,
+    pub select: usize,
+}
+
 pub struct GameSession {
     pub eng: Engine,
     pub scn: Scene,
@@ -57,6 +66,7 @@ pub struct GameSession {
     pub action_cooldown: f32,
     pub frame_count: u32,
     pub speakers: Vec<Speaker>,
+    pub controller_mappings: ControllerMappings,
 }
 
 pub fn tile_test(

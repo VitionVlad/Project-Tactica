@@ -1,6 +1,6 @@
-use crate::engine::{
+use crate::{engine::{
     engine::Engine, image::Image, light::{Light, LightType}, loader::rw::readfs, material::Material, math::{ivec3::Ivec3, vec3::Vec3}, render::render::{CullMode, MeshUsage, TextureFormat}, scene::{Scene, SceneVoxelizer}, speaker::Speaker, ui::{UIplane, UItext}, voxel::VoxelizerSettings,
-};
+}, game::ControllerMappings};
 
 use super::{Awarness, Enemy, GameSession, Pivot, TBTplate};
 
@@ -237,6 +237,14 @@ pub fn initialize() -> GameSession {
         action_cooldown: 0.0,
         frame_count: 0,
         speakers: speakers,
+        controller_mappings: ControllerMappings{
+            arrows: [10, 12, 11, 13],
+            abxy: [0, 1, 2, 3],
+            axis: [0, 1, 2, 3],
+            bumpers: [4, 5],
+            start: 7,
+            select: 6,
+        },
     }
 }
 

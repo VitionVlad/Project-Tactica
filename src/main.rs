@@ -17,7 +17,7 @@ fn main() {
         game_over::handle(&mut session);
 
         session.frame_count += 1;
-        if session.frame_count > 100_000 {
+        if session.frame_count > u32::MAX - 1000{
             session.frame_count = 0;
         }
     }
