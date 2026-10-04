@@ -1,14 +1,15 @@
 use super::{Awarness, GameSession, tile_test, tile_test_point};
 
 pub fn update(session: &mut GameSession) {
+    let enemy_on_player_plate = session
+        .enemies
+        .iter()
+        .any(|enemy| enemy.alive && enemy.plate_id == Some(session.actual_plate_id));
+    if enemy_on_player_plate {
+        session.awareness = Awarness::Compromised(session.max_awareness);
+    }
+
     if session.making_step {
-        let enemy_on_player_plate = session
-            .enemies
-            .iter()
-            .any(|enemy| enemy.alive && enemy.plate_id == Some(session.actual_plate_id));
-        if enemy_on_player_plate {
-            session.awareness = Awarness::Compromised(session.max_awareness);
-        }
         session.making_step = false;
         for plate in &mut session.tbtplates {
             plate.enemy_id = None;

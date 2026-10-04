@@ -62,7 +62,7 @@ pub fn initialize() -> GameSession {
 
     let mut scn = Scene::load_from_gltf(&mut eng, "assets/cpc.glb", matgeneral, Some(SceneVoxelizer {
         settings: VoxelizerSettings{ 
-            size: Some(Ivec3{ x: 400, y: 225, z: 240}), 
+            size: Some(Ivec3{ x: 400, y: 225, z: 204}), 
             origin: Some(Vec3 { x: -21.5, y: -1.0, z: -17.0 }),
             voxel_size: 0.1,
             //size: Some(Ivec3{ x: 800, y: 450, z: 480}), 
@@ -195,6 +195,7 @@ pub fn initialize() -> GameSession {
         "assets/audio/type.mp3",
         "assets/audio/walking.mp3",
         "assets/audio/knife.mp3",
+        "assets/audio/cityambient.mp3",
     ];
 
     let mut speakers = Vec::new();
@@ -212,6 +213,10 @@ pub fn initialize() -> GameSession {
     speakers[3].loopsound = true;
     speakers[3].play = true;
     speakers[3].volume = 0.0;
+
+    speakers[5].loopsound = true;
+    speakers[5].play = true;
+    speakers[5].volume = 0.1;
 
     GameSession {
         eng,

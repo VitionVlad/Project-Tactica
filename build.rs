@@ -44,8 +44,13 @@ fn main() {
     println!("cargo::rustc-link-search=native={}", out_dir);
     println!("cargo::rustc-link-lib=static=euclid");
     println!("cargo::rustc-link-lib=static=mozart");
-    println!("cargo::rustc-link-lib=vulkan-1");
-    println!("cargo::rustc-link-lib=glfw3");
+    if env::var_os("CARGO_CFG_WINDOWS").is_some() {
+        println!("cargo::rustc-link-lib=vulkan-1");
+        println!("cargo::rustc-link-lib=glfw3"); 
+    }else{
+        println!("cargo::rustc-link-lib=vulkan");
+        println!("cargo::rustc-link-lib=glfw");   
+    }
     println!("cargo::rustc-link-lib=pthread");
     println!("cargo::rerun-if-changed=src/engine/render/euclidc/euclid.c");
     println!("cargo::rerun-if-changed=src/engine/audio/mozartc/mozart.c");
