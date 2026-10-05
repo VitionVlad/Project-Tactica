@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
 pub mod control;
 pub mod game_over;
 pub mod initialization;

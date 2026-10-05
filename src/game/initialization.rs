@@ -238,7 +238,7 @@ pub fn initialize() -> GameSession {
         frame_count: 0,
         speakers: speakers,
         controller_mappings: ControllerMappings{
-            arrows: [10, 12, 11, 13],
+            arrows: [12, 10, 11, 13],
             abxy: [0, 1, 2, 3],
             axis: [0, 1, 2, 3],
             bumpers: [4, 5],

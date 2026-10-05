@@ -99,6 +99,31 @@ fn update_tbt_controls(session: &mut GameSession) {
         }
 
         if session.eng.control.gamepad_connected{
+            for (key_index, next_plate) in adjacent.iter().enumerate() {
+                if session.eng.control.get_gamepad_button_state(session.controller_mappings.arrows[key_index] as u8) && next_plate.is_some() {
+                    let (plate_id, occupied) = next_plate.unwrap();
+                    session.actual_plate_id = plate_id;
+                    if occupied {
+                        let enemy_id = session.tbtplates[plate_id].enemy_id.unwrap();
+                        session.enemies[enemy_id].alive = false;
+                        for _ in 0..(session.max_awareness+1){
+                            tbt::increase_awareness(&mut session.awareness, session.max_awareness);
+                        }
+                        let object_id = session.enemies[enemy_id].id;
+                        session.scn.objects[object_id].physic_object.pos.x = -1000.0;
+                        session.scn.objects[object_id].draw = false;
+                        session.speakers[4].play = true;
+                        session.speakers[4].move_sound_cursor(0.0);
+                    }
+                    session.making_step = true;
+                    break;
+                }
+            }
+
+            if session.eng.control.get_gamepad_button_state(session.controller_mappings.abxy[0] as u8) && session.action_cooldown <= 0.0 {
+                session.making_step = true;
+                session.action_cooldown = 0.5;
+            }
         }
     }else{
         session.speakers[3].volume = 0.25;
@@ -170,7 +195,11 @@ fn update_adventure_controls(session: &mut GameSession) {
     }
 
     if session.eng.control.gamepad_connected {
-        session.scn.objects[pivot_id].physic_object.acceleration.z += SPEED * session.eng.control.get_gamepad_axis_state(session.controller_mappings.axis[1] as u8);
-        session.scn.objects[pivot_id].physic_object.acceleration.x += SPEED * session.eng.control.get_gamepad_axis_state(session.controller_mappings.axis[0] as u8);
+        let gmv = (session.eng.control.get_gamepad_axis_state(session.controller_mappings.axis[1] as u8), session.eng.control.get_gamepad_axis_state(session.controller_mappings.axis[0] as u8));
+        session.scn.objects[pivot_id].physic_object.acceleration.z += SPEED * gmv.0;
+        session.scn.objects[pivot_id].physic_object.acceleration.x += SPEED * gmv.1;
+        if gmv.0.abs() > 0.1 || gmv.1.abs() > 0.1 {
+            session.speakers[3].volume = 0.25;
+        } 
     }
 }
