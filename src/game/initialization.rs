@@ -54,7 +54,7 @@ pub fn initialize() -> GameSession {
     let mut fpscnt = UItext::new_from_file(
         &mut eng,
         matt,
-        "assets/lat.png",
+        "assets/consolas.png",
         "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`~$% ",
         MeshUsage::PostPass,
     );
