@@ -1,4 +1,4 @@
-use crate::engine::math::vec3::Vec3;
+use crate::{engine::math::{vec3::Vec3, vec4::Vec4}, game::Action::{Step, StepWithElemination}};
 
 use super::{GameSession, tile_test};
 
@@ -21,30 +21,63 @@ pub fn update(session: &mut GameSession) {
             },
     );
 
-    let mut gamepadtxt = "".to_string();
-
-    if session.eng.control.gamepad_connected{
-        gamepadtxt += "Gamepad buttons: ";
-        for i in 0..session.eng.control.gamepad_button_count{
-            gamepadtxt += &format!("|{}: {}", i, session.eng.control.get_gamepad_button_state(i));
-        }
-        gamepadtxt += "|Gamepad axis: ";
-        for i in 0..session.eng.control.gamepad_axis_count{
-            gamepadtxt += &format!("|{}: {}", i, session.eng.control.get_gamepad_axis_state(i));
-        }
-    }
-
     let fps_text = format!(
-        "CPU_fps:{}|GPU_fps:{}|detection_level: {:?}|{}",
-        session.eng.cpu_fps, session.eng.gpu_fps, session.awareness, gamepadtxt
+        "CPU_dt:{}|GPU_fps:{}|detection_level: {:?}",
+        session.eng.cpu_fps, session.eng.gpu_fps, session.awareness
     );
-    session.fpscnt.size.x = 10.0;
-    session.fpscnt.size.y = 20.0;
+    session.fpscnt.size.x = 10.0 * session.ui_scale;
+    session.fpscnt.size.y = 20.0 * session.ui_scale;
     session.fpscnt.pos.x = 0.0;
     session.fpscnt.pos.y = 0.0;
     session.fpscnt.pos.z = 0.1;
     session.fpscnt.draw = true;
     session.fpscnt.exec(&mut session.eng, &fps_text);
+
+    for i in 0..4{
+        session.text[i].draw = false;
+        let mut drtxt = " ";
+        if session.action_list[i].is_some(){
+            let action = session.action_list[i].as_ref().unwrap();
+            match action {
+                Step(plate) => {
+                    let mut pos = session.scn.objects[plate.1].physic_object.pos;
+                    pos.y = session.scn.objects[plate.1].physic_object.collider.aabb_max.y;
+                    let mut cammat = session.eng.cameras[0].get_projection((session.eng.render.resolution_x as f32)/(session.eng.render.resolution_y as f32));
+                    cammat.transpose();
+                    let screenpos = cammat.vec4mul(Vec4{ x: pos.x, y: pos.y, z: pos.z, w: 1.0});
+                    let screenpos = Vec3{ x: ((screenpos.x/screenpos.w+1.0)/2.0)*(session.eng.render.resolution_x as f32), y: (session.eng.render.resolution_y as f32) - ((screenpos.y/screenpos.w+1.0)/2.0)*(session.eng.render.resolution_y as f32), z: 0.0};
+
+                    session.text[i].size.x = 10.0 * session.ui_scale;
+                    session.text[i].size.y = 20.0 * session.ui_scale;
+                    session.text[i].pos.x = screenpos.x;
+                    session.text[i].pos.y = screenpos.y - session.text[i].size.y/2.0;
+                    session.text[i].pos.z = 0.1;
+                    session.text[i].draw = true;
+                    drtxt = "Step";
+                },
+                StepWithElemination(plate) => {
+                    let mut pos = session.scn.objects[plate.1].physic_object.pos;
+                    pos.y = session.scn.objects[plate.1].physic_object.collider.aabb_max.y;
+                    let mut cammat = session.eng.cameras[0].get_projection((session.eng.render.resolution_x as f32)/(session.eng.render.resolution_y as f32));
+                    cammat.transpose();
+                    let screenpos = cammat.vec4mul(Vec4{ x: pos.x, y: pos.y, z: pos.z, w: 1.0});
+                    let screenpos = Vec3{ x: ((screenpos.x/screenpos.w+1.0)/2.0)*(session.eng.render.resolution_x as f32), y: (session.eng.render.resolution_y as f32) - ((screenpos.y/screenpos.w+1.0)/2.0)*(session.eng.render.resolution_y as f32), z: 0.0};
+
+                    session.text[i].size.x = 10.0 * session.ui_scale;
+                    session.text[i].size.y = 20.0 * session.ui_scale;
+                    session.text[i].pos.x = screenpos.x;
+                    session.text[i].pos.y = screenpos.y - session.text[i].size.y/2.0;
+                    session.text[i].pos.z = 0.1;
+                    session.text[i].draw = true;
+                    drtxt = "Elimination";
+                },
+                _ => {
+                    session.text[i].exec(&mut session.eng, " ");
+                },
+            }
+        }
+        session.text[i].exec(&mut session.eng, drtxt);
+    }
 
     session.scn.exec(&mut session.eng);
     session.ltviewport.object.physic_object.scale.x =
@@ -61,6 +94,8 @@ pub fn update(session: &mut GameSession) {
     session.ltviewport.object.mesh.ubo[54] = session.scn.voxel_representation.origin.z as f32;
     session.ltviewport.object.mesh.ubo[55] = session.scn.voxel_representation.voxel_size;
     session.ltviewport.exec(&mut session.eng);
+
+    session.scn.objects[session.pivot.id].mesh.ubo[48] = 1.0;
 
     if !session.pivot.tbtmode {
         for (index, plate) in session.tbtplates.iter().enumerate() {

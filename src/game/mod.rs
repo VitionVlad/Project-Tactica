@@ -18,12 +18,48 @@ pub struct Pivot {
     pub start_pos: Vec3,
 }
 
+const DIRECTIONS: [Vec3; 4] = [
+    Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    },
+    Vec3 {
+        x: 0.0,
+        y: 0.0,
+        z: -1.0,
+    },
+    Vec3 {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    },
+    Vec3 {
+        x: -1.0,
+        y: 0.0,
+        z: 0.0,
+    },
+];
+
 #[derive(PartialEq, Clone, Eq, Hash, Ord, PartialOrd, Debug)]
 pub enum Awarness {
     Unseen(u8),
     Suspected(i8),
     Detected(i8),
     Compromised(i8),
+}
+
+pub enum Direction {
+    Up = 0,
+    Down = 1,
+    Left = 2,
+    Right = 3,
+}
+
+pub enum Action{
+    Step((Direction, usize)),
+    StepWithElemination((Direction, usize)),
+    Skip,
 }
 
 pub struct Enemy {
@@ -56,6 +92,8 @@ pub struct GameSession {
     pub viewport: UIplane,
     pub ltviewport: UIplane,
     pub fpscnt: UItext,
+    pub text: Vec<UItext>,
+    pub ui_scale: f32,
     pub pivot: Pivot,
     pub tbtplates: Vec<TBTplate>,
     pub enemies: Vec<Enemy>,
@@ -70,6 +108,7 @@ pub struct GameSession {
     pub frame_count: u32,
     pub speakers: Vec<Speaker>,
     pub controller_mappings: ControllerMappings,
+    pub action_list: [Option<Action>; 5],
 }
 
 pub fn tile_test(

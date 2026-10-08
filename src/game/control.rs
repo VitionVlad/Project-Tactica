@@ -1,4 +1,4 @@
-use crate::{engine::math::vec3::Vec3, game::Awarness};
+use crate::{engine::math::vec3::Vec3, game::{Awarness, DIRECTIONS, Direction}};
 
 use super::{GameSession, tbt, tile_test_point};
 
@@ -14,6 +14,9 @@ pub fn update(session: &mut GameSession) {
 }
 
 fn update_tbt_controls(session: &mut GameSession) {
+    for i in 0..4 {
+        session.action_list[i] = None;
+    }
     session.object_holding = None;
     let pivot_position = session.scn.objects[session.pivot.id].physic_object.pos;
     let target_position = session.scn.objects[session.tbtplates[session.actual_plate_id].id]
@@ -29,37 +32,34 @@ fn update_tbt_controls(session: &mut GameSession) {
         if session.tbtplates[session.actual_plate_id].safe {
             session.pivot.tbtmode = false;
         }
-
-        let directions = [
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 1.0,
-            },
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: -1.0,
-            },
-            Vec3 {
-                x: 1.0,
-                y: 0.0,
-                z: 0.0,
-            },
-            Vec3 {
-                x: -1.0,
-                y: 0.0,
-                z: 0.0,
-            },
-        ];
         let mut adjacent = [None; 4];
         for (index, plate) in session.tbtplates.iter().enumerate() {
-            for (direction_index, direction) in directions.iter().enumerate() {
+            for (direction_index, direction) in DIRECTIONS.iter().enumerate() {
                 if tile_test_point(
                     &(pivot_position + *direction),
                     &session.scn.objects[plate.id].physic_object,
                 ) {
                     adjacent[direction_index] = Some((index, plate.enemy_id.is_some()));
+                    session.action_list[direction_index] = Some(match plate.enemy_id.is_some() {
+                        true => {
+                            super::Action::StepWithElemination(match direction_index {
+                                0 => (Direction::Up, plate.id),
+                                1 => (Direction::Down, plate.id),
+                                2 => (Direction::Left, plate.id),
+                                3 => (Direction::Right, plate.id),
+                                _ => (Direction::Up, plate.id),
+                            })
+                        },
+                        false => {
+                            super::Action::Step(match direction_index {
+                                0 => (Direction::Up, plate.id),
+                                1 => (Direction::Down, plate.id),
+                                2 => (Direction::Left, plate.id),
+                                3 => (Direction::Right, plate.id),
+                                _ => (Direction::Up, plate.id),
+                            })
+                        },
+                    });
                 }
             }
         }
@@ -96,6 +96,10 @@ fn update_tbt_controls(session: &mut GameSession) {
         if session.eng.control.get_key_state(KEYS[4]) && session.action_cooldown <= 0.0 {
             session.making_step = true;
             session.action_cooldown = 0.5;
+        }
+
+        if session.action_cooldown <= 0.0{
+            session.action_list[4] = Some(super::Action::Skip);
         }
 
         if session.eng.control.gamepad_connected{

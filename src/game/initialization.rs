@@ -58,6 +58,20 @@ pub fn initialize() -> GameSession {
         "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`~$% ",
         MeshUsage::PostPass,
     );
+
+    let mut text = Vec::new();
+    for i in 0..4 {
+        let mut t = UItext::new_from_file(
+            &mut eng,
+            matt,
+            "assets/comicmonoinv.png",
+            "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`~$% ",
+            MeshUsage::PostPass,
+        );
+        t.new_line_symbol = b'|';
+        text.push(t);
+    }
+
     fpscnt.new_line_symbol = b'|';
 
     let mut scn = Scene::load_from_gltf(&mut eng, "assets/cpc.glb", matgeneral, Some(SceneVoxelizer {
@@ -224,6 +238,8 @@ pub fn initialize() -> GameSession {
         viewport,
         ltviewport,
         fpscnt,
+        text,
+        ui_scale: 1.0,
         pivot,
         tbtplates,
         enemies,
@@ -245,6 +261,7 @@ pub fn initialize() -> GameSession {
             start: 7,
             select: 6,
         },
+        action_list: [None, None, None, None, None],
     }
 }
 
