@@ -45,15 +45,11 @@ vec3 SampleRT(vec2 uv) {
     return texture(sampler2DArray(lightingTexture, attachmentSampler), vec3(uv, mi.resolutions.a)).rgb;
 }
 
-vec3 SampleMaterial(vec2 uv) {
-    return texture(sampler2DArray(defferedTexture, attachmentSampler), vec3(uv, 1)).rgb;
+vec4 SampleMaterial(vec2 uv) {
+    return texture(sampler2DArray(defferedTexture, attachmentSampler), vec3(uv, 1));
 }
 
-
 void main() {
-    vec2 luv = vec2(uv.x, uv.y);
-    vec3 texel_color_behind = SampleRT(gl_FragCoord.xy / mi.resolutions.xy);
-    //bool covered =
     if(mi.addinfo.z > 0.0 && mi.addinfo.z < 10.0){
         outColor = vec4(pow(1.0 - texture(sampler2DArray(texTexture, imageSampler), vec3(uv.x/mi.addinfo.x + (1.0/mi.addinfo.x)*mi.addinfo.y, -uv.y, 0)).rgb, vec3(2.2)), 1.0);
     }else if(mi.addinfo.z > 10.0){

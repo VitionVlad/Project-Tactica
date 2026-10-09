@@ -38,9 +38,9 @@ void main() {
     vec2 luv = vec2(uv.x, uv.y);
     outColor = vec4(texture(sampler2DArray(tex, imageSampler), vec3(luv, 0)).rgb, 1.0);
     outMaterial.r = texture(sampler2DArray(tex, imageSampler), vec3(luv, 1)).r;
-    outMaterial.g = texture(sampler2DArray(tex, imageSampler), vec3(luv, 1)).b * 0.3;
-    outMaterial.b = texture(sampler2DArray(tex, imageSampler), vec3(luv, 1)).b;
-    outMaterial.a = mi.addinfo.x;
+    outMaterial.g = texture(sampler2DArray(tex, imageSampler), vec3(luv, 1)).b;
+    //outMaterial.b = texture(sampler2DArray(tex, imageSampler), vec3(luv, 1)).b;
+    outMaterial.b = mi.rtinfo.x;
     //outMaterial.r = 0.0;
     //outMaterial.g = 0.1;
     vec3 N = normalize(fnormal);

@@ -16,11 +16,19 @@ pub fn initialize() -> GameSession {
     let lfrag = readfs("shaders/fslight");
     let shadow = readfs("shaders/shadow");
     let textf = readfs("shaders/ftext");
+    let textf2 = readfs("shaders/ftext2");
 
     let matt = Material::new(
         &eng,
         vert.clone(),
         textf,
+        vec![],
+        [CullMode::CullModeNone, CullMode::CullModeNone],
+    );
+    let matt2 = Material::new(
+        &eng,
+        vert.clone(),
+        textf2,
         vec![],
         [CullMode::CullModeNone, CullMode::CullModeNone],
     );
@@ -63,7 +71,7 @@ pub fn initialize() -> GameSession {
     for i in 0..4 {
         let mut t = UItext::new_from_file(
             &mut eng,
-            matt,
+            matt2,
             "assets/comicmonoinv.png",
             "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`~$% ",
             MeshUsage::PostPass,

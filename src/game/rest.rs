@@ -69,7 +69,7 @@ pub fn update(session: &mut GameSession) {
                     session.text[i].pos.y = screenpos.y - session.text[i].size.y/2.0;
                     session.text[i].pos.z = 0.1;
                     session.text[i].draw = true;
-                    drtxt = "Elimination";
+                    drtxt = "Neutralize";
                 },
                 _ => {
                     session.text[i].exec(&mut session.eng, " ");
@@ -95,7 +95,7 @@ pub fn update(session: &mut GameSession) {
     session.ltviewport.object.mesh.ubo[55] = session.scn.voxel_representation.voxel_size;
     session.ltviewport.exec(&mut session.eng);
 
-    session.scn.objects[session.pivot.id].mesh.ubo[48] = 1.0;
+    session.scn.objects[session.pivot.id].mesh.ubo[52] = 1.0;
 
     if !session.pivot.tbtmode {
         for (index, plate) in session.tbtplates.iter().enumerate() {

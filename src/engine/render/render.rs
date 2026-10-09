@@ -557,7 +557,7 @@ impl Mesh {
                     usage as u32,
                 )
             },
-            ubo: [1.0; 56],
+            ubo: [0.0; 56],
             draw: true,
             draw_shadow: true,
             keep_shadow: true,
@@ -643,7 +643,7 @@ impl Mesh {
             unsafe {
                 destroy_mesh(ren.euclid, self.meshid);
             }
-            self.ubo = [1.0; 56];
+            self.ubo = [0.0; 56];
             self.draw = true;
             self.draw_shadow = true;
             self.keep_shadow = true;
