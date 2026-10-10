@@ -1,6 +1,6 @@
-use crate::{engine::math::vec3::Vec3, game::{Awarness, DIRECTIONS, Direction}};
+use crate::{engine::math::vec3::Vec3, game::{Awarness, Direction, DIRECTIONS}};
 
-use super::{GameSession, tbt, tile_test_point};
+use super::{GameSession, tile_test_point};
 
 const SPEED: f32 = 25.0;
 const KEYS: [u32; 5] = [40, 44, 25, 22, 48];
@@ -32,14 +32,14 @@ fn update_tbt_controls(session: &mut GameSession) {
         if session.tbtplates[session.actual_plate_id].safe {
             session.pivot.tbtmode = false;
         }
-        let mut adjacent = [None; 4];
-        for (index, plate) in session.tbtplates.iter().enumerate() {
+        let mut adjacent = [false; 4];
+        for plate in &session.tbtplates {
             for (direction_index, direction) in DIRECTIONS.iter().enumerate() {
                 if tile_test_point(
                     &(pivot_position + *direction),
                     &session.scn.objects[plate.id].physic_object,
                 ) {
-                    adjacent[direction_index] = Some((index, plate.enemy_id.is_some()));
+                    adjacent[direction_index] = true;
                     session.action_list[direction_index] = Some(match plate.enemy_id.is_some() {
                         true => {
                             super::Action::StepWithElemination(match direction_index {
@@ -72,61 +72,39 @@ fn update_tbt_controls(session: &mut GameSession) {
             session.awareness = Awarness::Compromised(session.max_awareness);
         }
 
+        if session.action_cooldown <= 0.0 {
+            session.action_list[4] = Some(super::Action::Skip);
+        } else {
+            session.action_list[4] = None;
+        }
+
         for (key_index, next_plate) in adjacent.iter().enumerate() {
-            if session.eng.control.get_key_state(KEYS[key_index]) && next_plate.is_some() {
-                let (plate_id, occupied) = next_plate.unwrap();
-                session.actual_plate_id = plate_id;
-                if occupied {
-                    let enemy_id = session.tbtplates[plate_id].enemy_id.unwrap();
-                    session.enemies[enemy_id].alive = false;
-                    for _ in 0..(session.max_awareness+1){
-                        tbt::increase_awareness(&mut session.awareness, session.max_awareness);
-                    }
-                    let object_id = session.enemies[enemy_id].id;
-                    session.scn.objects[object_id].physic_object.pos.x = -1000.0;
-                    session.scn.objects[object_id].draw = false;
-                    session.speakers[4].play = true;
-                    session.speakers[4].move_sound_cursor(0.0);
-                }
-                session.making_step = true;
+            if session.eng.control.get_key_state(KEYS[key_index]) && *next_plate {
+                session.active_action = session.action_list[key_index];
                 break;
             }
         }
 
         if session.eng.control.get_key_state(KEYS[4]) && session.action_cooldown <= 0.0 {
-            session.making_step = true;
-            session.action_cooldown = 0.5;
-        }
-
-        if session.action_cooldown <= 0.0{
-            session.action_list[4] = Some(super::Action::Skip);
+            if session.active_action.is_none() {
+                session.active_action = session.action_list[4];
+            }
         }
 
         if session.eng.control.gamepad_connected{
             for (key_index, next_plate) in adjacent.iter().enumerate() {
-                if session.eng.control.get_gamepad_button_state(session.controller_mappings.arrows[key_index] as u8) && next_plate.is_some() {
-                    let (plate_id, occupied) = next_plate.unwrap();
-                    session.actual_plate_id = plate_id;
-                    if occupied {
-                        let enemy_id = session.tbtplates[plate_id].enemy_id.unwrap();
-                        session.enemies[enemy_id].alive = false;
-                        for _ in 0..(session.max_awareness+1){
-                            tbt::increase_awareness(&mut session.awareness, session.max_awareness);
-                        }
-                        let object_id = session.enemies[enemy_id].id;
-                        session.scn.objects[object_id].physic_object.pos.x = -1000.0;
-                        session.scn.objects[object_id].draw = false;
-                        session.speakers[4].play = true;
-                        session.speakers[4].move_sound_cursor(0.0);
+                if session.eng.control.get_gamepad_button_state(session.controller_mappings.arrows[key_index] as u8) && *next_plate {
+                    if session.active_action.is_none() {
+                        session.active_action = session.action_list[key_index];
                     }
-                    session.making_step = true;
                     break;
                 }
             }
 
             if session.eng.control.get_gamepad_button_state(session.controller_mappings.abxy[0] as u8) && session.action_cooldown <= 0.0 {
-                session.making_step = true;
-                session.action_cooldown = 0.5;
+                if session.active_action.is_none() {
+                    session.active_action = session.action_list[4];
+                }
             }
         }
     }else{

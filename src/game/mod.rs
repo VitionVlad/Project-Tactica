@@ -8,7 +8,7 @@ pub mod rest;
 pub mod tbt;
 
 use crate::engine::{
-    engine::Engine, math::vec3::Vec3, scene::Scene, speaker::Speaker, ui::{UIplane, UItext},
+    engine::Engine, loader::jsonparser::JsonF, math::vec3::Vec3, scene::Scene, speaker::Speaker, ui::{UIplane, UItext},
 };
 
 #[derive(Clone, Copy)]
@@ -49,6 +49,7 @@ pub enum Awarness {
     Compromised(i8),
 }
 
+#[derive(Clone, Copy)]
 pub enum Direction {
     Up = 0,
     Down = 1,
@@ -56,6 +57,7 @@ pub enum Direction {
     Right = 3,
 }
 
+#[derive(Clone, Copy)]
 pub enum Action{
     Step((Direction, usize)),
     StepWithElemination((Direction, usize)),
@@ -109,6 +111,9 @@ pub struct GameSession {
     pub speakers: Vec<Speaker>,
     pub controller_mappings: ControllerMappings,
     pub action_list: [Option<Action>; 5],
+    pub active_action: Option<Action>,
+    pub in_game_text: JsonF,
+    pub chosen_language: usize,
 }
 
 pub fn tile_test(

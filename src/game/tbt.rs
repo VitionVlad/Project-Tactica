@@ -1,6 +1,44 @@
-use super::{Awarness, GameSession, tile_test, tile_test_point};
+use super::{Action, Awarness, GameSession, tile_test, tile_test_point};
 
 pub fn update(session: &mut GameSession) {
+    if let Some(action) = session.active_action.take() {
+        match action {
+            Action::Step((_, plate_object_id)) => {
+                session.actual_plate_id = session
+                    .tbtplates
+                    .iter()
+                    .position(|plate| plate.id == plate_object_id)
+                    .expect("step action references an unknown plate");
+                session.making_step = true;
+            }
+            Action::StepWithElemination((_, plate_object_id)) => {
+                let plate_id = session
+                    .tbtplates
+                    .iter()
+                    .position(|plate| plate.id == plate_object_id)
+                    .expect("elimination action references an unknown plate");
+                session.actual_plate_id = plate_id;
+                let enemy_id = session.tbtplates[plate_id]
+                    .enemy_id
+                    .expect("elimination action references an unoccupied plate");
+                session.enemies[enemy_id].alive = false;
+                for _ in 0..(session.max_awareness + 1) {
+                    increase_awareness(&mut session.awareness, session.max_awareness);
+                }
+                let object_id = session.enemies[enemy_id].id;
+                session.scn.objects[object_id].physic_object.pos.x = -1000.0;
+                session.scn.objects[object_id].draw = false;
+                session.speakers[4].play = true;
+                session.speakers[4].move_sound_cursor(0.0);
+                session.making_step = true;
+            }
+            Action::Skip => {
+                session.making_step = true;
+                session.action_cooldown = 0.5;
+            }
+        }
+    }
+
     let enemy_on_player_plate = session
         .enemies
         .iter()

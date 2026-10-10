@@ -1,5 +1,5 @@
 use crate::{engine::{
-    engine::Engine, image::Image, light::{Light, LightType}, loader::rw::readfs, material::Material, math::{ivec3::Ivec3, vec3::Vec3}, render::render::{CullMode, MeshUsage, TextureFormat}, scene::{Scene, SceneVoxelizer}, speaker::Speaker, ui::{UIplane, UItext}, voxel::VoxelizerSettings,
+    engine::Engine, image::Image, light::{Light, LightType}, loader::{jsonparser::JsonF, rw::readfs}, material::Material, math::{ivec3::Ivec3, vec3::Vec3}, render::render::{CullMode, MeshUsage, TextureFormat}, scene::{Scene, SceneVoxelizer}, speaker::Speaker, ui::{UIplane, UItext}, voxel::VoxelizerSettings,
 }, game::ControllerMappings};
 
 use super::{Awarness, Enemy, GameSession, Pivot, TBTplate};
@@ -17,6 +17,7 @@ pub fn initialize() -> GameSession {
     let shadow = readfs("shaders/shadow");
     let textf = readfs("shaders/ftext");
     let textf2 = readfs("shaders/ftext2");
+    let imgf2 = readfs("shaders/fimg2");
 
     let matt = Material::new(
         &eng,
@@ -200,6 +201,9 @@ pub fn initialize() -> GameSession {
         if name.contains("ns_") {
             scn.objects[i].physic_object.solid = false;
         }
+        if name.contains("cover_") {
+            scn.objects[i].mesh.ubo[52] = 1.0;
+        }
     }
 
     eng.render.shadow_map_resolution = 512;
@@ -240,6 +244,8 @@ pub fn initialize() -> GameSession {
     speakers[5].play = true;
     speakers[5].volume = 0.1;
 
+    let gmtxt = JsonF::load_from_file("assets/text.json");
+
     GameSession {
         eng,
         scn,
@@ -270,6 +276,9 @@ pub fn initialize() -> GameSession {
             select: 6,
         },
         action_list: [None, None, None, None, None],
+        active_action: None,
+        in_game_text: gmtxt,
+        chosen_language: 0,
     }
 }
 

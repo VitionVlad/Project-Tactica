@@ -1,6 +1,6 @@
 use crate::{engine::math::{vec3::Vec3, vec4::Vec4}, game::Action::{Step, StepWithElemination}};
 
-use super::{GameSession, tile_test};
+use super::{Direction, GameSession, tile_test};
 
 pub fn update(session: &mut GameSession) {
     for speaker in &mut session.speakers {
@@ -34,8 +34,6 @@ pub fn update(session: &mut GameSession) {
     session.fpscnt.exec(&mut session.eng, &fps_text);
 
     for i in 0..4{
-        session.text[i].draw = false;
-        let mut drtxt = " ";
         if session.action_list[i].is_some(){
             let action = session.action_list[i].as_ref().unwrap();
             match action {
@@ -53,7 +51,17 @@ pub fn update(session: &mut GameSession) {
                     session.text[i].pos.y = screenpos.y - session.text[i].size.y/2.0;
                     session.text[i].pos.z = 0.1;
                     session.text[i].draw = true;
-                    drtxt = "Step";
+                    session.text[i].signal = true;
+                    session.text[i].per_symbol = false;
+                    if session.text[i].exec(&mut session.eng, &session.in_game_text.other_nodes[session.chosen_language].other_nodes[0].other_nodes[0].strval) && session.action_cooldown <= 0.0 && session.eng.control.mousebtn[2] {
+                        session.active_action = Some(Step((match i {
+                            0 => Direction::Up,
+                            1 => Direction::Down,
+                            2 => Direction::Left,
+                            3 => Direction::Right,
+                            _ => Direction::Up,
+                        }, plate.1)));
+                    }
                 },
                 StepWithElemination(plate) => {
                     let mut pos = session.scn.objects[plate.1].physic_object.pos;
@@ -69,14 +77,26 @@ pub fn update(session: &mut GameSession) {
                     session.text[i].pos.y = screenpos.y - session.text[i].size.y/2.0;
                     session.text[i].pos.z = 0.1;
                     session.text[i].draw = true;
-                    drtxt = "Neutralize";
+                    session.text[i].signal = true;
+                    session.text[i].per_symbol = false;
+                    if session.text[i].exec(&mut session.eng, &session.in_game_text.other_nodes[session.chosen_language].other_nodes[0].other_nodes[1].strval) && session.action_cooldown <= 0.0 && session.eng.control.mousebtn[2] {
+                        session.active_action = Some(StepWithElemination((match i {
+                            0 => Direction::Up,
+                            1 => Direction::Down,
+                            2 => Direction::Left,
+                            3 => Direction::Right,
+                            _ => Direction::Up,
+                        }, plate.1)));
+                    }
                 },
                 _ => {
                     session.text[i].exec(&mut session.eng, " ");
                 },
             }
+        }else{
+            session.text[i].draw = false;
+            session.text[i].exec(&mut session.eng, " ");
         }
-        session.text[i].exec(&mut session.eng, drtxt);
     }
 
     session.scn.exec(&mut session.eng);
