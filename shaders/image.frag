@@ -29,7 +29,7 @@ layout(binding = 2) uniform DefferedMatricesInput {
 layout(binding = 3) uniform texture2DArray texTexture;
 
 layout(binding = 4) uniform texture2DArray lightingTexture;
-
+ 
 layout(binding = 5) uniform texture2DArray lightingDepthTexture;
 
 layout(binding = 6) uniform texture2DArray defferedTexture;
