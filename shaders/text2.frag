@@ -55,7 +55,7 @@ void main() {
     screen_uv.y = 1.0 - screen_uv.y;
     vec3 texel_color_behind = SampleRT(screen_uv);
     bool covered = SampleMaterial(screen_uv).b > 0.1;
-    float mix_factor = 0.5;
+    float mix_factor = 0.75;
     if(covered){
         //outColor = vec4(texel_color_behind, 1.0);
         //outColor = vec4(SampleMaterial(screen_uv).rgb, 1.0);

@@ -33,6 +33,13 @@ pub fn initialize() -> GameSession {
         vec![],
         [CullMode::CullModeNone, CullMode::CullModeNone],
     );
+    let mati2 = Material::new(
+        &eng,
+        vert.clone(),
+        imgf2,
+        vec![],
+        [CullMode::CullModeNone, CullMode::CullModeNone],
+    );
     let mat = Material::new(
         &eng,
         vert.clone(),
@@ -79,6 +86,18 @@ pub fn initialize() -> GameSession {
         );
         t.new_line_symbol = b'|';
         text.push(t);
+    }
+
+    let imgbl = Image::new_color(&mut eng, [0, 0, 0, 200]);
+    let mut spbg = Vec::new();
+    for i in 0..4 {
+        let t = UIplane::new(
+            &mut eng,
+            mati2,
+            vec![imgbl.clone()],
+            MeshUsage::PostPass,
+        );
+        spbg.push(t);
     }
 
     fpscnt.new_line_symbol = b'|';
@@ -253,6 +272,7 @@ pub fn initialize() -> GameSession {
         ltviewport,
         fpscnt,
         text,
+        speech_bubble_background: spbg,
         ui_scale: 1.0,
         pivot,
         tbtplates,

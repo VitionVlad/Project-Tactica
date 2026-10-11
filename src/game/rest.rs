@@ -53,7 +53,8 @@ pub fn update(session: &mut GameSession) {
                     session.text[i].draw = true;
                     session.text[i].signal = true;
                     session.text[i].per_symbol = false;
-                    if session.text[i].exec(&mut session.eng, &session.in_game_text.other_nodes[session.chosen_language].other_nodes[0].other_nodes[0].strval) && session.action_cooldown <= 0.0 && session.eng.control.mousebtn[2] {
+                    let text = &session.in_game_text.other_nodes[session.chosen_language].other_nodes[0].other_nodes[0].strval;
+                    if session.text[i].exec(&mut session.eng, text) && session.action_cooldown <= 0.0 && session.eng.control.mousebtn[2] {
                         session.active_action = Some(Step((match i {
                             0 => Direction::Up,
                             1 => Direction::Down,
@@ -62,6 +63,13 @@ pub fn update(session: &mut GameSession) {
                             _ => Direction::Up,
                         }, plate.1)));
                     }
+                    session.speech_bubble_background[i].object.physic_object.scale.x = (session.text[i].size.x * text.len() as f32 + 12.0) * session.ui_scale;
+                    session.speech_bubble_background[i].object.physic_object.scale.y = (session.text[i].size.y + 12.0) * session.ui_scale;
+                    session.speech_bubble_background[i].object.physic_object.pos.x = session.text[i].pos.x - 6.0 * session.ui_scale;
+                    session.speech_bubble_background[i].object.physic_object.pos.y = session.text[i].pos.y - 6.0 * session.ui_scale;
+                    session.speech_bubble_background[i].object.physic_object.pos.z = 0.2;
+                    session.speech_bubble_background[i].object.draw = true;
+                    session.speech_bubble_background[i].exec(&mut session.eng);
                 },
                 StepWithElemination(plate) => {
                     let mut pos = session.scn.objects[plate.1].physic_object.pos;
@@ -79,7 +87,8 @@ pub fn update(session: &mut GameSession) {
                     session.text[i].draw = true;
                     session.text[i].signal = true;
                     session.text[i].per_symbol = false;
-                    if session.text[i].exec(&mut session.eng, &session.in_game_text.other_nodes[session.chosen_language].other_nodes[0].other_nodes[1].strval) && session.action_cooldown <= 0.0 && session.eng.control.mousebtn[2] {
+                    let text = &session.in_game_text.other_nodes[session.chosen_language].other_nodes[0].other_nodes[1].strval;
+                    if session.text[i].exec(&mut session.eng, text) && session.action_cooldown <= 0.0 && session.eng.control.mousebtn[2] {
                         session.active_action = Some(StepWithElemination((match i {
                             0 => Direction::Up,
                             1 => Direction::Down,
@@ -88,12 +97,21 @@ pub fn update(session: &mut GameSession) {
                             _ => Direction::Up,
                         }, plate.1)));
                     }
+                    session.speech_bubble_background[i].object.physic_object.scale.x = (session.text[i].size.x * text.len() as f32 + 12.0) * session.ui_scale;
+                    session.speech_bubble_background[i].object.physic_object.scale.y = (session.text[i].size.y + 12.0) * session.ui_scale;
+                    session.speech_bubble_background[i].object.physic_object.pos.x = session.text[i].pos.x - 6.0 * session.ui_scale;
+                    session.speech_bubble_background[i].object.physic_object.pos.y = session.text[i].pos.y - 6.0 * session.ui_scale;
+                    session.speech_bubble_background[i].object.physic_object.pos.z = 0.2;
+                    session.speech_bubble_background[i].object.draw = true;
+                    session.speech_bubble_background[i].exec(&mut session.eng);
                 },
                 _ => {
                     session.text[i].exec(&mut session.eng, " ");
                 },
             }
         }else{
+            session.speech_bubble_background[i].object.draw = false;
+            session.speech_bubble_background[i].exec(&mut session.eng);
             session.text[i].draw = false;
             session.text[i].exec(&mut session.eng, " ");
         }

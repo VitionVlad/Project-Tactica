@@ -95,6 +95,7 @@ pub struct GameSession {
     pub ltviewport: UIplane,
     pub fpscnt: UItext,
     pub text: Vec<UItext>,
+    pub speech_bubble_background: Vec<UIplane>,
     pub ui_scale: f32,
     pub pivot: Pivot,
     pub tbtplates: Vec<TBTplate>,
