@@ -1,15 +1,52 @@
 use crate::{engine::math::vec3::Vec3, game::{Awarness, Direction, DIRECTIONS}};
 
-use super::{GameSession, tile_test_point};
+use super::{GameSession, InputType, tile_test_point};
 
 const SPEED: f32 = 25.0;
-const KEYS: [u32; 5] = [40, 44, 25, 22, 48];
 
 pub fn update(session: &mut GameSession) {
+    update_input_type(session);
     if session.pivot.tbtmode {
         update_tbt_controls(session);
     } else {
         update_adventure_controls(session);
+    }
+}
+
+fn update_input_type(session: &mut GameSession) {
+    let keyboard_pressed = session
+        .keyboard_bindings
+        .arrows
+        .iter()
+        .any(|key| session.eng.control.get_key_state(key.keycode as u32))
+        || session
+            .eng
+            .control
+            .get_key_state(session.keyboard_bindings.abxy[0].keycode as u32);
+    if keyboard_pressed {
+        session.input_type = InputType::Keyboard;
+    }
+
+    if session.eng.control.gamepad_connected {
+        let gamepad_button_pressed = session
+            .controller_mappings
+            .arrows
+            .iter()
+            .any(|button| session.eng.control.get_gamepad_button_state(*button as u8))
+            || session
+                .eng
+                .control
+                .get_gamepad_button_state(session.controller_mappings.abxy[0] as u8);
+        let gamepad_axis_moved = session
+            .controller_mappings
+            .axis
+            .iter()
+            .take(2)
+            .any(|axis| session.eng.control.get_gamepad_axis_state(*axis as u8).abs() > 0.1);
+
+        if gamepad_button_pressed || gamepad_axis_moved {
+            session.input_type = InputType::Gamepad;
+        }
     }
 }
 
@@ -79,13 +116,17 @@ fn update_tbt_controls(session: &mut GameSession) {
         }
 
         for (key_index, next_plate) in adjacent.iter().enumerate() {
-            if session.eng.control.get_key_state(KEYS[key_index]) && *next_plate {
+            if session.eng.control.get_key_state(
+                session.keyboard_bindings.arrows[key_index].keycode as u32,
+            ) && *next_plate {
                 session.active_action = session.action_list[key_index];
                 break;
             }
         }
 
-        if session.eng.control.get_key_state(KEYS[4]) && session.action_cooldown <= 0.0 {
+        if session.eng.control.get_key_state(session.keyboard_bindings.abxy[0].keycode as u32)
+            && session.action_cooldown <= 0.0
+        {
             if session.active_action.is_none() {
                 session.active_action = session.action_list[4];
             }
@@ -121,7 +162,7 @@ fn update_tbt_controls(session: &mut GameSession) {
 
 fn update_adventure_controls(session: &mut GameSession) {
     let pivot_id = session.pivot.id;
-    if session.eng.control.get_key_state(KEYS[0]) {
+    if session.eng.control.get_key_state(session.keyboard_bindings.arrows[0].keycode as u32) {
         session.scn.objects[pivot_id].physic_object.acceleration.z += SPEED;
         session.current_dir = Vec3 {
             x: 0.0,
@@ -130,7 +171,7 @@ fn update_adventure_controls(session: &mut GameSession) {
         };
         session.speakers[3].volume = 0.25;
     }
-    if session.eng.control.get_key_state(KEYS[1]) {
+    if session.eng.control.get_key_state(session.keyboard_bindings.arrows[1].keycode as u32) {
         session.scn.objects[pivot_id].physic_object.acceleration.z -= SPEED;
         session.current_dir = Vec3 {
             x: 0.0,
@@ -139,7 +180,7 @@ fn update_adventure_controls(session: &mut GameSession) {
         };
         session.speakers[3].volume = 0.25;
     }
-    if session.eng.control.get_key_state(KEYS[2]) {
+    if session.eng.control.get_key_state(session.keyboard_bindings.arrows[2].keycode as u32) {
         session.scn.objects[pivot_id].physic_object.acceleration.x += SPEED;
         session.current_dir = Vec3 {
             x: 1.0,
@@ -148,7 +189,7 @@ fn update_adventure_controls(session: &mut GameSession) {
         };
         session.speakers[3].volume = 0.25;
     }
-    if session.eng.control.get_key_state(KEYS[3]) {
+    if session.eng.control.get_key_state(session.keyboard_bindings.arrows[3].keycode as u32) {
         session.scn.objects[pivot_id].physic_object.acceleration.x -= SPEED;
         session.current_dir = Vec3 {
             x: -1.0,
@@ -157,7 +198,9 @@ fn update_adventure_controls(session: &mut GameSession) {
         };
         session.speakers[3].volume = 0.25;
     }
-    if session.eng.control.get_key_state(KEYS[4]) && session.action_cooldown <= 0.0 {
+    if session.eng.control.get_key_state(session.keyboard_bindings.abxy[0].keycode as u32)
+        && session.action_cooldown <= 0.0
+    {
         if session.object_holding.is_none() {
             session.object_holding = Some((None, session.current_dir));
             let point = session.scn.objects[pivot_id].physic_object.pos + session.current_dir;

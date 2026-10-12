@@ -79,13 +79,36 @@ pub struct TBTplate {
     pub enemy_id: Option<usize>,
 }
 
+pub struct Key{
+    pub keycode: u8,
+    pub key: String,
+}
+
+pub struct KeyboardBindings{
+    pub arrows: [Key; 4],
+    pub abxy: [Key; 4],
+    pub start: Key,
+    pub select: Key,
+}
+
 pub struct ControllerMappings{
     pub arrows: [usize; 4],
+    pub arrows_key: [String; 4],
     pub abxy: [usize; 4],
+    pub abxy_key: [String; 4],
     pub axis: [usize; 4],
     pub bumpers: [usize; 2],
     pub start: usize,
+    pub start_key: String,
     pub select: usize,
+    pub select_key: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum InputType {
+    Keyboard,
+    Gamepad,
+    Touchscreen,
 }
 
 pub struct GameSession {
@@ -95,6 +118,7 @@ pub struct GameSession {
     pub ltviewport: UIplane,
     pub fpscnt: UItext,
     pub text: Vec<UItext>,
+    pub keyimg: Vec<UItext>,
     pub speech_bubble_background: Vec<UIplane>,
     pub ui_scale: f32,
     pub pivot: Pivot,
@@ -110,7 +134,9 @@ pub struct GameSession {
     pub action_cooldown: f32,
     pub frame_count: u32,
     pub speakers: Vec<Speaker>,
+    pub keyboard_bindings: KeyboardBindings,
     pub controller_mappings: ControllerMappings,
+    pub input_type: InputType,
     pub action_list: [Option<Action>; 5],
     pub active_action: Option<Action>,
     pub in_game_text: JsonF,

@@ -1,6 +1,6 @@
 use crate::{engine::math::{vec3::Vec3, vec4::Vec4}, game::Action::{Step, StepWithElemination}};
 
-use super::{Direction, GameSession, tile_test};
+use super::{Direction, GameSession, InputType, tile_test};
 
 pub fn update(session: &mut GameSession) {
     for speaker in &mut session.speakers {
@@ -55,6 +55,7 @@ pub fn update(session: &mut GameSession) {
                     session.text[i].per_symbol = false;
                     let text = &session.in_game_text.other_nodes[session.chosen_language].other_nodes[0].other_nodes[0].strval;
                     if session.text[i].exec(&mut session.eng, text) && session.action_cooldown <= 0.0 && session.eng.control.mousebtn[2] {
+                        session.input_type = InputType::Touchscreen;
                         session.active_action = Some(Step((match i {
                             0 => Direction::Up,
                             1 => Direction::Down,
@@ -89,6 +90,7 @@ pub fn update(session: &mut GameSession) {
                     session.text[i].per_symbol = false;
                     let text = &session.in_game_text.other_nodes[session.chosen_language].other_nodes[0].other_nodes[1].strval;
                     if session.text[i].exec(&mut session.eng, text) && session.action_cooldown <= 0.0 && session.eng.control.mousebtn[2] {
+                        session.input_type = InputType::Touchscreen;
                         session.active_action = Some(StepWithElemination((match i {
                             0 => Direction::Up,
                             1 => Direction::Down,
@@ -136,6 +138,9 @@ pub fn update(session: &mut GameSession) {
     session.scn.objects[session.pivot.id].mesh.ubo[52] = 1.0;
 
     if !session.pivot.tbtmode {
+        for i in 0..session.action_list.len() {
+            session.action_list[i] = None;
+        }
         for (index, plate) in session.tbtplates.iter().enumerate() {
             if tile_test(
                 &session.scn.objects[session.pivot.id].physic_object,

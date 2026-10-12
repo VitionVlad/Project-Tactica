@@ -1,6 +1,6 @@
 use crate::{engine::{
     engine::Engine, image::Image, light::{Light, LightType}, loader::{jsonparser::JsonF, rw::readfs}, material::Material, math::{ivec3::Ivec3, vec3::Vec3}, render::render::{CullMode, MeshUsage, TextureFormat}, scene::{Scene, SceneVoxelizer}, speaker::Speaker, ui::{UIplane, UItext}, voxel::VoxelizerSettings,
-}, game::ControllerMappings};
+}, game::{ControllerMappings, Key, KeyboardBindings}};
 
 use super::{Awarness, Enemy, GameSession, Pivot, TBTplate};
 
@@ -86,6 +86,19 @@ pub fn initialize() -> GameSession {
         );
         t.new_line_symbol = b'|';
         text.push(t);
+    }
+
+    let mut keyimg = Vec::new();
+    for i in 0..5 {
+        let mut t = UItext::new_from_file(
+            &mut eng,
+            matt2,
+            "assets/btns.png",
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789rtldaxbyqwzxtsjk",
+            MeshUsage::PostPass,
+        );
+        t.new_line_symbol = b'|';
+        keyimg.push(t);
     }
 
     let imgbl = Image::new_color(&mut eng, [0, 0, 0, 200]);
@@ -272,6 +285,7 @@ pub fn initialize() -> GameSession {
         ltviewport,
         fpscnt,
         text,
+        keyimg,
         speech_bubble_background: spbg,
         ui_scale: 1.0,
         pivot,
@@ -287,14 +301,65 @@ pub fn initialize() -> GameSession {
         action_cooldown: 0.0,
         frame_count: 0,
         speakers: speakers,
+        keyboard_bindings: KeyboardBindings {
+            arrows: [
+                Key {
+                    keycode: 40,
+                    key: "w".to_string(),
+                },
+                Key {
+                    keycode: 44,
+                    key: "s".to_string(),
+                },
+                Key {
+                    keycode: 25,
+                    key: "a".to_string(),
+                },
+                Key {
+                    keycode: 22,
+                    key: "d".to_string(),
+                },
+            ],
+            abxy: [
+                Key {
+                    keycode: 48,
+                    key: "space".to_string(),
+                },
+                Key {
+                    keycode: 0,
+                    key: String::new(),
+                },
+                Key {
+                    keycode: 0,
+                    key: String::new(),
+                },
+                Key {
+                    keycode: 0,
+                    key: String::new(),
+                },
+            ],
+            start: Key {
+                keycode: 0,
+                key: String::new(),
+            },
+            select: Key {
+                keycode: 0,
+                key: String::new(),
+            },
+        },
         controller_mappings: ControllerMappings{
             arrows: [12, 10, 11, 13],
+            arrows_key: ["t".to_string(), "d".to_string(), "l".to_string(), "r".to_string()],
             abxy: [0, 1, 2, 3],
+            abxy_key: ["a".to_string(), "x".to_string(), "b".to_string(), "y".to_string()],
             axis: [0, 1, 2, 3],
             bumpers: [4, 5],
             start: 7,
+            start_key: "t".to_string(),
             select: 6,
+            select_key: "s".to_string(),
         },
+        input_type: super::InputType::Keyboard,
         action_list: [None, None, None, None, None],
         active_action: None,
         in_game_text: gmtxt,
