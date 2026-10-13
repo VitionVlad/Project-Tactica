@@ -71,6 +71,43 @@ pub fn update(session: &mut GameSession) {
                     session.speech_bubble_background[i].object.physic_object.pos.z = 0.2;
                     session.speech_bubble_background[i].object.draw = true;
                     session.speech_bubble_background[i].exec(&mut session.eng);
+
+                    session.keyimg[i].size.x = 40.0 * session.ui_scale;
+                    session.keyimg[i].size.y = 40.0 * session.ui_scale;
+                    session.keyimg[i].pos.z = 0.1;
+                    match i {
+                        0 => {
+                            session.keyimg[i].pos.x = session.text[i].pos.x;
+                            session.keyimg[i].pos.y = session.text[i].pos.y + session.text[i].size.y;
+                        },
+                        1 => {
+                            session.keyimg[i].pos.x = session.text[i].pos.x;
+                            session.keyimg[i].pos.y = session.text[i].pos.y - session.keyimg[i].size.y;
+                        },
+                        2 => {
+                            session.keyimg[i].pos.x = session.text[i].pos.x + (text.len() as f32)*session.text[i].size.x;
+                            session.keyimg[i].pos.y = session.text[i].pos.y - session.keyimg[i].size.y/4.0;
+                        },
+                        3 => {
+                            session.keyimg[i].pos.x = session.text[i].pos.x - session.keyimg[i].size.x;
+                            session.keyimg[i].pos.y = session.text[i].pos.y - session.keyimg[i].size.y/4.0;
+                        },
+                        _ => {},
+                    }
+                    match session.input_type {
+                        InputType::Keyboard => {
+                            session.keyimg[i].draw = true;
+                            session.keyimg[i].exec(&mut session.eng, &session.keyboard_bindings.arrows[i].key);
+                        },
+                        InputType::Gamepad => {
+                            session.keyimg[i].draw = true;
+                            session.keyimg[i].exec(&mut session.eng, &session.controller_mappings.arrows_key[i]);
+                        },
+                        InputType::Touchscreen => {
+                            session.keyimg[i].draw = false;
+                            session.keyimg[i].exec(&mut session.eng, " ");
+                        },
+                    }
                 },
                 StepWithElemination(plate) => {
                     let mut pos = session.scn.objects[plate.1].physic_object.pos;
@@ -106,6 +143,43 @@ pub fn update(session: &mut GameSession) {
                     session.speech_bubble_background[i].object.physic_object.pos.z = 0.2;
                     session.speech_bubble_background[i].object.draw = true;
                     session.speech_bubble_background[i].exec(&mut session.eng);
+
+                    session.keyimg[i].size.x = 50.0 * session.ui_scale;
+                    session.keyimg[i].size.y = 50.0 * session.ui_scale;
+                    session.keyimg[i].pos.z = 0.1;
+                    match i {
+                        0 => {
+                            session.keyimg[i].pos.x = session.text[i].pos.x;
+                            session.keyimg[i].pos.y = session.text[i].pos.y + session.text[i].size.y;
+                        },
+                        1 => {
+                            session.keyimg[i].pos.x = session.text[i].pos.x;
+                            session.keyimg[i].pos.y = session.text[i].pos.y - session.keyimg[i].size.y;
+                        },
+                        2 => {
+                            session.keyimg[i].pos.x = session.text[i].pos.x + (text.len() as f32)*session.text[i].size.x;
+                            session.keyimg[i].pos.y = session.text[i].pos.y - session.keyimg[i].size.y/4.0;
+                        },
+                        3 => {
+                            session.keyimg[i].pos.x = session.text[i].pos.x - session.keyimg[i].size.x;
+                            session.keyimg[i].pos.y = session.text[i].pos.y - session.keyimg[i].size.y/4.0;
+                        },
+                        _ => {},
+                    }
+                    match session.input_type {
+                        InputType::Keyboard => {
+                            session.keyimg[i].draw = true;
+                            session.keyimg[i].exec(&mut session.eng, &session.keyboard_bindings.arrows[i].key);
+                        },
+                        InputType::Gamepad => {
+                            session.keyimg[i].draw = true;
+                            session.keyimg[i].exec(&mut session.eng, &session.controller_mappings.arrows_key[i]);
+                        },
+                        InputType::Touchscreen => {
+                            session.keyimg[i].draw = false;
+                            session.keyimg[i].exec(&mut session.eng, " ");
+                        },
+                    }
                 },
                 _ => {
                     session.text[i].exec(&mut session.eng, " ");
@@ -116,6 +190,8 @@ pub fn update(session: &mut GameSession) {
             session.speech_bubble_background[i].exec(&mut session.eng);
             session.text[i].draw = false;
             session.text[i].exec(&mut session.eng, " ");
+            session.keyimg[i].draw = false;
+            session.keyimg[i].exec(&mut session.eng, " ");
         }
     }
 

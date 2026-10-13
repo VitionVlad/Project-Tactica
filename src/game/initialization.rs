@@ -305,25 +305,25 @@ pub fn initialize() -> GameSession {
             arrows: [
                 Key {
                     keycode: 40,
-                    key: "w".to_string(),
+                    key: "W".to_string(),
                 },
                 Key {
                     keycode: 44,
-                    key: "s".to_string(),
+                    key: "S".to_string(),
                 },
                 Key {
                     keycode: 25,
-                    key: "a".to_string(),
+                    key: "A".to_string(),
                 },
                 Key {
                     keycode: 22,
-                    key: "d".to_string(),
+                    key: "D".to_string(),
                 },
             ],
             abxy: [
                 Key {
                     keycode: 48,
-                    key: "space".to_string(),
+                    key: " ".to_string(),
                 },
                 Key {
                     keycode: 0,
@@ -349,7 +349,7 @@ pub fn initialize() -> GameSession {
         },
         controller_mappings: ControllerMappings{
             arrows: [12, 10, 11, 13],
-            arrows_key: ["t".to_string(), "d".to_string(), "l".to_string(), "r".to_string()],
+            arrows_key: ["d".to_string(), "t".to_string(), "r".to_string(), "l".to_string()],
             abxy: [0, 1, 2, 3],
             abxy_key: ["a".to_string(), "x".to_string(), "b".to_string(), "y".to_string()],
             axis: [0, 1, 2, 3],
