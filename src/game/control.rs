@@ -1,4 +1,4 @@
-use crate::{engine::math::vec3::Vec3, game::{Awarness, Direction, DIRECTIONS}};
+use crate::{engine::math::vec3::Vec3, game::{Action::Skip, Awarness, DIRECTIONS, Direction}};
 
 use super::{GameSession, InputType, tile_test_point};
 
@@ -51,7 +51,7 @@ fn update_input_type(session: &mut GameSession) {
 }
 
 fn update_tbt_controls(session: &mut GameSession) {
-    for i in 0..4 {
+    for i in 0..5 {
         session.action_list[i] = None;
     }
     session.object_holding = None;
@@ -66,6 +66,7 @@ fn update_tbt_controls(session: &mut GameSession) {
     };
 
     if delta.length_squared().sqrt() < 0.01 {
+        session.action_list[4] = Some(Skip);
         if session.tbtplates[session.actual_plate_id].safe {
             session.pivot.tbtmode = false;
         }

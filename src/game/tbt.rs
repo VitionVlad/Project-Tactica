@@ -10,6 +10,7 @@ pub fn update(session: &mut GameSession) {
                     .position(|plate| plate.id == plate_object_id)
                     .expect("step action references an unknown plate");
                 session.making_step = true;
+                session.action_cooldown = 0.5;
             }
             Action::StepWithElemination((_, plate_object_id)) => {
                 let plate_id = session
@@ -31,6 +32,7 @@ pub fn update(session: &mut GameSession) {
                 session.speakers[4].play = true;
                 session.speakers[4].move_sound_cursor(0.0);
                 session.making_step = true;
+                session.action_cooldown = 0.5;
             }
             Action::Skip => {
                 session.making_step = true;

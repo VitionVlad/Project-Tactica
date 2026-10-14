@@ -17,6 +17,7 @@ pub fn initialize() -> GameSession {
     let shadow = readfs("shaders/shadow");
     let textf = readfs("shaders/ftext");
     let textf2 = readfs("shaders/ftext2");
+    let imgf = readfs("shaders/img");
     let imgf2 = readfs("shaders/fimg2");
 
     let matt = Material::new(
@@ -30,6 +31,13 @@ pub fn initialize() -> GameSession {
         &eng,
         vert.clone(),
         textf2,
+        vec![],
+        [CullMode::CullModeNone, CullMode::CullModeNone],
+    );
+    let mati = Material::new(
+        &eng,
+        vert.clone(),
+        imgf,
         vec![],
         [CullMode::CullModeNone, CullMode::CullModeNone],
     );
@@ -77,29 +85,43 @@ pub fn initialize() -> GameSession {
 
     let mut text = Vec::new();
     for i in 0..4 {
-        let mut t = UItext::new_from_file(
+        let t = UItext::new_from_file(
             &mut eng,
             matt2,
             "assets/comicmonoinv.png",
             "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`~$% ",
             MeshUsage::PostPass,
         );
-        t.new_line_symbol = b'|';
         text.push(t);
     }
 
+    text.push(UItext::new_from_file(
+        &mut eng,
+        matt,
+        "assets/comicmonoinv.png",
+        "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`~$% ",
+        MeshUsage::PostPass,
+    ));
+
     let mut keyimg = Vec::new();
-    for i in 0..5 {
-        let mut t = UItext::new_from_file(
+    for i in 0..4 {
+        let t = UItext::new_from_file(
             &mut eng,
             matt2,
             "assets/btns.png",
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789rtldaxbyqwzxtsjk",
             MeshUsage::PostPass,
         );
-        t.new_line_symbol = b'|';
         keyimg.push(t);
     }
+
+    keyimg.push(UItext::new_from_file(
+        &mut eng,
+        matt,
+        "assets/btns.png",
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789rtldaxbyqwzxtsjk",
+        MeshUsage::PostPass,
+    ));
 
     let imgbl = Image::new_color(&mut eng, [0, 0, 0, 200]);
     let mut spbg = Vec::new();
@@ -112,6 +134,13 @@ pub fn initialize() -> GameSession {
         );
         spbg.push(t);
     }
+
+    spbg.push(UIplane::new(
+        &mut eng,
+        mati,
+        vec![imgbl.clone()],
+        MeshUsage::PostPass,
+    ));
 
     fpscnt.new_line_symbol = b'|';
 
@@ -322,8 +351,8 @@ pub fn initialize() -> GameSession {
             ],
             abxy: [
                 Key {
-                    keycode: 48,
-                    key: " ".to_string(),
+                    keycode: 26,
+                    key: "E".to_string(),
                 },
                 Key {
                     keycode: 0,

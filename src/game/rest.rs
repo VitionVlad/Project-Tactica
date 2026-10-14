@@ -1,4 +1,4 @@
-use crate::{engine::math::{vec3::Vec3, vec4::Vec4}, game::Action::{Step, StepWithElemination}};
+use crate::{engine::math::{vec3::Vec3, vec4::Vec4}, game::Action::{Skip, Step, StepWithElemination}};
 
 use super::{Direction, GameSession, InputType, tile_test};
 
@@ -36,8 +36,8 @@ pub fn update(session: &mut GameSession) {
     for plates in &session.tbtplates{
         session.scn.objects[plates.id].mesh.ubo[53] = 0.0;
     }
-    for i in 0..4{
-        if session.action_list[i].is_some(){
+    for i in 0..5{
+        if session.action_list[i].is_some() && !session.making_step && session.action_cooldown <= 0.0{
             let action = session.action_list[i].as_ref().unwrap();
             match action {
                 Step(plate) => {
@@ -199,8 +199,55 @@ pub fn update(session: &mut GameSession) {
                         }, plate.1)));
                     }
                 },
-                _ => {
-                    session.text[i].exec(&mut session.eng, " ");
+                Skip => {
+                    let text = &session.in_game_text.other_nodes[session.chosen_language].other_nodes[0].other_nodes[2].strval;
+                    session.text[i].size.x = 15.0 * session.ui_scale;
+                    session.text[i].size.y = 30.0 * session.ui_scale;
+                    session.text[i].pos.x = session.eng.render.resolution_x as f32 / 2.0 - text.len() as f32;
+                    session.text[i].pos.y = session.eng.render.resolution_y as f32 - session.text[i].size.y*2.0;
+                    session.text[i].pos.z = 0.1;
+                    session.text[i].draw = true;
+                    session.text[i].signal = true;
+                    session.text[i].per_symbol = false;
+                    session.text[i].auto_recalculate_clickzone = true;
+                    session.text[i].rotate_each_character = false;
+                    session.text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: 0.1 }.to_quat();
+
+                    session.speech_bubble_background[i].object.physic_object.scale.x = (session.text[i].size.x * text.len() as f32 + 12.0) * session.ui_scale;
+                    session.speech_bubble_background[i].object.physic_object.scale.y = (session.text[i].size.y + 12.0) * session.ui_scale;
+                    session.speech_bubble_background[i].object.physic_object.pos.x = session.text[i].pos.x - 6.0 * session.ui_scale;
+                    session.speech_bubble_background[i].object.physic_object.pos.y = session.text[i].pos.y - 6.0 * session.ui_scale;
+                    session.speech_bubble_background[i].object.physic_object.pos.z = 0.2;
+                    session.speech_bubble_background[i].object.physic_object.rot = Vec3{ x: 0.0, y: 0.0, z: 0.1 }.to_quat();
+                    session.speech_bubble_background[i].object.draw = true;
+
+                    session.keyimg[i].size.x = 50.0 * session.ui_scale;
+                    session.keyimg[i].size.y = 50.0 * session.ui_scale;
+                    session.keyimg[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.1 }.to_quat();
+                    session.keyimg[i].pos.z = 0.1;
+                    session.keyimg[i].pos.x = session.speech_bubble_background[i].object.physic_object.pos.x - session.keyimg[i].size.x/1.125;
+                    session.keyimg[i].pos.y = session.eng.render.resolution_y as f32 - session.keyimg[i].size.y*1.5;
+
+                    match session.input_type {
+                        InputType::Keyboard => {
+                            session.keyimg[i].draw = true;
+                            session.keyimg[i].exec(&mut session.eng, &session.keyboard_bindings.abxy[0].key);
+                        },
+                        InputType::Gamepad => {
+                            session.keyimg[i].draw = true;
+                            session.keyimg[i].exec(&mut session.eng, &session.controller_mappings.abxy_key[0]);
+                        },
+                        InputType::Touchscreen => {
+                            session.keyimg[i].draw = false;
+                            session.keyimg[i].exec(&mut session.eng, " ");
+                        },
+                    }
+
+                    session.speech_bubble_background[i].exec(&mut session.eng);
+                    if session.text[i].exec(&mut session.eng, text) && session.action_cooldown <= 0.0 && session.eng.control.mousebtn[2] {
+                        session.input_type = InputType::Touchscreen;
+                        session.active_action = Some(Skip);
+                    }
                 },
             }
         }else{
