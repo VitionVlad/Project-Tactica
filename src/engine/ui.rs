@@ -7,7 +7,7 @@ use super::{
     engine::Engine,
     image::Image,
     material::Material,
-    math::{vec2::Vec2, vec3::Vec3},
+    math::{vec2::Vec2, vec3::Vec3, vec4::Vec4},
     model::Model,
     object::Object,
     plane::PLANEUI,
@@ -140,6 +140,9 @@ pub struct UItext {
     pub clickzone: Clickzone,
     pub signal: bool,
     pub per_symbol: bool,
+    pub rotation: Vec4,
+    pub rotate_each_character: bool,
+    pub auto_recalculate_clickzone: bool,
     pub allow_when_mouse_locked: bool,
     pub draw: bool,
     pub symbol_pressed: u8,
@@ -155,6 +158,75 @@ pub struct UItext {
 }
 
 impl UItext {
+    fn normalized_rotation(rotation: Vec4) -> Vec4 {
+        let magnitude = rotation.magnitude();
+        if magnitude <= f32::EPSILON {
+            Vec4 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+                w: 1.0,
+            }
+        } else {
+            Vec4 {
+                x: rotation.x / magnitude,
+                y: rotation.y / magnitude,
+                z: rotation.z / magnitude,
+                w: rotation.w / magnitude,
+            }
+        }
+    }
+
+    fn rotate_point(point: Vec3, pivot: Vec3, rotation: Vec4) -> Vec3 {
+        let offset = Vec4 {
+            x: point.x - pivot.x,
+            y: point.y - pivot.y,
+            z: point.z - pivot.z,
+            w: 0.0,
+        };
+        let rotated = rotation.multiply(offset).multiply(rotation.conjugate());
+        Vec3 {
+            x: pivot.x + rotated.x,
+            y: pivot.y + rotated.y,
+            z: pivot.z + rotated.z,
+        }
+    }
+
+    fn rotated_bounds(pos: Vec3, size: Vec2, pivot: Vec3, rotation: Vec4) -> (Vec2, Vec2) {
+        let corners = [
+            pos,
+            Vec3 {
+                x: pos.x + size.x,
+                y: pos.y,
+                z: pos.z,
+            },
+            Vec3 {
+                x: pos.x,
+                y: pos.y + size.y,
+                z: pos.z,
+            },
+            Vec3 {
+                x: pos.x + size.x,
+                y: pos.y + size.y,
+                z: pos.z,
+            },
+        ];
+        let first = Self::rotate_point(corners[0], pivot, rotation);
+        let mut min = Vec2 {
+            x: first.x,
+            y: first.y,
+        };
+        let mut max = min;
+        for corner in corners.iter().skip(1) {
+            let point = Self::rotate_point(*corner, pivot, rotation);
+            min.x = min.x.min(point.x);
+            min.y = min.y.min(point.y);
+            max.x = max.x.max(point.x);
+            max.y = max.y.max(point.y);
+        }
+        (min, max)
+    }
+
     pub fn new(
         eng: &mut Engine,
         mat: Material,
@@ -177,6 +249,14 @@ impl UItext {
             },
             signal: false,
             per_symbol: true,
+            rotation: Vec4 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+                w: 1.0,
+            },
+            rotate_each_character: false,
+            auto_recalculate_clickzone: true,
             allow_when_mouse_locked: false,
             blank: false,
             symbol_pressed: b' ',
@@ -223,6 +303,14 @@ impl UItext {
             },
             signal: false,
             per_symbol: true,
+            rotation: Vec4 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+                w: 1.0,
+            },
+            rotate_each_character: false,
+            auto_recalculate_clickzone: true,
             allow_when_mouse_locked: false,
             blank: true,
             symbol_pressed: b' ',
@@ -260,6 +348,14 @@ impl UItext {
             },
             signal: false,
             per_symbol: true,
+            rotation: Vec4 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+                w: 1.0,
+            },
+            rotate_each_character: false,
+            auto_recalculate_clickzone: true,
             allow_when_mouse_locked: false,
             blank: false,
             symbol_pressed: b' ',
@@ -297,6 +393,34 @@ impl UItext {
             self.clickzone.pos1.y = self.pos.y;
             self.clickzone.pos2.x = self.pos.x + self.size.x * (mx as f32 + 1.0);
             self.clickzone.pos2.y = self.pos.y + self.size.y * (my as f32);
+            let rotation = Self::normalized_rotation(self.rotation);
+            let rotation_is_identity = rotation.x.abs() <= f32::EPSILON
+                && rotation.y.abs() <= f32::EPSILON
+                && rotation.z.abs() <= f32::EPSILON;
+            let clickzone_pos = Vec3 {
+                x: self.clickzone.pos1.x,
+                y: self.clickzone.pos1.y,
+                z: self.pos.z,
+            };
+            let clickzone_size = Vec2 {
+                x: self.clickzone.pos2.x - self.clickzone.pos1.x,
+                y: self.clickzone.pos2.y - self.clickzone.pos1.y,
+            };
+            let mut rotated_symbol_bounds: Option<(Vec2, Vec2)> = None;
+            if self.auto_recalculate_clickzone && !rotation_is_identity {
+                if self.rotate_each_character {
+                    rotated_symbol_bounds = Some((self.clickzone.pos1, self.clickzone.pos2));
+                } else {
+                    let (min, max) = Self::rotated_bounds(
+                        clickzone_pos,
+                        clickzone_size,
+                        clickzone_pos,
+                        rotation,
+                    );
+                    self.clickzone.pos1 = min;
+                    self.clickzone.pos2 = max;
+                }
+            }
             let mut btst = self.clickzone.check(Vec2 {
                 x: eng.control.xpos as f32,
                 y: eng.control.ypos as f32,
@@ -333,18 +457,44 @@ impl UItext {
                             self.planes[i].physic_object.scale.x = self.size.x;
                             self.planes[i].physic_object.scale.y = self.size.y;
                             self.planes[i].physic_object.scale.z = 1.0;
-                            self.planes[i].physic_object.pos.x =
-                                self.pos.x + ((i as i32 - bp as i32) as f32) * self.size.x;
-                            self.planes[i].physic_object.pos.y = posy;
-                            self.planes[i].physic_object.pos.z = self.pos.z;
+                            let original_glyph_pos = Vec3 {
+                                x: self.pos.x + ((i as i32 - bp as i32) as f32) * self.size.x,
+                                y: posy,
+                                z: self.pos.z,
+                            };
+                            let pivot = if self.rotate_each_character {
+                                Vec3 {
+                                    x: original_glyph_pos.x + self.size.x * 0.5,
+                                    y: original_glyph_pos.y + self.size.y * 0.5,
+                                    z: original_glyph_pos.z,
+                                }
+                            } else {
+                                clickzone_pos
+                            };
+                            let glyph_pos = if rotation_is_identity {
+                                original_glyph_pos
+                            } else {
+                                Self::rotate_point(original_glyph_pos, pivot, rotation)
+                            };
+                            self.planes[i].physic_object.pos = glyph_pos;
+                            self.planes[i].physic_object.rot = rotation;
 
                             if self.per_symbol {
-                                self.clickzone.pos1.x = self.planes[i].physic_object.pos.x;
-                                self.clickzone.pos1.y = self.planes[i].physic_object.pos.y;
-                                self.clickzone.pos2.x =
-                                    self.planes[i].physic_object.pos.x + self.size.x;
-                                self.clickzone.pos2.y =
-                                    self.planes[i].physic_object.pos.y + self.size.y;
+                                if self.auto_recalculate_clickzone && !rotation_is_identity {
+                                    let (min, max) = Self::rotated_bounds(
+                                        original_glyph_pos,
+                                        self.size,
+                                        pivot,
+                                        rotation,
+                                    );
+                                    self.clickzone.pos1 = min;
+                                    self.clickzone.pos2 = max;
+                                } else {
+                                    self.clickzone.pos1.x = glyph_pos.x;
+                                    self.clickzone.pos1.y = glyph_pos.y;
+                                    self.clickzone.pos2.x = glyph_pos.x + self.size.x;
+                                    self.clickzone.pos2.y = glyph_pos.y + self.size.y;
+                                }
                                 lbtst = self.clickzone.check(Vec2 {
                                     x: eng.control.xpos as f32,
                                     y: eng.control.ypos as f32,
@@ -353,6 +503,25 @@ impl UItext {
                                     self.symbol_pressed = self.symbols[j];
                                     self.symbol_index = i;
                                     btst = true;
+                                }
+                            }
+                            if self.auto_recalculate_clickzone
+                                && self.rotate_each_character
+                                && !rotation_is_identity
+                            {
+                                let (min, max) = Self::rotated_bounds(
+                                    original_glyph_pos,
+                                    self.size,
+                                    pivot,
+                                    rotation,
+                                );
+                                if let Some((bounds_min, bounds_max)) = &mut rotated_symbol_bounds {
+                                    bounds_min.x = bounds_min.x.min(min.x);
+                                    bounds_min.y = bounds_min.y.min(min.y);
+                                    bounds_max.x = bounds_max.x.max(max.x);
+                                    bounds_max.y = bounds_max.y.max(max.y);
+                                } else {
+                                    rotated_symbol_bounds = Some((min, max));
                                 }
                             }
                             if self.signal
@@ -383,6 +552,14 @@ impl UItext {
                         }
                     }
                 }
+            }
+            if let Some((min, max)) = rotated_symbol_bounds {
+                self.clickzone.pos1 = min;
+                self.clickzone.pos2 = max;
+                btst = self.clickzone.check(Vec2 {
+                    x: eng.control.xpos as f32,
+                    y: eng.control.ypos as f32,
+                });
             }
             for i in 0..self.planes.len() {
                 self.planes[i].exec(eng);

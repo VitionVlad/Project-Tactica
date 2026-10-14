@@ -41,6 +41,7 @@ void main() {
     outMaterial.g = texture(sampler2DArray(tex, imageSampler), vec3(luv, 1)).b;
     //outMaterial.b = texture(sampler2DArray(tex, imageSampler), vec3(luv, 1)).b;
     outMaterial.b = mi.rtinfo.x;
+    outMaterial.a = mi.rtinfo.y;
     //outMaterial.r = 0.0;
     //outMaterial.g = 0.1;
     vec3 N = normalize(fnormal);

@@ -58,6 +58,10 @@ float SampleDepth(vec2 uv) {
     return texture(sampler2DArray(defferedDepthTexture, attachmentSampler), vec3(uv, 0)).r;
 }
 
+vec4 SampleMaterial(vec2 uv) {
+    return texture(sampler2DArray(defferedTexture, attachmentSampler), vec3(uv, 1));
+}
+
 vec3 WorldPosFromDepth(float depth, vec2 uv, mat4 inversemat) {
     vec4 clip  = vec4(uv * 2.0 - 1.0, depth, 1.0);
     vec4 world = inversemat * clip;
@@ -655,7 +659,7 @@ vec3 voxelplusssrt() {
 }
 
 void main() {
-    //vec2 uv = vec2(fuv.x, 1.0 - fuv.y);
+    vec2 uv = vec2(fuv.x, 1.0 - fuv.y);
     //outColor = vec4(0.0, 0.0, 0.0, 1.0);
     //float frn = mi.resolutions.a;
     //int fri = int(gl_FragCoord.y+gl_FragCoord.x);
@@ -663,6 +667,11 @@ void main() {
     //    outColor = vec4(voxelplusssrt(), 1.0);
     //}
 
-    outColor = vec4(voxelplusssrt(), 1.0);
+    bool hlighted = SampleMaterial(uv).a > 0.1;
+    vec3 orc = SampleAlbedo(uv).rgb;
+    float fac = hlighted ? 0.85 : 1.0;
+    orc = SampleMaterial(uv).a > 1.0 ? vec3(1.0) : orc;
+
+    outColor = vec4(mix(orc, voxelplusssrt(), fac), 1.0);
     //outColor = vec4(SampleAlbedo(uv), 1.0);
 }

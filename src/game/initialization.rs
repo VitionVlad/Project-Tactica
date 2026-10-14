@@ -245,7 +245,7 @@ pub fn initialize() -> GameSession {
     eng.cameras[0].physic_object.gravity = false;
     println!("shadowmapresolution(ignore if shadowmaps are off): {}", eng.render.shadow_map_resolution);
 
-    eng.render.resolution_scale = 0.5;
+    eng.render.resolution_scale = 0.65;
 
     let audiofl = [
         "assets/audio/bell.mp3",
@@ -305,19 +305,19 @@ pub fn initialize() -> GameSession {
             arrows: [
                 Key {
                     keycode: 40,
-                    key: "W".to_string(),
-                },
-                Key {
-                    keycode: 44,
                     key: "S".to_string(),
                 },
                 Key {
+                    keycode: 44,
+                    key: "W".to_string(),
+                },
+                Key {
                     keycode: 25,
-                    key: "A".to_string(),
+                    key: "D".to_string(),
                 },
                 Key {
                     keycode: 22,
-                    key: "D".to_string(),
+                    key: "A".to_string(),
                 },
             ],
             abxy: [
