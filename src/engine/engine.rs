@@ -32,6 +32,7 @@ pub struct Engine {
     pub primary_camera: usize,
     pub object_object_interaction: bool,
     pub logic_frametime: f32,
+    avg_dt: f32,
 }
 
 impl Engine {
@@ -77,20 +78,32 @@ impl Engine {
             primary_camera: 0,
             object_object_interaction: true,
             logic_frametime: 0.0,
+            avg_dt: 0.0,
         }
     }
     pub fn work(&mut self) -> bool {
         self.audio.exec();
         self.gpu_fps = self.render.gpu_fps;
-        self.cumulated_time += self.render.cpu_frametime;
-        self.tmpassed += self.render.cpu_frametime;
-        self.cfps += 1;
-        if self.tmpassed >= 1000.0 {
+        const MAX_DT: f32 = 0.05;
+        const SPIKE_FACTOR: f32 = 2.0;
+        const AVG_RATE: f32 = 0.1;
+
+        let raw = self.render.cpu_frametime / 1000.0;
+        let mut dt = raw.min(MAX_DT);
+        if self.avg_dt > 0.0 {
+            dt = dt.min(self.avg_dt * SPIKE_FACTOR);
+        }
+        self.avg_dt += (dt - self.avg_dt) * AVG_RATE;
+        self.logic_frametime = dt;
+
+        if self.tmpassed >= 1.0 {
             self.cpu_fps = self.cfps;
             self.cfps = 0;
             self.tmpassed = 0.0;
         }
-        self.logic_frametime = (self.render.cpu_frametime / 1000.0).min(1.0);
+        self.cfps += 1;
+        self.tmpassed += self.logic_frametime;
+
         self.render.camera_count = self.used_camera_count;
         self.render.lights_count = self.used_light_count;
         self.render.shadow_map_count = self
