@@ -11,6 +11,7 @@ layout(binding = 0) uniform MeshInput {
     mat4 r;
     mat4 s;
     vec4 addinfo;
+    vec4 rtinfo;
 } mi;
 
 layout(binding = 1) uniform ShadowMatricesInput {
@@ -20,9 +21,10 @@ layout(binding = 1) uniform ShadowMatricesInput {
 } smi;
 
 layout(binding = 2) uniform DefferedMatricesInput {
-    mat4 defferedViews[10];
-    vec4 lightpos[10];
-    vec4 lightcol[10];
+    mat4 defferedMVP[10];
+    mat4 defferedMVPInverse[10];
+    vec4 deffpos[10];
+    vec4 deffrot[10];
 } dmi;
 
 layout(binding = 3) uniform texture2DArray texTexture;

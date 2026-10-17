@@ -21,15 +21,16 @@ layout(binding = 1) uniform ShadowMatricesInput {
 } smi;
 
 layout(binding = 2) uniform DefferedMatricesInput {
-    mat4 defferedViews[10];
-    vec4 lightpos[10];
-    vec4 lightcol[10];
+    mat4 defferedMVP[10];
+    mat4 defferedMVPInverse[10];
+    vec4 deffpos[10];
+    vec4 deffrot[10];
 } dmi;
 
 layout(binding = 3) uniform texture2DArray texTexture;
 
 layout(binding = 4) uniform texture2DArray lightingTexture;
- 
+
 layout(binding = 5) uniform texture2DArray lightingDepthTexture;
 
 layout(binding = 6) uniform texture2DArray defferedTexture;
@@ -44,11 +45,11 @@ layout(binding = 10) uniform sampler attachmentSampler;
 
 void main() {
     if(mi.addinfo.z > 0.0){
-        vec3 op = pow(texture(sampler2DArray(texTexture, imageSampler), vec3(uv.x, -uv.y, 0)).rgb, vec3(2.2)) / 16.0;
+        vec3 op = pow(texture(sampler2DArray(texTexture, imageSampler), vec3(uv.x, 1.0-uv.y, 0)).rgb, vec3(2.2)) / 16.0;
         //op = mix(op, vec3(0.0, 0.0, 0.0), mi.addinfo.x);
         outColor = vec4(op, 1.0);
     }else{
-        vec3 op = pow(texture(sampler2DArray(texTexture, imageSampler), vec3(uv.x, -uv.y, 0)).rgb, vec3(2.2));
+        vec3 op = pow(texture(sampler2DArray(texTexture, imageSampler), vec3(uv.x, 1.0-uv.y, 0)).rgb, vec3(2.2));
         //op = mix(op, vec3(0.0, 0.0, 0.0), mi.addinfo.x);
         outColor = vec4(op, 1.0);
     }

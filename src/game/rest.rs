@@ -1,4 +1,4 @@
-use crate::{engine::math::{vec3::Vec3, vec4::Vec4}, game::Action::{Skip, Step, StepWithElemination}};
+use crate::{engine::math::{vec3::Vec3, vec4::Vec4}, game::{Action::{Skip, Step, StepWithElemination}, Awarness}};
 
 use super::{Direction, GameSession, InputType, tile_test};
 
@@ -27,7 +27,7 @@ pub fn update(session: &mut GameSession) {
     );
     session.fpscnt.size.x = 10.0 * session.ui_scale;
     session.fpscnt.size.y = 20.0 * session.ui_scale;
-    session.fpscnt.pos.x = 0.0;
+    session.fpscnt.pos.x = session.eng.render.resolution_x as f32 - 400.0;
     session.fpscnt.pos.y = 0.0;
     session.fpscnt.pos.z = 0.1;
     session.fpscnt.draw = true;
@@ -298,10 +298,127 @@ pub fn update(session: &mut GameSession) {
         for enemy in &session.enemies{
             session.scn.objects[enemy.id].mesh.ubo[53] = 0.0;
         }
+
+        for pl in &mut session.awarness_signs{
+            pl.object.physic_object.pos.x += (-150.0 - pl.object.physic_object.pos.x)*session.eng.logic_frametime;
+            pl.object.physic_object.scale.x = 100.0 * session.ui_scale;
+            pl.object.physic_object.scale.y = 100.0 * session.ui_scale;
+            pl.object.physic_object.pos.y = 10.0;
+            pl.object.draw = true;
+            pl.exec(&mut session.eng);
+        }
     }else{
         session.scn.objects[session.pivot.id].mesh.ubo[53] = 1.0;
         for enemy in &session.enemies{
             session.scn.objects[enemy.id].mesh.ubo[53] = 1.0;
+        }
+
+        match session.awareness {
+            Awarness::Unseen(l) => {
+                session.awarness_signs[0].object.physic_object.scale.x = 100.0 * session.ui_scale;
+                session.awarness_signs[0].object.physic_object.scale.y = 100.0 * session.ui_scale;
+                session.awarness_signs[0].object.physic_object.pos.x += (10.0 - session.awarness_signs[0].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                session.awarness_signs[0].object.physic_object.pos.y = 10.0;
+                session.awarness_signs[0].object.physic_object.pos.z = 0.1;
+                session.awarness_signs[0].object.draw = true;
+                session.awarness_signs[0].exec(&mut session.eng);
+
+                for i in 1..3{
+                    //session.awarness_signs[i].object.draw = false;
+                    session.awarness_signs[i].object.physic_object.pos.y = 10.0;
+                    session.awarness_signs[i].object.physic_object.pos.x += (-150.0 - session.awarness_signs[i].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                    session.awarness_signs[i].exec(&mut session.eng);
+                }
+            },
+            Awarness::Suspected(l) => {
+                session.awarness_signs[0].object.physic_object.scale.x = 100.0 * session.ui_scale;
+                session.awarness_signs[0].object.physic_object.scale.y = 100.0 * session.ui_scale;
+                session.awarness_signs[0].object.physic_object.pos.x += (10.0 - session.awarness_signs[0].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                session.awarness_signs[0].object.physic_object.pos.y = 10.0;
+                session.awarness_signs[0].object.physic_object.pos.z = 0.1;
+                session.awarness_signs[0].object.draw = true;
+                session.awarness_signs[0].exec(&mut session.eng);
+
+                session.awarness_signs[1].object.physic_object.scale.x = 100.0 * session.ui_scale;
+                session.awarness_signs[1].object.physic_object.scale.y = 100.0 * session.ui_scale;
+                //session.awarness_signs[1].object.physic_object.pos.x = 10.0;
+                session.awarness_signs[1].object.physic_object.pos.x += ((20.0 + session.awarness_signs[1].object.physic_object.scale.x) - session.awarness_signs[1].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                session.awarness_signs[1].object.physic_object.pos.y = 10.0;
+                session.awarness_signs[1].object.physic_object.pos.z = 0.2;
+                session.awarness_signs[1].object.draw = true;
+                session.awarness_signs[1].exec(&mut session.eng);
+
+                for i in 2..3{
+                    session.awarness_signs[i].object.physic_object.pos.x += (-150.0 - session.awarness_signs[0].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                    session.awarness_signs[i].exec(&mut session.eng);
+                }
+            },
+            Awarness::Detected(l) => {
+                session.awarness_signs[0].object.physic_object.scale.x = 100.0 * session.ui_scale;
+                session.awarness_signs[0].object.physic_object.scale.y = 100.0 * session.ui_scale;
+                session.awarness_signs[0].object.physic_object.pos.x += (10.0 - session.awarness_signs[0].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                session.awarness_signs[0].object.physic_object.pos.y = 10.0;
+                session.awarness_signs[0].object.physic_object.pos.z = 0.1;
+                session.awarness_signs[0].object.draw = true;
+                session.awarness_signs[0].exec(&mut session.eng);
+
+                session.awarness_signs[1].object.physic_object.scale.x = 100.0 * session.ui_scale;
+                session.awarness_signs[1].object.physic_object.scale.y = 100.0 * session.ui_scale;
+                //session.awarness_signs[1].object.physic_object.pos.x = 10.0;
+                session.awarness_signs[1].object.physic_object.pos.x += ((20.0 + session.awarness_signs[1].object.physic_object.scale.x) - session.awarness_signs[1].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                session.awarness_signs[1].object.physic_object.pos.y = 10.0;
+                session.awarness_signs[1].object.physic_object.pos.z = 0.2;
+                session.awarness_signs[1].object.draw = true;
+                session.awarness_signs[1].exec(&mut session.eng);
+
+                session.awarness_signs[2].object.physic_object.scale.x = 100.0 * session.ui_scale;
+                session.awarness_signs[2].object.physic_object.scale.y = 100.0 * session.ui_scale;
+                //session.awarness_signs[1].object.physic_object.pos.x = 10.0;
+                session.awarness_signs[2].object.physic_object.pos.x += ((10.0 + session.awarness_signs[2].object.physic_object.scale.x)*2.0 + 10.0 - session.awarness_signs[2].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                session.awarness_signs[2].object.physic_object.pos.y = 10.0;
+                session.awarness_signs[2].object.physic_object.pos.z = 0.3;
+                session.awarness_signs[2].object.draw = true;
+                session.awarness_signs[2].exec(&mut session.eng);
+
+                session.awarness_signs[3].object.physic_object.pos.x += (-150.0 - session.awarness_signs[3].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                session.awarness_signs[3].exec(&mut session.eng);
+            },
+            Awarness::Compromised(l) => {
+                session.awarness_signs[0].object.physic_object.scale.x = 100.0 * session.ui_scale;
+                session.awarness_signs[0].object.physic_object.scale.y = 100.0 * session.ui_scale;
+                session.awarness_signs[0].object.physic_object.pos.x += (20.0 - session.awarness_signs[0].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                session.awarness_signs[0].object.physic_object.pos.y = 10.0;
+                session.awarness_signs[0].object.physic_object.pos.z = 0.1;
+                session.awarness_signs[0].object.draw = true;
+                session.awarness_signs[0].exec(&mut session.eng);
+
+                session.awarness_signs[1].object.physic_object.scale.x = 100.0 * session.ui_scale;
+                session.awarness_signs[1].object.physic_object.scale.y = 100.0 * session.ui_scale;
+                //session.awarness_signs[1].object.physic_object.pos.x = 10.0;
+                session.awarness_signs[1].object.physic_object.pos.x += ((10.0 + session.awarness_signs[1].object.physic_object.scale.x) - session.awarness_signs[1].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                session.awarness_signs[1].object.physic_object.pos.y = 10.0;
+                session.awarness_signs[1].object.physic_object.pos.z = 0.2;
+                session.awarness_signs[1].object.draw = true;
+                session.awarness_signs[1].exec(&mut session.eng);
+
+                session.awarness_signs[2].object.physic_object.scale.x = 100.0 * session.ui_scale;
+                session.awarness_signs[2].object.physic_object.scale.y = 100.0 * session.ui_scale;
+                //session.awarness_signs[1].object.physic_object.pos.x = 10.0;
+                session.awarness_signs[2].object.physic_object.pos.x += ((10.0 + session.awarness_signs[2].object.physic_object.scale.x)*2.0 + 10.0 - session.awarness_signs[2].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                session.awarness_signs[2].object.physic_object.pos.y = 10.0;
+                session.awarness_signs[2].object.physic_object.pos.z = 0.3;
+                session.awarness_signs[2].object.draw = true;
+                session.awarness_signs[2].exec(&mut session.eng);
+
+                session.awarness_signs[3].object.physic_object.scale.x = 100.0 * session.ui_scale;
+                session.awarness_signs[3].object.physic_object.scale.y = 100.0 * session.ui_scale;
+                //session.awarness_signs[1].object.physic_object.pos.x = 10.0;
+                session.awarness_signs[3].object.physic_object.pos.x += ((10.0 + session.awarness_signs[3].object.physic_object.scale.x)*3.0 + 10.0 - session.awarness_signs[3].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                session.awarness_signs[3].object.physic_object.pos.y = 10.0;
+                session.awarness_signs[3].object.physic_object.pos.z = 0.4;
+                session.awarness_signs[3].object.draw = true;
+                session.awarness_signs[3].exec(&mut session.eng);
+            },
         }
     }
 

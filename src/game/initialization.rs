@@ -17,7 +17,7 @@ pub fn initialize() -> GameSession {
     let shadow = readfs("shaders/shadow");
     let textf = readfs("shaders/ftext");
     let textf2 = readfs("shaders/ftext2");
-    let imgf = readfs("shaders/img");
+    let imgf = readfs("shaders/fimg");
     let imgf2 = readfs("shaders/fimg2");
 
     let matt = Material::new(
@@ -74,6 +74,27 @@ pub fn initialize() -> GameSession {
     let mut viewport = UIplane::new(&mut eng, mat, vec![black], MeshUsage::PostPass);
     viewport.object.physic_object.pos.z = 1.0;
     viewport.signal = false;
+
+    let mut awaspr = Vec::new();
+
+    awaspr.push(UIplane::new_from_file(&mut eng, mati, ["assets/ui/awa1.png".to_string()].to_vec(), MeshUsage::PostPass));
+    awaspr.push(UIplane::new_from_file(&mut eng, mati, ["assets/ui/awa2.png".to_string()].to_vec(), MeshUsage::PostPass));
+    awaspr.push(UIplane::new_from_file(&mut eng, mati, ["assets/ui/awa3.png".to_string()].to_vec(), MeshUsage::PostPass));
+    awaspr.push(UIplane::new_from_file(&mut eng, mati, ["assets/ui/awa4.png".to_string()].to_vec(), MeshUsage::PostPass));
+
+    for pl in &mut awaspr{
+        pl.object.physic_object.is_static = false;
+        pl.object.physic_object.gravity = false;
+        pl.object.physic_object.solid = false;
+        pl.object.physic_object.compute_force = true;
+        pl.object.physic_object.compute_torque = false;
+        pl.object.physic_object.pin_pos = false;
+        pl.object.physic_object.scale.x = 100.0;
+        pl.object.physic_object.scale.y = 100.0;
+        pl.object.physic_object.pos.z = 0.2;
+        pl.object.physic_object.pos.x = -150.0;
+        pl.object.physic_object.air_friction = 1.0;
+    }
 
     let mut fpscnt = UItext::new_from_file(
         &mut eng,
@@ -316,6 +337,7 @@ pub fn initialize() -> GameSession {
         text,
         keyimg,
         speech_bubble_background: spbg,
+        awarness_signs: awaspr,
         ui_scale: 1.0,
         pivot,
         tbtplates,
@@ -323,7 +345,7 @@ pub fn initialize() -> GameSession {
         physics_objects,
         actual_plate_id: 0,
         awareness: Awarness::Unseen(0),
-        max_awareness: 2,
+        max_awareness: 0,
         making_step: false,
         object_holding: None,
         current_dir: Vec3::new(),

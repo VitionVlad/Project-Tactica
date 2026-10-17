@@ -23,7 +23,7 @@ pub fn update(session: &mut GameSession) {
                     .enemy_id
                     .expect("elimination action references an unoccupied plate");
                 session.enemies[enemy_id].alive = false;
-                for _ in 0..(session.max_awareness + 1) {
+                for _ in 0..(session.max_awareness + 2) {
                     increase_awareness(&mut session.awareness, session.max_awareness);
                 }
                 let object_id = session.enemies[enemy_id].id;

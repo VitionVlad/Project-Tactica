@@ -120,6 +120,7 @@ pub struct GameSession {
     pub text: Vec<UItext>,
     pub keyimg: Vec<UItext>,
     pub speech_bubble_background: Vec<UIplane>,
+    pub awarness_signs: Vec<UIplane>,
     pub ui_scale: f32,
     pub pivot: Pivot,
     pub tbtplates: Vec<TBTplate>,

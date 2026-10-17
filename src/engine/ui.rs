@@ -77,7 +77,7 @@ impl UIplane {
             signal_off_value: 0.0f32,
         }
     }
-    pub fn new_from_file(eng: &mut Engine, mat: Material, paths: Vec<String>) -> UIplane {
+    pub fn new_from_file(eng: &mut Engine, mat: Material, paths: Vec<String>, usage: super::render::render::MeshUsage) -> UIplane {
         let image = Image::new_from_files(eng, paths);
         let model = Model::new(&eng, PLANEUI.to_vec());
         UIplane {
@@ -86,7 +86,7 @@ impl UIplane {
                 model,
                 mat,
                 vec![image],
-                super::render::render::MeshUsage::LightingPass,
+                usage,
                 true,
                 "".to_string(),
                 vec![],

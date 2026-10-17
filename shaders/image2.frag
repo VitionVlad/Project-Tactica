@@ -21,15 +21,16 @@ layout(binding = 1) uniform ShadowMatricesInput {
 } smi;
 
 layout(binding = 2) uniform DefferedMatricesInput {
-    mat4 defferedViews[10];
-    vec4 lightpos[10];
-    vec4 lightcol[10];
+    mat4 defferedMVP[10];
+    mat4 defferedMVPInverse[10];
+    vec4 deffpos[10];
+    vec4 deffrot[10];
 } dmi;
 
 layout(binding = 3) uniform texture2DArray texTexture;
 
 layout(binding = 4) uniform texture2DArray lightingTexture;
- 
+
 layout(binding = 5) uniform texture2DArray lightingDepthTexture;
 
 layout(binding = 6) uniform texture2DArray defferedTexture;

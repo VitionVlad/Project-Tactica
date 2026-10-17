@@ -29,9 +29,10 @@ layout(binding = 1) uniform ShadowMatricesInput {
 } smi;
 
 layout(binding = 2) uniform DefferedMatricesInput {
-    mat4 defferedViews[10];
-    vec4 campos[10];
-    vec4 camrot[10];
+    mat4 defferedMVP[10];
+    mat4 defferedMVPInverse[10];
+    vec4 deffpos[10];
+    vec4 deffrot[10];
 } dmi;
 
 void main() {
