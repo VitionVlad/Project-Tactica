@@ -2,6 +2,14 @@
 #define EUCLID_H
 #include <stdint.h>
 
+enum {
+    EUCLID_RENDER_PASS_SHADOW = 0,
+    EUCLID_RENDER_PASS_DEFFERED = 1,
+    EUCLID_RENDER_PASS_LIGHTING = 2,
+    EUCLID_RENDER_PASS_MAIN = 3,
+    EUCLID_RENDER_PASS_COUNT = 4
+};
+
 float get_frametime(uint32_t eh);
 float get_gpuframetime(uint32_t eh);
 uint32_t get_gpufps(uint32_t eh);
@@ -29,6 +37,8 @@ void modifyshadowdata(uint32_t eh, uint32_t ncnt, uint32_t nres, uint32_t lcnt);
 void modifydeffereddata(uint32_t eh, uint32_t ncnt, float nres);
 void modifyshadowuniform(uint32_t eh, uint32_t pos, float value);
 void modifydeffereduniform(uint32_t eh, uint32_t pos, float value);
+uint8_t setrenderpassactive(uint32_t eh, uint8_t pass, uint8_t active);
+uint8_t setrenderpassactiveonresize(uint32_t eh, uint8_t pass, uint8_t active);
 uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug);
 void destroy(uint32_t eh);
 uint32_t newmaterial(uint32_t eh, uint32_t *vert, uint32_t *frag, uint32_t *shadow, uint32_t svert, uint32_t sfrag, uint32_t sshadow, uint32_t cullmode, uint32_t scullmode);

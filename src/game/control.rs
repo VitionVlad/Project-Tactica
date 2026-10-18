@@ -6,11 +6,40 @@ const SPEED: f32 = 25.0;
 
 pub fn update(session: &mut GameSession) {
     update_input_type(session);
+    if session.action_cooldown <= 0.0 && start_pressed(session) {
+        session.game_state = super::GameState::Paused;
+        session.action_cooldown = 0.25;
+        return;
+    }
+
     if session.pivot.tbtmode {
         update_tbt_controls(session);
     } else {
         update_adventure_controls(session);
     }
+}
+
+pub fn start_pressed(session: &mut GameSession) -> bool {
+    if session
+        .eng
+        .control
+        .get_key_state(session.keyboard_bindings.start.keycode as u32)
+    {
+        session.input_type = InputType::Keyboard;
+        return true;
+    }
+
+    if session.eng.control.gamepad_connected
+        && session
+            .eng
+            .control
+            .get_gamepad_button_state(session.controller_mappings.start as u8)
+    {
+        session.input_type = InputType::Gamepad;
+        return true;
+    }
+
+    false
 }
 
 fn update_input_type(session: &mut GameSession) {
@@ -22,7 +51,11 @@ fn update_input_type(session: &mut GameSession) {
         || session
             .eng
             .control
-            .get_key_state(session.keyboard_bindings.abxy[0].keycode as u32);
+            .get_key_state(session.keyboard_bindings.abxy[0].keycode as u32)
+        || session
+            .eng
+            .control
+            .get_key_state(session.keyboard_bindings.start.keycode as u32);
     if keyboard_pressed {
         session.input_type = InputType::Keyboard;
     }
@@ -36,7 +69,11 @@ fn update_input_type(session: &mut GameSession) {
             || session
                 .eng
                 .control
-                .get_gamepad_button_state(session.controller_mappings.abxy[0] as u8);
+                .get_gamepad_button_state(session.controller_mappings.abxy[0] as u8)
+            || session
+                .eng
+                .control
+                .get_gamepad_button_state(session.controller_mappings.start as u8);
         let gamepad_axis_moved = session
             .controller_mappings
             .axis

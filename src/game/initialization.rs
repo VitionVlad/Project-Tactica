@@ -2,7 +2,7 @@ use crate::{engine::{
     engine::Engine, image::Image, light::{Light, LightType}, loader::{jsonparser::JsonF, rw::readfs}, material::Material, math::{ivec3::Ivec3, vec3::Vec3}, render::render::{CullMode, MeshUsage, TextureFormat}, scene::{Scene, SceneVoxelizer}, speaker::Speaker, ui::{UIplane, UItext}, voxel::VoxelizerSettings,
 }, game::{ControllerMappings, Key, KeyboardBindings}};
 
-use super::{Awarness, Enemy, GameSession, Pivot, TBTplate};
+use super::{Awarness, Enemy, GameSession, Pivot, TBTplate, TextContent};
 
 pub fn initialize() -> GameSession {
     let mut eng = Engine::new(false);
@@ -327,6 +327,9 @@ pub fn initialize() -> GameSession {
     speakers[5].volume = 0.1;
 
     let gmtxt = JsonF::load_from_file("assets/text.json");
+    let chosen_language = 0;
+    let text_content = TextContent::from_json(&gmtxt, chosen_language)
+        .expect("failed to load text content from assets/text.json");
 
     GameSession {
         eng,
@@ -390,7 +393,7 @@ pub fn initialize() -> GameSession {
                 },
             ],
             start: Key {
-                keycode: 0,
+                keycode: 49,
                 key: String::new(),
             },
             select: Key {
@@ -413,8 +416,9 @@ pub fn initialize() -> GameSession {
         input_type: super::InputType::Keyboard,
         action_list: [None, None, None, None, None],
         active_action: None,
-        in_game_text: gmtxt,
-        chosen_language: 0,
+        chosen_language,
+        text_content,
+        game_state: crate::game::GameState::InGame,
     }
 }
 

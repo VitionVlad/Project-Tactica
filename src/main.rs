@@ -1,7 +1,7 @@
 mod engine;
 mod game;
 
-use game::{control, game_over, initialization, rest, tbt};
+use game::{control, game_over, initialization, pause, rest, tbt};
 
 fn main() {
     let mut session = initialization::initialize();
@@ -11,10 +11,22 @@ fn main() {
             session.action_cooldown -= session.eng.logic_frametime;
         }
 
-        tbt::update(&mut session);
-        control::update(&mut session);
-        rest::update(&mut session);
-        game_over::handle(&mut session);
+        match session.game_state{
+            game::GameState::InGame => {
+                session.eng.render.active_renderpasses = [true, true, true, true];
+                tbt::update(&mut session);
+                control::update(&mut session);
+                rest::update(&mut session);
+                game_over::handle(&mut session);
+            },
+            game::GameState::Gameover => {},
+            game::GameState::Paused => {
+                session.eng.render.active_renderpasses = [false, false, false, true];
+                pause::update(&mut session);
+                pause::handle_input(&mut session);
+            },
+            game::GameState::MainMenu => {},
+        }
 
         session.frame_count += 1;
         if session.frame_count > u32::MAX - 100000{

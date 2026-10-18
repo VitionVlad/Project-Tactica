@@ -4,11 +4,12 @@
 pub mod control;
 pub mod game_over;
 pub mod initialization;
+pub mod pause;
 pub mod rest;
 pub mod tbt;
 
 use crate::engine::{
-    engine::Engine, loader::jsonparser::JsonF, math::vec3::Vec3, scene::Scene, speaker::Speaker, ui::{UIplane, UItext},
+    engine::Engine, loader::jsonparser::{JsonF, NodeType}, math::vec3::Vec3, scene::Scene, speaker::Speaker, ui::{UIplane, UItext},
 };
 
 #[derive(Clone, Copy)]
@@ -111,6 +112,42 @@ pub enum InputType {
     Touchscreen,
 }
 
+pub enum GameState{
+    InGame,
+    Paused,
+    Gameover,
+    MainMenu,
+}
+
+pub struct TextContent{
+    pub actions: Vec<String>,
+}
+
+impl TextContent {
+    pub fn from_json(json: &JsonF, language_index: usize) -> Result<Self, String> {
+        let language = json
+            .other_nodes
+            .get(language_index)
+            .ok_or_else(|| format!("language index {language_index} is missing from text.json"))?;
+        let tbt_ui = language
+            .other_nodes
+            .iter()
+            .find(|node| node.name == "tbt_ui")
+            .ok_or_else(|| format!("tbt_ui dictionary is missing for language {}", language.name))?;
+        let mut actions = Vec::with_capacity(tbt_ui.other_nodes.len());
+        for item in &tbt_ui.other_nodes {
+            if item.node_type != NodeType::String {
+                return Err(format!(
+                    "tbt_ui contains a non-string value for language {}",
+                    language.name
+                ));
+            }
+            actions.push(item.strval.clone());
+        }
+        Ok(Self { actions })
+    }
+}
+
 pub struct GameSession {
     pub eng: Engine,
     pub scn: Scene,
@@ -140,8 +177,9 @@ pub struct GameSession {
     pub input_type: InputType,
     pub action_list: [Option<Action>; 5],
     pub active_action: Option<Action>,
-    pub in_game_text: JsonF,
     pub chosen_language: usize,
+    pub text_content: TextContent,
+    pub game_state: GameState,
 }
 
 pub fn tile_test(

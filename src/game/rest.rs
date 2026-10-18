@@ -60,7 +60,7 @@ pub fn update(session: &mut GameSession) {
                     session.text[i].draw = true;
                     session.text[i].signal = true;
                     session.text[i].per_symbol = false;
-                    let text = &session.in_game_text.other_nodes[session.chosen_language].other_nodes[0].other_nodes[0].strval;
+                    let text = &session.text_content.actions[0];
                     if session.text[i].exec(&mut session.eng, text) && session.action_cooldown <= 0.0 && session.eng.control.mousebtn[2] {
                         session.input_type = InputType::Touchscreen;
                         session.active_action = Some(Step((match i {
@@ -138,7 +138,7 @@ pub fn update(session: &mut GameSession) {
                     session.text[i].auto_recalculate_clickzone = true;
                     session.text[i].rotate_each_character = false;
                     session.text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: 0.1 }.to_quat();
-                    let text = &session.in_game_text.other_nodes[session.chosen_language].other_nodes[0].other_nodes[1].strval;
+                    let text = &session.text_content.actions[1];
 
                     session.speech_bubble_background[i].object.physic_object.scale.x = (session.text[i].size.x * text.len() as f32 + 12.0) * session.ui_scale;
                     session.speech_bubble_background[i].object.physic_object.scale.y = (session.text[i].size.y + 12.0) * session.ui_scale;
@@ -200,7 +200,7 @@ pub fn update(session: &mut GameSession) {
                     }
                 },
                 Skip => {
-                    let text = &session.in_game_text.other_nodes[session.chosen_language].other_nodes[0].other_nodes[2].strval;
+                    let text = &session.text_content.actions[2];
                     session.text[i].size.x = 15.0 * session.ui_scale;
                     session.text[i].size.y = 30.0 * session.ui_scale;
                     session.text[i].pos.x = session.eng.render.resolution_x as f32 / 2.0 - text.len() as f32;
@@ -274,6 +274,7 @@ pub fn update(session: &mut GameSession) {
     session.ltviewport.object.mesh.ubo[53] = session.scn.voxel_representation.origin.y as f32;
     session.ltviewport.object.mesh.ubo[54] = session.scn.voxel_representation.origin.z as f32;
     session.ltviewport.object.mesh.ubo[55] = session.scn.voxel_representation.voxel_size;
+    session.ltviewport.object.draw = true;
     session.ltviewport.exec(&mut session.eng);
 
     session.scn.objects[session.pivot.id].mesh.ubo[52] = 1.0;
@@ -327,6 +328,7 @@ pub fn update(session: &mut GameSession) {
                     //session.awarness_signs[i].object.draw = false;
                     session.awarness_signs[i].object.physic_object.pos.y = 10.0;
                     session.awarness_signs[i].object.physic_object.pos.x += (-150.0 - session.awarness_signs[i].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                    session.awarness_signs[i].object.draw = true;
                     session.awarness_signs[i].exec(&mut session.eng);
                 }
             },
@@ -350,6 +352,7 @@ pub fn update(session: &mut GameSession) {
 
                 for i in 2..3{
                     session.awarness_signs[i].object.physic_object.pos.x += (-150.0 - session.awarness_signs[0].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                    session.awarness_signs[i].object.draw = true;
                     session.awarness_signs[i].exec(&mut session.eng);
                 }
             },
@@ -381,6 +384,7 @@ pub fn update(session: &mut GameSession) {
                 session.awarness_signs[2].exec(&mut session.eng);
 
                 session.awarness_signs[3].object.physic_object.pos.x += (-150.0 - session.awarness_signs[3].object.physic_object.pos.x)*session.eng.logic_frametime*10.0;
+                session.awarness_signs[3].object.draw = true;
                 session.awarness_signs[3].exec(&mut session.eng);
             },
             Awarness::Compromised(l) => {
@@ -445,5 +449,6 @@ pub fn update(session: &mut GameSession) {
     session.viewport.object.mesh.ubo[49] = 0.0;
     session.viewport.object.mesh.ubo[50] = 0.2;
     session.viewport.object.mesh.ubo[51] = 0.18;
+    session.viewport.object.draw = true;
     session.viewport.exec(&mut session.eng);
 }

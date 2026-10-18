@@ -38,6 +38,16 @@ unsafe extern "C" {
     fn modifydeffereddata(eh: cty::uint32_t, ncnt: cty::uint32_t, nres: cty::c_float);
     fn modifyshadowuniform(eh: cty::uint32_t, pos: cty::uint32_t, value: cty::c_float);
     fn modifydeffereduniform(eh: cty::uint32_t, pos: cty::uint32_t, value: cty::c_float);
+    fn setrenderpassactive(
+        eh: cty::uint32_t,
+        pass: cty::uint8_t,
+        active: cty::uint8_t,
+    ) -> cty::uint8_t;
+    fn setrenderpassactiveonresize(
+        eh: cty::uint32_t,
+        pass: cty::uint8_t,
+        active: cty::uint8_t,
+    ) -> cty::uint8_t;
     fn neweng(shadowMapResolution: cty::uint32_t, debug: cty::uint8_t) -> cty::uint32_t;
     fn destroy(eh: cty::uint32_t);
     fn newmaterial(
@@ -142,10 +152,17 @@ pub struct Render {
     pub gpu_frametime: f32,
     pub gpu_fps: u32,
     pub lights_count: u32,
+    pub active_renderpasses: [bool; 4],
+    pub active_renderpasses_on_resize: [bool; 4],
     fullscreeno: bool,
 }
 
 impl Render {
+    pub const RENDER_PASS_SHADOW: u8 = 0;
+    pub const RENDER_PASS_DEFFERED: u8 = 1;
+    pub const RENDER_PASS_LIGHTING: u8 = 2;
+    pub const RENDER_PASS_MAIN: u8 = 3;
+
     pub fn new(debug: bool) -> Render {
         Render {
             euclid: unsafe { neweng(1000, if debug { 1 } else { 0 }) },
@@ -160,6 +177,8 @@ impl Render {
             cpu_frametime: 0.0,
             gpu_frametime: 0.0,
             gpu_fps: 0,
+            active_renderpasses: [true, true, true, true],
+            active_renderpasses_on_resize: [true, true, true, true],
             lights_count: 1,
         }
     }
@@ -184,6 +203,14 @@ impl Render {
             self.cpu_frametime = get_frametime(self.euclid);
             self.gpu_frametime = get_gpuframetime(self.euclid);
             self.gpu_fps = get_gpufps(self.euclid);
+            for i in 0 ..4{
+                setrenderpassactive(self.euclid, i, u8::from(self.active_renderpasses[i as usize]));
+                setrenderpassactiveonresize(
+                    self.euclid,
+                    i,
+                    u8::from(self.active_renderpasses_on_resize[i as usize]),
+                );
+            }
         };
         return unsafe { loopcont(self.euclid) } == 1;
     }

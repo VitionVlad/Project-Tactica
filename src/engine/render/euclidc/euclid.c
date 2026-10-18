@@ -146,6 +146,8 @@ typedef struct euclidh{
     uint32_t oldy;
     VkImageView *swapChainImageViews;
     VkRenderPass renderPass;
+    _Atomic uint8_t renderPassActive[2][4];
+    _Atomic uint8_t renderPassActiveOnResize[2][4];
     VkImage depthImage;
     VkImageView depthImageView;
     VkDeviceMemory depthImageMemory;
@@ -1653,6 +1655,18 @@ void startrender(uint32_t eh){
 
     VkResult result = vkAcquireNextImageKHR(euclid.handle[eh].device, euclid.handle[eh].swapChain, UINT64_MAX, euclid.handle[eh].imageAvailableSemaphores[euclid.handle[eh].currentFrame], VK_NULL_HANDLE, &euclid.handle[eh].imageIndex);
 
+    for(uint32_t i = 0; i != 4; i++){
+        atomic_store_explicit(
+            &euclid.handle[eh].renderPassActive[0][i],
+            atomic_load_explicit(&euclid.handle[eh].renderPassActive[1][i], memory_order_relaxed),
+            memory_order_relaxed
+        );
+        atomic_store_explicit(
+            &euclid.handle[eh].renderPassActiveOnResize[0][i],
+            atomic_load_explicit(&euclid.handle[eh].renderPassActiveOnResize[1][i], memory_order_relaxed),
+            memory_order_relaxed
+        );
+    }
     euclid.handle[eh].resolutionX[0] = euclid.handle[eh].resolutionX[1];
     euclid.handle[eh].resolutionY[0] = euclid.handle[eh].resolutionY[1];
     if(euclid.handle[eh].resolutionX[0] <= 0){
@@ -1669,7 +1683,10 @@ void startrender(uint32_t eh){
     euclid.handle[eh].resolutionScale[0] = euclid.handle[eh].resolutionScale[1];
     euclid.handle[eh].shadowMapResolution[0] = euclid.handle[eh].shadowMapResolution[1];
     euclid.handle[eh].shadowMapsCount[0] = euclid.handle[eh].shadowMapsCount[1];
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || euclid.handle[eh].oldx != euclid.handle[eh].resolutionX[0] || euclid.handle[eh].oldy != euclid.handle[eh].resolutionY[0] || euclid.handle[eh].resolutionScale[0] != euclid.handle[eh].oldResolutionScale || euclid.handle[eh].defferedCount[0] != euclid.handle[eh].oldDefferedCount) {
+    uint8_t resized = result == VK_ERROR_OUT_OF_DATE_KHR
+        || euclid.handle[eh].oldx != euclid.handle[eh].resolutionX[0]
+        || euclid.handle[eh].oldy != euclid.handle[eh].resolutionY[0];
+    if (resized || euclid.handle[eh].resolutionScale[0] != euclid.handle[eh].oldResolutionScale || euclid.handle[eh].defferedCount[0] != euclid.handle[eh].oldDefferedCount) {
         if (euclid.handle[eh].debug == 1) printf("\e[1;35mEuclidVK\e[0;37m: Resolution changed from %dx%d to %dx%d, acquiere result = %i\n", euclid.handle[eh].oldx, euclid.handle[eh].oldy, euclid.handle[eh].resolutionX[0], euclid.handle[eh].resolutionY[0], result);
         euclid.handle[eh].oldx = euclid.handle[eh].resolutionX[0];
         euclid.handle[eh].oldy = euclid.handle[eh].resolutionY[0];
@@ -1711,6 +1728,13 @@ void startrender(uint32_t eh){
         recreateSwapChain(eh);
         euclid.handle[eh].mrec++;
         if (euclid.handle[eh].debug == 1) printf("\e[1;35mEuclidVK\e[0;37m: Recreated swapchain and deffered data\n");
+    }
+    if(resized){
+        for(uint32_t i = 0; i != EUCLID_RENDER_PASS_COUNT; i++){
+            if(atomic_load_explicit(&euclid.handle[eh].renderPassActiveOnResize[0][i], memory_order_relaxed)){
+                atomic_store_explicit(&euclid.handle[eh].renderPassActive[0][i], 1, memory_order_relaxed);
+            }
+        }
     }
     if(euclid.handle[eh].shadowMapResolution[0] < 1 || euclid.handle[eh].shadowMapsCount[0] < 1){
         euclid.handle[eh].shadowMapResolution[0] = 1;
@@ -4822,6 +4846,10 @@ void* renderarbeite(void *arg){
         if(euclid.handle[eh].halt_render == 0){
             float t1 = glfwGetTime();
             startrender(eh);
+            uint8_t shadow_active = atomic_load_explicit(&euclid.handle[eh].renderPassActive[0][EUCLID_RENDER_PASS_SHADOW], memory_order_relaxed);
+            uint8_t deffered_active = atomic_load_explicit(&euclid.handle[eh].renderPassActive[0][EUCLID_RENDER_PASS_DEFFERED], memory_order_relaxed);
+            uint8_t lighting_active = atomic_load_explicit(&euclid.handle[eh].renderPassActive[0][EUCLID_RENDER_PASS_LIGHTING], memory_order_relaxed);
+            uint8_t main_active = atomic_load_explicit(&euclid.handle[eh].renderPassActive[0][EUCLID_RENDER_PASS_MAIN], memory_order_relaxed);
             for(uint32_t i = 0; i != euclid.handle[eh].mesize; i++){
                 if(euclid.handle[eh].meshes[i].usage == 0 || euclid.handle[eh].meshes[i].usage == 4){
                     continue;
@@ -4832,19 +4860,48 @@ void* renderarbeite(void *arg){
                     updatePassGlobalsUniform(eh, i);
                 }
             }
-            pthread_create(&euclid.handle[eh].threads[0], NULL, shadowpassrender, arg);
-            pthread_create(&euclid.handle[eh].threads[1], NULL, deffredpassrender, arg);
-            pthread_create(&euclid.handle[eh].threads[2], NULL, lightingpassrender, arg);
-            startmainrenderpass(eh);
-            for(uint32_t i = 0; i != euclid.handle[eh].mesize; i++){
-                if(euclid.handle[eh].meshes[i].drawable == 1 && euclid.handle[eh].meshes[i].usage == 0){
-                    draw(eh, i);
+            uint8_t shadow_thread_created = 0;
+            uint8_t deffered_thread_created = 0;
+            uint8_t lighting_thread_created = 0;
+            if(shadow_active){
+                int result = pthread_create(&euclid.handle[eh].threads[0], NULL, shadowpassrender, arg);
+                shadow_thread_created = result == 0;
+                if(result != 0){
+                    fprintf(stderr, "Error: failed to create shadow render-pass thread (code %d)\n", result);
                 }
             }
-            endrenderpass(eh, 3);
-            pthread_join(euclid.handle[eh].threads[0], NULL);
-            pthread_join(euclid.handle[eh].threads[1], NULL);
-            pthread_join(euclid.handle[eh].threads[2], NULL);
+            if(deffered_active){
+                int result = pthread_create(&euclid.handle[eh].threads[1], NULL, deffredpassrender, arg);
+                deffered_thread_created = result == 0;
+                if(result != 0){
+                    fprintf(stderr, "Error: failed to create deffered render-pass thread (code %d)\n", result);
+                }
+            }
+            if(lighting_active){
+                int result = pthread_create(&euclid.handle[eh].threads[2], NULL, lightingpassrender, arg);
+                lighting_thread_created = result == 0;
+                if(result != 0){
+                    fprintf(stderr, "Error: failed to create lighting render-pass thread (code %d)\n", result);
+                }
+            }
+            if(main_active){
+                startmainrenderpass(eh);
+                for(uint32_t i = 0; i != euclid.handle[eh].mesize; i++){
+                    if(euclid.handle[eh].meshes[i].drawable == 1 && euclid.handle[eh].meshes[i].usage == 0){
+                        draw(eh, i);
+                    }
+                }
+                endrenderpass(eh, 3);
+            }
+            if(shadow_thread_created){
+                pthread_join(euclid.handle[eh].threads[0], NULL);
+            }
+            if(deffered_thread_created){
+                pthread_join(euclid.handle[eh].threads[1], NULL);
+            }
+            if(lighting_thread_created){
+                pthread_join(euclid.handle[eh].threads[2], NULL);
+            }
             endrender(eh);
             for(uint32_t i = 0; i != euclid.handle[eh].mesize; i++){
                 euclid.handle[eh].meshes[i].uniformslot = (euclid.handle[eh].meshes[i].uniformslot+1)%2;
@@ -4868,6 +4925,30 @@ void* renderarbeite(void *arg){
         }
     }
     return NULL;
+}
+
+uint8_t setrenderpassactive(uint32_t eh, uint8_t pass, uint8_t active){
+    if(pass >= EUCLID_RENDER_PASS_COUNT){
+        return 0;
+    }
+    atomic_store_explicit(
+        &euclid.handle[eh].renderPassActive[1][pass],
+        active != 0,
+        memory_order_relaxed
+    );
+    return 1;
+}
+
+uint8_t setrenderpassactiveonresize(uint32_t eh, uint8_t pass, uint8_t active){
+    if(pass >= EUCLID_RENDER_PASS_COUNT){
+        return 0;
+    }
+    atomic_store_explicit(
+        &euclid.handle[eh].renderPassActiveOnResize[1][pass],
+        active != 0,
+        memory_order_relaxed
+    );
+    return 1;
 }
 
 uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug){
@@ -4904,6 +4985,12 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug){
     euclid.handle[eh].defferedCount[0] = 1;
     euclid.handle[eh].resolutionScale[1] = 1;
     euclid.handle[eh].defferedCount[1] = 1;
+    for(uint32_t i = 0; i != EUCLID_RENDER_PASS_COUNT; i++){
+        atomic_init(&euclid.handle[eh].renderPassActive[0][i], 1);
+        atomic_init(&euclid.handle[eh].renderPassActive[1][i], 1);
+        atomic_init(&euclid.handle[eh].renderPassActiveOnResize[0][i], 1);
+        atomic_init(&euclid.handle[eh].renderPassActiveOnResize[1][i], 1);
+    }
     euclid.handle[eh].lpcont = 1;
     euclid.handle[eh].halt_render = 0;
     euclid.handle[eh].currentFrame = 0;
