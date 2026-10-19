@@ -12,6 +12,21 @@ use crate::engine::{
     engine::Engine, loader::jsonparser::{JsonF, NodeType}, math::vec3::Vec3, scene::Scene, speaker::Speaker, ui::{UIplane, UItext},
 };
 
+pub fn smooth_value_towards(
+    value: f32,
+    final_value: f32,
+    engine: &Engine,
+    speed_modifier: f32,
+) -> f32 {
+    let difference = final_value - value;
+    if difference.abs() <= 0.01 {
+        return final_value;
+    }
+
+    let step_factor = (engine.logic_frametime * speed_modifier).clamp(0.0, 1.0);
+    value + difference * step_factor
+}
+
 #[derive(Clone, Copy)]
 pub struct Pivot {
     pub id: usize,
