@@ -22,7 +22,7 @@ fn main() {
             game::GameState::Gameover => {},
             game::GameState::Paused => {
                 if session.resize_cnt != session.eng.render.resize_count{
-                    session.tredr = 0.1;
+                    session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
                     session.resize_cnt = session.eng.render.resize_count;
                 }
                 session.eng.render.active_renderpasses = [false, false, false, true];
