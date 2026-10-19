@@ -180,6 +180,8 @@ pub struct GameSession {
     pub chosen_language: usize,
     pub text_content: TextContent,
     pub game_state: GameState,
+    pub resize_cnt: u32,
+    pub tredr: f32,
 }
 
 pub fn tile_test(

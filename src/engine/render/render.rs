@@ -11,6 +11,7 @@ unsafe extern "C" {
     fn get_gpufps(eh: cty::uint32_t) -> cty::uint32_t;
     fn get_resx(eh: cty::uint32_t) -> cty::uint32_t;
     fn get_resy(eh: cty::uint32_t) -> cty::uint32_t;
+    fn get_resize_count(eh: cty::uint32_t) -> cty::uint32_t;
     fn setresolution(eh: cty::uint32_t, xs: cty::uint32_t, ys: cty::uint32_t);
     fn seticon(eh: cty::uint32_t, xs: cty::uint32_t, ys: cty::uint32_t, pixels: *mut cty::c_char);
     fn settitle(eh: cty::uint32_t, title: *const cty::c_char);
@@ -147,6 +148,7 @@ pub struct Render {
     pub resolution_scale: f32,
     pub resolution_x: u32,
     pub resolution_y: u32,
+    pub resize_count: u32,
     pub fullscreen: bool,
     pub cpu_frametime: f32,
     pub gpu_frametime: f32,
@@ -172,6 +174,7 @@ impl Render {
             resolution_scale: 1f32,
             resolution_x: 800,
             resolution_y: 600,
+            resize_count: 0,
             fullscreen: false,
             fullscreeno: false,
             cpu_frametime: 0.0,
@@ -212,7 +215,9 @@ impl Render {
                 );
             }
         };
-        return unsafe { loopcont(self.euclid) } == 1;
+        let should_continue = unsafe { loopcont(self.euclid) } == 1;
+        self.resize_count = unsafe { get_resize_count(self.euclid) };
+        should_continue
     }
     pub fn set_shadow_uniform_data(&self, i: u32, value: f32) {
         unsafe {

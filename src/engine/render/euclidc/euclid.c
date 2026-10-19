@@ -144,6 +144,7 @@ typedef struct euclidh{
     uint32_t sresolutionY;
     uint32_t oldx;
     uint32_t oldy;
+    _Atomic uint32_t resizeCount;
     VkImageView *swapChainImageViews;
     VkRenderPass renderPass;
     _Atomic uint8_t renderPassActive[2][4];
@@ -273,6 +274,10 @@ uint32_t get_resx(uint32_t eh){
 
 uint32_t get_resy(uint32_t eh){
     return euclid.handle[eh].resolutionY[0];
+}
+
+uint32_t get_resize_count(uint32_t eh){
+    return atomic_load_explicit(&euclid.handle[eh].resizeCount, memory_order_relaxed);
 }
 
 static int mini(int x, int y)
@@ -1730,6 +1735,7 @@ void startrender(uint32_t eh){
         if (euclid.handle[eh].debug == 1) printf("\e[1;35mEuclidVK\e[0;37m: Recreated swapchain and deffered data\n");
     }
     if(resized){
+        atomic_fetch_add_explicit(&euclid.handle[eh].resizeCount, 1, memory_order_relaxed);
         for(uint32_t i = 0; i != EUCLID_RENDER_PASS_COUNT; i++){
             if(atomic_load_explicit(&euclid.handle[eh].renderPassActiveOnResize[0][i], memory_order_relaxed)){
                 atomic_store_explicit(&euclid.handle[eh].renderPassActive[0][i], 1, memory_order_relaxed);
@@ -4974,6 +4980,7 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug){
     euclid.handle[eh].resolutionY[0] = 600;
     euclid.handle[eh].resolutionX[1] = 800;
     euclid.handle[eh].resolutionY[1] = 600;
+    atomic_init(&euclid.handle[eh].resizeCount, 0);
     euclid.handle[eh].shadowMapsCount[0] = 1;
     euclid.handle[eh].shadowMapsCount[1] = 1;
     euclid.handle[eh].lightsCount = 1;

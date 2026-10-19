@@ -15,6 +15,7 @@ float get_gpuframetime(uint32_t eh);
 uint32_t get_gpufps(uint32_t eh);
 uint32_t get_resx(uint32_t eh);
 uint32_t get_resy(uint32_t eh);
+uint32_t get_resize_count(uint32_t eh);
 void setresolution(uint32_t eh, uint32_t xs, uint32_t ys);
 void seticon(uint32_t eh, uint32_t xs, uint32_t ys, char *pixels);
 void settitle(uint32_t eh, const char* title);

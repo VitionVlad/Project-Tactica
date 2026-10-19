@@ -419,6 +419,8 @@ pub fn initialize() -> GameSession {
         chosen_language,
         text_content,
         game_state: crate::game::GameState::InGame,
+        resize_cnt: 0,
+        tredr: 0.0,
     }
 }
 

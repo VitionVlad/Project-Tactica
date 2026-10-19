@@ -21,7 +21,16 @@ fn main() {
             },
             game::GameState::Gameover => {},
             game::GameState::Paused => {
+                if session.resize_cnt != session.eng.render.resize_count{
+                    session.tredr = 0.1;
+                    session.resize_cnt = session.eng.render.resize_count;
+                }
                 session.eng.render.active_renderpasses = [false, false, false, true];
+                if session.tredr > 0.0{
+                    session.eng.render.active_renderpasses = [true, true, true, true];
+                    rest::update(&mut session);
+                    session.tredr -= session.eng.logic_frametime;
+                }
                 pause::update(&mut session);
                 pause::handle_input(&mut session);
             },
