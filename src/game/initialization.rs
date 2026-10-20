@@ -353,6 +353,7 @@ pub fn initialize() -> GameSession {
         object_holding: None,
         current_dir: Vec3::new(),
         action_cooldown: 0.0,
+        returning_to_game: false,
         frame_count: 0,
         speakers: speakers,
         keyboard_bindings: KeyboardBindings {

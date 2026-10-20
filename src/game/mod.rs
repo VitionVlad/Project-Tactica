@@ -185,6 +185,7 @@ pub struct GameSession {
     pub object_holding: Option<(Option<usize>, Vec3)>,
     pub current_dir: Vec3,
     pub action_cooldown: f32,
+    pub returning_to_game: bool,
     pub frame_count: u32,
     pub speakers: Vec<Speaker>,
     pub keyboard_bindings: KeyboardBindings,

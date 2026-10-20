@@ -28,7 +28,20 @@ fn main() {
                 session.eng.render.active_renderpasses = [false, false, false, true];
                 if session.tredr > 0.0{
                     session.eng.render.active_renderpasses = [true, true, true, true];
-                    rest::update(&mut session);
+                    session.scn.exec(&mut session.eng);
+                    session.ltviewport.object.physic_object.scale.x = session.eng.render.resolution_x as f32 * session.eng.render.resolution_scale;
+                    session.ltviewport.object.physic_object.scale.y = session.eng.render.resolution_y as f32 * session.eng.render.resolution_scale;
+                    session.ltviewport.object.physic_object.pos.z = 0.9;
+                    session.ltviewport.object.mesh.ubo[48] = session.frame_count as f32;
+                    session.ltviewport.object.mesh.ubo[49] = session.scn.voxel_representation.size[0] as f32;
+                    session.ltviewport.object.mesh.ubo[50] = session.scn.voxel_representation.size[1] as f32;
+                    session.ltviewport.object.mesh.ubo[51] = session.scn.voxel_representation.size[2] as f32;
+                    session.ltviewport.object.mesh.ubo[52] = session.scn.voxel_representation.origin.x as f32;
+                    session.ltviewport.object.mesh.ubo[53] = session.scn.voxel_representation.origin.y as f32;
+                    session.ltviewport.object.mesh.ubo[54] = session.scn.voxel_representation.origin.z as f32;
+                    session.ltviewport.object.mesh.ubo[55] = session.scn.voxel_representation.voxel_size;
+                    session.ltviewport.object.draw = true;
+                    session.ltviewport.exec(&mut session.eng);
                     session.tredr -= session.eng.logic_frametime;
                 }
                 pause::update(&mut session);

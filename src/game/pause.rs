@@ -1,3 +1,6 @@
+use crate::engine::{math::vec3::Vec3, physics::physics::PhysicsObject};
+use crate::game::smooth_value_towards;
+
 use super::GameSession;
 
 pub fn update(session: &mut GameSession) {
@@ -35,8 +38,72 @@ pub fn update(session: &mut GameSession) {
         sign.exec(&mut session.eng);
     }
 
-    session.viewport.object.physic_object.scale.x = session.eng.render.resolution_x as f32;
-    session.viewport.object.physic_object.scale.y = session.eng.render.resolution_y as f32;
+    if session.returning_to_game {
+        let viewport = &mut session.viewport.object.physic_object;
+        viewport.scale.x = smooth_value_towards(
+            viewport.scale.x,
+            session.eng.render.resolution_x as f32,
+            &session.eng,
+            2.0,
+        );
+        viewport.scale.y = smooth_value_towards(
+            viewport.scale.y,
+            session.eng.render.resolution_y as f32,
+            &session.eng,
+            2.0,
+        );
+        viewport.pos.x = smooth_value_towards(viewport.pos.x, 0.0, &session.eng, 2.0);
+        viewport.pos.y = smooth_value_towards(viewport.pos.y, 0.0, &session.eng, 2.0);
+
+        //let mut rotation = viewport.rot.to_euler();
+        //rotation.x = smooth_value_towards(rotation.x, 0.0, &session.eng, 2.0);
+        //rotation.y = smooth_value_towards(rotation.y, 0.0, &session.eng, 2.0);
+        //rotation.z = smooth_value_towards(rotation.z, 0.0, &session.eng, 2.0);
+        //viewport.rot = rotation.to_quat();
+
+        if viewport_is_normal(
+            viewport,
+            session.eng.render.resolution_x as f32,
+            session.eng.render.resolution_y as f32,
+        ) {
+            viewport.scale.x = session.eng.render.resolution_x as f32;
+            viewport.scale.y = session.eng.render.resolution_y as f32;
+            viewport.pos.x = 0.0;
+            viewport.pos.y = 0.0;
+            viewport.rot = Vec3::new().to_quat();
+            session.returning_to_game = false;
+            session.game_state = super::GameState::InGame;
+        }
+    } else {
+        let viewport = &mut session.viewport.object.physic_object;
+        viewport.scale.x = smooth_value_towards(
+            viewport.scale.x,
+            session.eng.render.resolution_x as f32 * 0.8,
+            &session.eng,
+            2.0,
+        );
+        viewport.scale.y = smooth_value_towards(
+            viewport.scale.y,
+            session.eng.render.resolution_y as f32 * 0.8,
+            &session.eng,
+            2.0,
+        );
+        viewport.pos.x = smooth_value_towards(
+            viewport.pos.x,
+            session.eng.render.resolution_x as f32 * 0.5,
+            &session.eng,
+            2.0,
+        );
+        viewport.pos.y = smooth_value_towards(
+            viewport.pos.y,
+            session.eng.render.resolution_y as f32 * 0.1,
+            &session.eng,
+            2.0,
+        );
+        //let mut rotation = viewport.rot.to_euler();
+        //rotation.z = smooth_value_towards(rotation.z, -0.05, &session.eng, 2.0);
+        //viewport.rot = rotation.to_quat();
+    }
     session.viewport.object.mesh.ubo[48] = session.frame_count as f32;
     session.viewport.object.mesh.ubo[49] = 0.0;
     session.viewport.object.mesh.ubo[50] = 0.2;
@@ -47,10 +114,21 @@ pub fn update(session: &mut GameSession) {
     // Pause-menu rendering can be added here.
 }
 
+fn viewport_is_normal(viewport: &PhysicsObject, width: f32, height: f32) -> bool {
+    viewport.pos.x.abs() <= 0.1
+        && viewport.pos.y.abs() <= 0.1
+        && (viewport.scale.x - width).abs() <= 0.1
+        && (viewport.scale.y - height).abs() <= 0.1
+}
+
 pub fn handle_input(session: &mut GameSession) {
+    if session.returning_to_game {
+        return;
+    }
+
     let start_pressed = super::control::start_pressed(session);
     if session.action_cooldown <= 0.0 && start_pressed {
-        session.game_state = super::GameState::InGame;
+        session.returning_to_game = true;
         session.action_cooldown = 0.25;
     }
 }
