@@ -513,6 +513,11 @@ pub fn update(session: &mut GameSession) {
         }
     }
 
+    for wbg in &mut session.white_background{
+        wbg.object.draw = false;
+        wbg.exec(&mut session.eng);
+    }
+
     session.viewport.object.physic_object.scale.x = session.eng.render.resolution_x as f32;
     session.viewport.object.physic_object.scale.y = session.eng.render.resolution_y as f32;
     session.viewport.object.mesh.ubo[48] = session.frame_count as f32;

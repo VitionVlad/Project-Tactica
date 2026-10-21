@@ -144,7 +144,7 @@ pub fn initialize() -> GameSession {
         MeshUsage::PostPass,
     ));
 
-    let imgbl = Image::new_color(&mut eng, [0, 0, 0, 200]);
+    let imgbl = Image::new_color(&mut eng, [0, 0, 0, u8::MAX]);
     let mut spbg = Vec::new();
     for i in 0..4 {
         let t = UIplane::new(
@@ -154,6 +154,18 @@ pub fn initialize() -> GameSession {
             MeshUsage::PostPass,
         );
         spbg.push(t);
+    }
+
+    let imgw = Image::new_color(&mut eng, [u8::MAX, u8::MAX, u8::MAX, u8::MAX]);
+    let mut wbg = Vec::new();
+    for i in 0..4 {
+        let t = UIplane::new(
+            &mut eng,
+            mati,
+            vec![imgw.clone()],
+            MeshUsage::PostPass,
+        );
+        wbg.push(t);
     }
 
     spbg.push(UIplane::new(
@@ -339,6 +351,7 @@ pub fn initialize() -> GameSession {
         fpscnt,
         text,
         keyimg,
+        white_background: wbg,
         speech_bubble_background: spbg,
         awarness_signs: awaspr,
         ui_scale: 1.0,

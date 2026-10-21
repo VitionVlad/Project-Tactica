@@ -38,6 +38,14 @@ pub fn update(session: &mut GameSession) {
         sign.exec(&mut session.eng);
     }
 
+    session.white_background[0].object.physic_object.scale.x = session.viewport.object.physic_object.scale.x + 20.0;
+    session.white_background[0].object.physic_object.scale.y = session.viewport.object.physic_object.scale.y + 20.0;
+    session.white_background[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - 10.0;
+    session.white_background[0].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y - 10.0;
+    session.white_background[0].object.physic_object.pos.z = 0.65;
+    session.white_background[0].object.draw = true;
+    session.white_background[0].exec(&mut session.eng);
+
     if session.returning_to_game {
         let viewport = &mut session.viewport.object.physic_object;
         viewport.scale.x = smooth_value_towards(
@@ -104,6 +112,7 @@ pub fn update(session: &mut GameSession) {
         //rotation.z = smooth_value_towards(rotation.z, -0.05, &session.eng, 2.0);
         //viewport.rot = rotation.to_quat();
     }
+    session.viewport.object.physic_object.pos.z = 0.6;
     session.viewport.object.mesh.ubo[48] = session.frame_count as f32;
     session.viewport.object.mesh.ubo[49] = 0.0;
     session.viewport.object.mesh.ubo[50] = 0.2;
@@ -115,10 +124,10 @@ pub fn update(session: &mut GameSession) {
 }
 
 fn viewport_is_normal(viewport: &PhysicsObject, width: f32, height: f32) -> bool {
-    viewport.pos.x.abs() <= 0.1
-        && viewport.pos.y.abs() <= 0.1
-        && (viewport.scale.x - width).abs() <= 0.1
-        && (viewport.scale.y - height).abs() <= 0.1
+    viewport.pos.x.abs() <= 2.0
+        && viewport.pos.y.abs() <= 2.0
+        && (viewport.scale.x - width).abs() <= 2.0
+        && (viewport.scale.y - height).abs() <= 2.0
 }
 
 pub fn handle_input(session: &mut GameSession) {
