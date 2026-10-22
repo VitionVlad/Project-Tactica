@@ -116,6 +116,18 @@ pub fn initialize() -> GameSession {
         text.push(t);
     }
 
+    let mut menu_text = Vec::new();
+    for i in 0..3 {
+        let t = UItext::new_from_file(
+            &mut eng,
+            matt,
+            "assets/comicmonoinv.png",
+            "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`~$% ",
+            MeshUsage::PostPass,
+        );
+        menu_text.push(t);
+    }
+
     text.push(UItext::new_from_file(
         &mut eng,
         matt,
@@ -166,6 +178,17 @@ pub fn initialize() -> GameSession {
             MeshUsage::PostPass,
         );
         wbg.push(t);
+    }
+
+    let mut bbg = Vec::new();
+    for i in 0..4 {
+        let t = UIplane::new(
+            &mut eng,
+            mati,
+            vec![imgbl],
+            MeshUsage::PostPass,
+        );
+        bbg.push(t);
     }
 
     spbg.push(UIplane::new(
@@ -350,8 +373,10 @@ pub fn initialize() -> GameSession {
         ltviewport,
         fpscnt,
         text,
+        menu_text,
         keyimg,
         white_background: wbg,
+        black_background: bbg,
         speech_bubble_background: spbg,
         awarness_signs: awaspr,
         ui_scale: 1.0,
@@ -435,6 +460,8 @@ pub fn initialize() -> GameSession {
         game_state: crate::game::GameState::InGame,
         resize_cnt: 0,
         tredr: 0.0,
+        zvr: 0.0,
+        exit: false,
     }
 }
 

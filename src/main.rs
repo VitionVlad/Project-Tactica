@@ -6,7 +6,7 @@ use game::{control, game_over, initialization, pause, rest, tbt};
 fn main() {
     let mut session = initialization::initialize();
 
-    while session.eng.work() {
+    while session.eng.work() && !session.exit{
         if session.action_cooldown > 0.0 {
             session.action_cooldown -= session.eng.logic_frametime;
         }
@@ -51,7 +51,7 @@ fn main() {
         }
 
         session.frame_count += 1;
-        if session.frame_count > u32::MAX - 100000{
+        if session.frame_count > 100000{
             session.frame_count = 0;
         }
     }

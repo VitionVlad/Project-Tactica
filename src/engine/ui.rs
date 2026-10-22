@@ -153,6 +153,7 @@ pub struct UItext {
     pub new_line_symbol: u8,
     pub max_text_width: u32,
     pub next_line_on_whitespace: bool,
+    pub implicit_on: bool,
     blank: bool,
     usage: super::render::render::MeshUsage,
 }
@@ -269,6 +270,7 @@ impl UItext {
             next_line_on_whitespace: false,
             draw: true,
             usage: usage,
+            implicit_on: false,
         }
     }
     pub fn new_blank() -> UItext {
@@ -323,6 +325,7 @@ impl UItext {
             next_line_on_whitespace: false,
             draw: false,
             usage: super::render::render::MeshUsage::PostPass,
+            implicit_on: false,
         }
     }
     pub fn new_from_file(
@@ -368,6 +371,7 @@ impl UItext {
             next_line_on_whitespace: false,
             draw: true,
             usage: usage,
+            implicit_on: false,
         }
     }
     pub fn exec(&mut self, eng: &mut Engine, text: &str) -> bool {
@@ -524,10 +528,10 @@ impl UItext {
                                     rotated_symbol_bounds = Some((min, max));
                                 }
                             }
-                            if self.signal
+                            if (self.signal
                                 && lbtst
                                 && (self.allow_when_mouse_locked
-                                    || (!self.allow_when_mouse_locked && !eng.control.mouse_lock))
+                                    || (!self.allow_when_mouse_locked && !eng.control.mouse_lock))) || self.implicit_on
                             {
                                 self.planes[i].mesh.ubo[self.ubo_index + 2] = self.signal_on_value;
                             } else {

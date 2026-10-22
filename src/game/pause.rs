@@ -38,13 +38,69 @@ pub fn update(session: &mut GameSession) {
         sign.exec(&mut session.eng);
     }
 
-    session.white_background[0].object.physic_object.scale.x = session.viewport.object.physic_object.scale.x + 20.0;
-    session.white_background[0].object.physic_object.scale.y = session.viewport.object.physic_object.scale.y + 20.0;
-    session.white_background[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - 10.0;
-    session.white_background[0].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y - 10.0;
-    session.white_background[0].object.physic_object.pos.z = 0.65;
+    //session.white_background[0].object.physic_object.scale.x = session.viewport.object.physic_object.scale.x + 20.0;
+    //session.white_background[0].object.physic_object.scale.y = session.viewport.object.physic_object.scale.y + 20.0;
+    //session.white_background[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - 10.0;
+    //session.white_background[0].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y - 10.0;
+    session.white_background[0].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
+    session.white_background[0].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
+    session.white_background[0].object.physic_object.pos.x = 0.0;
+    session.white_background[0].object.physic_object.pos.y = 0.0;
+    session.white_background[0].object.physic_object.pos.z = 0.99;
     session.white_background[0].object.draw = true;
     session.white_background[0].exec(&mut session.eng);
+
+    session.white_background[1].object.physic_object.scale.x = session.viewport.object.physic_object.scale.x + 10.0;
+    session.white_background[1].object.physic_object.scale.y = session.viewport.object.physic_object.scale.y + 10.0;
+    session.white_background[1].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - 5.0;
+    session.white_background[1].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y - 5.0;
+    session.white_background[1].object.physic_object.pos.z = 0.65;
+    session.white_background[1].object.draw = true;
+    session.white_background[1].object.physic_object.rot = session.viewport.object.physic_object.rot;
+    session.white_background[1].exec(&mut session.eng);
+
+    session.black_background[0].object.physic_object.scale.x = session.viewport.object.physic_object.scale.x + 50.0;
+    session.black_background[0].object.physic_object.scale.y = session.viewport.object.physic_object.scale.y + 50.0;
+    session.black_background[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - 25.0;
+    session.black_background[0].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y - 25.0;
+    session.black_background[0].object.physic_object.pos.z = 0.66;
+    session.black_background[0].object.draw = true;
+    session.black_background[0].object.physic_object.rot = session.viewport.object.physic_object.rot;
+    session.black_background[0].exec(&mut session.eng);
+
+    for i in 0..session.text_content.pause_entries.len(){
+        session.menu_text[i].size.x = 30.0 * session.ui_scale;
+        session.menu_text[i].size.y = 60.0 * session.ui_scale;
+        session.menu_text[i].pos.x = session.black_background[0].object.physic_object.pos.x - (session.eng.render.resolution_x as f32 / 2.0) + session.menu_text[i].size.x*2.0;
+        session.menu_text[i].pos.y = session.eng.render.resolution_y as f32 / 2.0 + (session.menu_text[i].size.y + 30.0)*(i as f32);
+        session.menu_text[i].pos.z = 0.7;
+        session.menu_text[i].draw = true;
+        session.menu_text[i].signal = true;
+        session.menu_text[i].per_symbol = false;
+        session.menu_text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
+        if session.menu_text[i].exec(&mut session.eng, &session.text_content.pause_entries[i]) && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+            match i {
+                0 => {
+                    session.returning_to_game = true;
+                    session.action_cooldown = 0.25;
+                }
+                2 => {
+                    session.exit = true;
+                    session.action_cooldown = 0.25;
+                }
+                _ => {}
+            }
+        }
+
+        session.black_background[i+1].object.physic_object.scale.x = session.menu_text[i].size.x*(session.text_content.pause_entries[i].len() as f32)+15.0;
+        session.black_background[i+1].object.physic_object.scale.y = session.menu_text[i].size.y+15.0;
+        session.black_background[i+1].object.physic_object.pos.x = session.menu_text[i].pos.x-7.5;
+        session.black_background[i+1].object.physic_object.pos.y = session.menu_text[i].pos.y-7.5;
+        session.black_background[i+1].object.physic_object.pos.z = 0.71;
+        session.black_background[i+1].object.draw = true;
+        session.black_background[i+1].object.physic_object.rot = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
+        session.black_background[i+1].exec(&mut session.eng);
+    }
 
     if session.returning_to_game {
         let viewport = &mut session.viewport.object.physic_object;
@@ -68,6 +124,9 @@ pub fn update(session: &mut GameSession) {
         //rotation.y = smooth_value_towards(rotation.y, 0.0, &session.eng, 2.0);
         //rotation.z = smooth_value_towards(rotation.z, 0.0, &session.eng, 2.0);
         //viewport.rot = rotation.to_quat();
+
+        session.zvr = smooth_value_towards(session.zvr, 0.0, &session.eng, 4.0);
+        viewport.rot = Vec3{x: 0.0, y: 0.0, z: session.zvr}.to_quat();
 
         if viewport_is_normal(
             viewport,
@@ -108,9 +167,10 @@ pub fn update(session: &mut GameSession) {
             &session.eng,
             2.0,
         );
+        //session.viewport.object.physic_object.rot = Vec3{ x: 0.0, y: 0.0, z: 0.05}.to_quat();
         //let mut rotation = viewport.rot.to_euler();
-        //rotation.z = smooth_value_towards(rotation.z, -0.05, &session.eng, 2.0);
-        //viewport.rot = rotation.to_quat();
+        session.zvr = smooth_value_towards(session.zvr, 0.05, &session.eng, 4.0);
+        viewport.rot = Vec3{x: 0.0, y: 0.0, z: session.zvr}.to_quat();
     }
     session.viewport.object.physic_object.pos.z = 0.6;
     session.viewport.object.mesh.ubo[48] = session.frame_count as f32;

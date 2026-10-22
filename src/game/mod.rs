@@ -136,9 +136,25 @@ pub enum GameState{
 
 pub struct TextContent{
     pub actions: Vec<String>,
+    pub pause_entries: Vec<String>,
+    pub longest_pause_entry: usize,
 }
 
 impl TextContent {
+    fn parse_string_list(node: &JsonF, field_name: &str, language_name: &str) -> Result<Vec<String>, String> {
+        let mut values = Vec::with_capacity(node.other_nodes.len());
+        for item in &node.other_nodes {
+            if item.node_type != NodeType::String {
+                return Err(format!(
+                    "{field_name} contains a non-string value for language {}",
+                    language_name
+                ));
+            }
+            values.push(item.strval.clone());
+        }
+        Ok(values)
+    }
+
     pub fn from_json(json: &JsonF, language_index: usize) -> Result<Self, String> {
         let language = json
             .other_nodes
@@ -149,17 +165,18 @@ impl TextContent {
             .iter()
             .find(|node| node.name == "tbt_ui")
             .ok_or_else(|| format!("tbt_ui dictionary is missing for language {}", language.name))?;
-        let mut actions = Vec::with_capacity(tbt_ui.other_nodes.len());
-        for item in &tbt_ui.other_nodes {
-            if item.node_type != NodeType::String {
-                return Err(format!(
-                    "tbt_ui contains a non-string value for language {}",
-                    language.name
-                ));
-            }
-            actions.push(item.strval.clone());
-        }
-        Ok(Self { actions })
+        let actions = Self::parse_string_list(tbt_ui, "tbt_ui", &language.name)?;
+        let pause_entries = language
+            .other_nodes
+            .iter()
+            .find(|node| node.name == "pause")
+            .map(|pause| Self::parse_string_list(pause, "pause", &language.name))
+            .transpose()?
+            .unwrap_or_default();
+        let mut szv: Vec<usize> = pause_entries.iter().map(|x| x.len()).collect();
+        szv.sort();
+        let longest_pause_entry = szv[0];
+        Ok(Self { actions, pause_entries, longest_pause_entry })
     }
 }
 
@@ -170,9 +187,11 @@ pub struct GameSession {
     pub ltviewport: UIplane,
     pub fpscnt: UItext,
     pub text: Vec<UItext>,
+    pub menu_text: Vec<UItext>,
     pub keyimg: Vec<UItext>,
     pub speech_bubble_background: Vec<UIplane>,
     pub white_background: Vec<UIplane>,
+    pub black_background: Vec<UIplane>,
     pub awarness_signs: Vec<UIplane>,
     pub ui_scale: f32,
     pub pivot: Pivot,
@@ -199,6 +218,8 @@ pub struct GameSession {
     pub game_state: GameState,
     pub resize_cnt: u32,
     pub tredr: f32,
+    pub zvr: f32,
+    pub exit: bool,
 }
 
 pub fn tile_test(

@@ -518,6 +518,16 @@ pub fn update(session: &mut GameSession) {
         wbg.exec(&mut session.eng);
     }
 
+    for bbg in &mut session.black_background{
+        bbg.object.draw = false;
+        bbg.exec(&mut session.eng);
+    }
+
+    for txt in &mut session.menu_text{
+        txt.draw = false;
+        txt.exec(&mut session.eng, " ");
+    }
+
     session.viewport.object.physic_object.scale.x = session.eng.render.resolution_x as f32;
     session.viewport.object.physic_object.scale.y = session.eng.render.resolution_y as f32;
     session.viewport.object.mesh.ubo[48] = session.frame_count as f32;

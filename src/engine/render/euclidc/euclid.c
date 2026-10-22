@@ -5149,6 +5149,7 @@ uint32_t loopcont(uint32_t eh){
 
 void destroy(uint32_t eh){
     if (euclid.handle[eh].debug == 1) printf("\e[1;36mEuclidVK\e[0;37m: Destroing handle by id = %d...\n", eh);
+    euclid.handle[eh].lpcont = 0;
     pthread_join(euclid.handle[eh].threads[3], NULL);
     vkDeviceWaitIdle(euclid.handle[eh].device);
     vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].defferedImageView, NULL);
@@ -5281,6 +5282,7 @@ void destroy(uint32_t eh){
     vkDestroySurfaceKHR(euclid.handle[eh].instance, euclid.handle[eh].surface, NULL);
     vkDestroyDevice(euclid.handle[eh].device, NULL);
     vkDestroyInstance(euclid.handle[eh].instance, NULL);
+    glfwDestroyWindow(euclid.handle[eh].window);
     free(euclid.handle[eh].swapChainFramebuffers);
     free(euclid.handle[eh].swapChainImageViews);
     free(euclid.handle[eh].swapChainImages);
