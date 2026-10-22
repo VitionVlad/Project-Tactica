@@ -1,5 +1,6 @@
 use crate::engine::{math::vec3::Vec3, physics::physics::PhysicsObject};
-use crate::game::smooth_value_towards;
+use crate::game::SubMenu::{Audio, Game, Graphics, Main, Settings};
+use crate::game::{InputType, smooth_value_towards};
 
 use super::GameSession;
 
@@ -68,7 +69,7 @@ pub fn update(session: &mut GameSession) {
     session.black_background[0].object.physic_object.rot = session.viewport.object.physic_object.rot;
     session.black_background[0].exec(&mut session.eng);
 
-    for i in 0..session.text_content.pause_entries.len(){
+    for i in 0..session.text_content.pause.len(){
         session.menu_text[i].size.x = 30.0 * session.ui_scale;
         session.menu_text[i].size.y = 60.0 * session.ui_scale;
         session.menu_text[i].pos.x = session.black_background[0].object.physic_object.pos.x - (session.eng.render.resolution_x as f32 / 2.0) + session.menu_text[i].size.x*2.0;
@@ -78,21 +79,21 @@ pub fn update(session: &mut GameSession) {
         session.menu_text[i].signal = true;
         session.menu_text[i].per_symbol = false;
         session.menu_text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-        if session.menu_text[i].exec(&mut session.eng, &session.text_content.pause_entries[i]) && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+        if session.menu_text[i].exec(&mut session.eng, &session.text_content.pause[i]) && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
             match i {
                 0 => {
                     session.returning_to_game = true;
-                    session.action_cooldown = 0.25;
                 }
                 2 => {
                     session.exit = true;
-                    session.action_cooldown = 0.25;
                 }
                 _ => {}
             }
+            session.input_type = InputType::Touchscreen;
+            session.action_cooldown = 0.25;
         }
 
-        session.black_background[i+1].object.physic_object.scale.x = session.menu_text[i].size.x*(session.text_content.pause_entries[i].len() as f32)+15.0;
+        session.black_background[i+1].object.physic_object.scale.x = session.menu_text[i].size.x*(session.text_content.pause[i].len() as f32)+15.0;
         session.black_background[i+1].object.physic_object.scale.y = session.menu_text[i].size.y+15.0;
         session.black_background[i+1].object.physic_object.pos.x = session.menu_text[i].pos.x-7.5;
         session.black_background[i+1].object.physic_object.pos.y = session.menu_text[i].pos.y-7.5;
@@ -199,5 +200,47 @@ pub fn handle_input(session: &mut GameSession) {
     if session.action_cooldown <= 0.0 && start_pressed {
         session.returning_to_game = true;
         session.action_cooldown = 0.25;
+    }
+
+    match session.submenu {
+        Main => {
+            for mt in &mut session.menu_text{
+                mt.implicit_on = false;
+            }
+            if session.eng.control.gamepad_connected{
+                if session.eng.control.get_gamepad_button_state(session.controller_mappings.arrows[1] as u8) && session.gamepadsel > 0 && session.action_cooldown <= 0.0{
+                    session.action_cooldown = 0.25;
+                    session.gamepadsel -= 1;
+                    session.input_type = InputType::Gamepad;
+                }else if session.eng.control.get_gamepad_button_state(session.controller_mappings.arrows[0] as u8) && session.gamepadsel < 2 && session.action_cooldown <= 0.0{
+                    session.action_cooldown = 0.25;
+                    session.gamepadsel += 1;
+                    session.input_type = InputType::Gamepad;
+                }else if session.eng.control.get_gamepad_button_state(session.controller_mappings.abxy[0] as u8) && session.gamepadsel < 3 && session.action_cooldown <= 0.0{
+                    match session.gamepadsel {
+                        0 => {
+                            session.returning_to_game = true;
+                        },
+                        1 => {},
+                        2 => {
+                            session.exit = true;
+                        },
+                        _ => {}
+                    }
+                    session.action_cooldown = 0.25;
+                    session.input_type = InputType::Gamepad;
+                }
+                if session.input_type == InputType::Gamepad{
+                    if session.gamepadsel > 2{
+                        session.gamepadsel = 2;
+                    }
+                    session.menu_text[session.gamepadsel].implicit_on = true;
+                }
+            }
+        },
+        Settings => {},
+        Game => {},
+        Audio => {},
+        Graphics => {},
     }
 }

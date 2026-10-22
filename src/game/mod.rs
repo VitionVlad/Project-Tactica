@@ -127,6 +127,14 @@ pub enum InputType {
     Touchscreen,
 }
 
+pub enum SubMenu{
+    Main,
+    Settings,
+    Game,
+    Audio,
+    Graphics
+}
+
 pub enum GameState{
     InGame,
     Paused,
@@ -135,18 +143,28 @@ pub enum GameState{
 }
 
 pub struct TextContent{
-    pub actions: Vec<String>,
-    pub pause_entries: Vec<String>,
-    pub longest_pause_entry: usize,
+    pub tbt_ui: Vec<String>,
+    pub pause: Vec<String>,
+    pub settings: Vec<String>,
+    pub game_set: Vec<String>,
+    pub audio: Vec<String>,
+    pub graphics: Vec<String>,
 }
 
 impl TextContent {
     fn parse_string_list(node: &JsonF, field_name: &str, language_name: &str) -> Result<Vec<String>, String> {
+        if node.node_type != NodeType::Other {
+            return Err(format!(
+                "{field_name} is not a string list for language {}",
+                language_name
+            ));
+        }
+
         let mut values = Vec::with_capacity(node.other_nodes.len());
         for item in &node.other_nodes {
-            if item.node_type != NodeType::String {
+            if !item.indexed || item.node_type != NodeType::String {
                 return Err(format!(
-                    "{field_name} contains a non-string value for language {}",
+                    "{field_name} contains an invalid list value for language {}",
                     language_name
                 ));
             }
@@ -160,23 +178,28 @@ impl TextContent {
             .other_nodes
             .get(language_index)
             .ok_or_else(|| format!("language index {language_index} is missing from text.json"))?;
-        let tbt_ui = language
-            .other_nodes
-            .iter()
-            .find(|node| node.name == "tbt_ui")
-            .ok_or_else(|| format!("tbt_ui dictionary is missing for language {}", language.name))?;
-        let actions = Self::parse_string_list(tbt_ui, "tbt_ui", &language.name)?;
-        let pause_entries = language
-            .other_nodes
-            .iter()
-            .find(|node| node.name == "pause")
-            .map(|pause| Self::parse_string_list(pause, "pause", &language.name))
-            .transpose()?
-            .unwrap_or_default();
-        let mut szv: Vec<usize> = pause_entries.iter().map(|x| x.len()).collect();
-        szv.sort();
-        let longest_pause_entry = szv[0];
-        Ok(Self { actions, pause_entries, longest_pause_entry })
+        let parse_list = |field_name: &str| {
+            let node = language
+                .other_nodes
+                .iter()
+                .find(|node| node.name == field_name)
+                .ok_or_else(|| {
+                    format!(
+                        "{field_name} string list is missing for language {}",
+                        language.name
+                    )
+                })?;
+            Self::parse_string_list(node, field_name, &language.name)
+        };
+
+        Ok(Self {
+            tbt_ui: parse_list("tbt_ui")?,
+            pause: parse_list("pause")?,
+            settings: parse_list("settings")?,
+            game_set: parse_list("game_set")?,
+            audio: parse_list("audio")?,
+            graphics: parse_list("graphics")?,
+        })
     }
 }
 
@@ -220,6 +243,8 @@ pub struct GameSession {
     pub tredr: f32,
     pub zvr: f32,
     pub exit: bool,
+    pub gamepadsel: usize,
+    pub submenu: SubMenu,
 }
 
 pub fn tile_test(

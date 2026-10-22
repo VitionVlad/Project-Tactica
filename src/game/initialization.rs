@@ -462,6 +462,8 @@ pub fn initialize() -> GameSession {
         tredr: 0.0,
         zvr: 0.0,
         exit: false,
+        gamepadsel: 0,
+        submenu: crate::game::SubMenu::Main,
     }
 }
 

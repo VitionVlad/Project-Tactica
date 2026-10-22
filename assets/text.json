@@ -9,6 +9,31 @@
             " Continue ",
             " Settings ",
             " Exit "
+        ],
+        "settings": [
+            " Game ",
+            " Audio ",
+            " Graphics ",
+            " Back "
+        ],
+        "game_set": [
+            " Language: English ",
+            " UI scale:",
+            " Show performance statistics ",
+            " Back "
+        ],
+        "audio": [
+            " Volume:",
+            " Back "
+        ],
+        "graphics": [
+            " Lighting type:",
+            " only rasterization ",
+            " voxel ray-traced lighting ",
+            " Resolution scale:",
+            " Shadowmaps quality:",
+            " Fullscreen:",
+            " Back "
         ]
     }
 }
