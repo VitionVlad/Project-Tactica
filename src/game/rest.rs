@@ -523,6 +523,11 @@ pub fn update(session: &mut GameSession) {
         bbg.exec(&mut session.eng);
     }
 
+    for mbg in &mut session.menu_background{
+        mbg.object.draw = false;
+        mbg.exec(&mut session.eng);
+    }
+
     for txt in &mut session.menu_text{
         txt.draw = false;
         txt.exec(&mut session.eng, " ");

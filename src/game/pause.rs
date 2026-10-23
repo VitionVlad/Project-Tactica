@@ -39,26 +39,22 @@ pub fn update(session: &mut GameSession) {
         sign.exec(&mut session.eng);
     }
 
-    //session.white_background[0].object.physic_object.scale.x = session.viewport.object.physic_object.scale.x + 20.0;
-    //session.white_background[0].object.physic_object.scale.y = session.viewport.object.physic_object.scale.y + 20.0;
-    //session.white_background[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - 10.0;
-    //session.white_background[0].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y - 10.0;
-    session.white_background[0].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
-    session.white_background[0].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
-    session.white_background[0].object.physic_object.pos.x = 0.0;
-    session.white_background[0].object.physic_object.pos.y = 0.0;
-    session.white_background[0].object.physic_object.pos.z = 0.99;
-    session.white_background[0].object.draw = true;
-    session.white_background[0].exec(&mut session.eng);
+    session.menu_background[0].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
+    session.menu_background[0].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
+    session.menu_background[0].object.physic_object.pos.x = 0.0;
+    session.menu_background[0].object.physic_object.pos.y = 0.0;
+    session.menu_background[0].object.physic_object.pos.z = 0.99;
+    session.menu_background[0].object.draw = true;
+    session.menu_background[0].exec(&mut session.eng);
 
-    session.white_background[1].object.physic_object.scale.x = session.viewport.object.physic_object.scale.x + 10.0;
-    session.white_background[1].object.physic_object.scale.y = session.viewport.object.physic_object.scale.y + 10.0;
-    session.white_background[1].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - 5.0;
-    session.white_background[1].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y - 5.0;
-    session.white_background[1].object.physic_object.pos.z = 0.65;
-    session.white_background[1].object.draw = true;
-    session.white_background[1].object.physic_object.rot = session.viewport.object.physic_object.rot;
-    session.white_background[1].exec(&mut session.eng);
+    //session.white_background[1].object.physic_object.scale.x = session.viewport.object.physic_object.scale.x + 10.0;
+    //session.white_background[1].object.physic_object.scale.y = session.viewport.object.physic_object.scale.y + 10.0;
+    //session.white_background[1].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - 5.0;
+    //session.white_background[1].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y - 5.0;
+    //session.white_background[1].object.physic_object.pos.z = 0.65;
+    //session.white_background[1].object.draw = true;
+    //session.white_background[1].object.physic_object.rot = session.viewport.object.physic_object.rot;
+    //session.white_background[1].exec(&mut session.eng);
 
     session.black_background[0].object.physic_object.scale.x = session.viewport.object.physic_object.scale.x + 50.0;
     session.black_background[0].object.physic_object.scale.y = session.viewport.object.physic_object.scale.y + 50.0;
@@ -105,29 +101,7 @@ pub fn update(session: &mut GameSession) {
 
     if session.returning_to_game {
         let viewport = &mut session.viewport.object.physic_object;
-        viewport.scale.x = smooth_value_towards(
-            viewport.scale.x,
-            session.eng.render.resolution_x as f32,
-            &session.eng,
-            2.0,
-        );
-        viewport.scale.y = smooth_value_towards(
-            viewport.scale.y,
-            session.eng.render.resolution_y as f32,
-            &session.eng,
-            2.0,
-        );
         viewport.pos.x = smooth_value_towards(viewport.pos.x, 0.0, &session.eng, 2.0);
-        viewport.pos.y = smooth_value_towards(viewport.pos.y, 0.0, &session.eng, 2.0);
-
-        //let mut rotation = viewport.rot.to_euler();
-        //rotation.x = smooth_value_towards(rotation.x, 0.0, &session.eng, 2.0);
-        //rotation.y = smooth_value_towards(rotation.y, 0.0, &session.eng, 2.0);
-        //rotation.z = smooth_value_towards(rotation.z, 0.0, &session.eng, 2.0);
-        //viewport.rot = rotation.to_quat();
-
-        session.zvr = smooth_value_towards(session.zvr, 0.0, &session.eng, 4.0);
-        viewport.rot = Vec3{x: 0.0, y: 0.0, z: session.zvr}.to_quat();
 
         if viewport_is_normal(
             viewport,
@@ -144,34 +118,14 @@ pub fn update(session: &mut GameSession) {
         }
     } else {
         let viewport = &mut session.viewport.object.physic_object;
-        viewport.scale.x = smooth_value_towards(
-            viewport.scale.x,
-            session.eng.render.resolution_x as f32 * 0.8,
-            &session.eng,
-            2.0,
-        );
-        viewport.scale.y = smooth_value_towards(
-            viewport.scale.y,
-            session.eng.render.resolution_y as f32 * 0.8,
-            &session.eng,
-            2.0,
-        );
+        viewport.scale.x = session.eng.render.resolution_x as f32;
+        viewport.scale.y = session.eng.render.resolution_y as f32;
         viewport.pos.x = smooth_value_towards(
             viewport.pos.x,
             session.eng.render.resolution_x as f32 * 0.5,
             &session.eng,
             2.0,
         );
-        viewport.pos.y = smooth_value_towards(
-            viewport.pos.y,
-            session.eng.render.resolution_y as f32 * 0.1,
-            &session.eng,
-            2.0,
-        );
-        //session.viewport.object.physic_object.rot = Vec3{ x: 0.0, y: 0.0, z: 0.05}.to_quat();
-        //let mut rotation = viewport.rot.to_euler();
-        session.zvr = smooth_value_towards(session.zvr, 0.05, &session.eng, 4.0);
-        viewport.rot = Vec3{x: 0.0, y: 0.0, z: session.zvr}.to_quat();
     }
     session.viewport.object.physic_object.pos.z = 0.6;
     session.viewport.object.mesh.ubo[48] = session.frame_count as f32;

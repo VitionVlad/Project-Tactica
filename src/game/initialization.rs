@@ -191,6 +191,15 @@ pub fn initialize() -> GameSession {
         bbg.push(t);
     }
 
+    let orimg = Image::new_color(&mut eng, [255, 213, 128, u8::MAX]);
+    let mut menubg = Vec::new();
+    menubg.push(UIplane::new(
+        &mut eng,
+        mati,
+        vec![orimg],
+        MeshUsage::PostPass,
+    ));
+
     spbg.push(UIplane::new(
         &mut eng,
         mati,
@@ -377,6 +386,7 @@ pub fn initialize() -> GameSession {
         keyimg,
         white_background: wbg,
         black_background: bbg,
+        menu_background: menubg,
         speech_bubble_background: spbg,
         awarness_signs: awaspr,
         ui_scale: 1.0,
@@ -460,7 +470,6 @@ pub fn initialize() -> GameSession {
         game_state: crate::game::GameState::InGame,
         resize_cnt: 0,
         tredr: 0.0,
-        zvr: 0.0,
         exit: false,
         gamepadsel: 0,
         submenu: crate::game::SubMenu::Main,
