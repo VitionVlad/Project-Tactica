@@ -1,6 +1,19 @@
-use crate::{engine::{
-    engine::Engine, image::Image, light::{Light, LightType}, loader::{jsonparser::JsonF, rw::readfs}, material::Material, math::{ivec3::Ivec3, vec3::Vec3}, render::render::{CullMode, MeshUsage, TextureFormat}, scene::{Scene, SceneVoxelizer}, speaker::Speaker, ui::{UIplane, UItext}, voxel::VoxelizerSettings,
-}, game::{ControllerMappings, Key, KeyboardBindings}};
+use crate::{
+    engine::{
+        engine::Engine,
+        image::Image,
+        light::{Light, LightType},
+        loader::{jsonparser::JsonF, rw::readfs},
+        material::Material,
+        math::{ivec3::Ivec3, vec3::Vec3},
+        render::render::{CullMode, MeshUsage, TextureFormat},
+        scene::{Scene, SceneVoxelizer},
+        speaker::Speaker,
+        ui::{UIplane, UItext},
+        voxel::VoxelizerSettings,
+    },
+    game::{ControllerMappings, Key, KeyboardBindings},
+};
 
 use super::{Awarness, Enemy, GameSession, Pivot, TBTplate, TextContent};
 
@@ -8,6 +21,18 @@ pub fn initialize() -> GameSession {
     let mut eng = Engine::new(false);
     eng.render.set_title("rttest");
     eng.render.set_new_resolution(1280, 720);
+
+    let gmtxt = JsonF::load_from_file("assets/text.json");
+    let chosen_language = 0;
+    let text_content = TextContent::from_json(&gmtxt, chosen_language)
+        .expect("failed to load text content from assets/text.json");
+    let menu_item_capacity = text_content
+        .pause
+        .len()
+        .max(text_content.settings.len())
+        .max(text_content.game_set.len())
+        .max(text_content.audio.len())
+        .max(text_content.graphics.len());
 
     let vert = readfs("shaders/vert");
     let frag = readfs("shaders/frag");
@@ -77,12 +102,32 @@ pub fn initialize() -> GameSession {
 
     let mut awaspr = Vec::new();
 
-    awaspr.push(UIplane::new_from_file(&mut eng, mati, ["assets/ui/awa1.png".to_string()].to_vec(), MeshUsage::PostPass));
-    awaspr.push(UIplane::new_from_file(&mut eng, mati, ["assets/ui/awa2.png".to_string()].to_vec(), MeshUsage::PostPass));
-    awaspr.push(UIplane::new_from_file(&mut eng, mati, ["assets/ui/awa3.png".to_string()].to_vec(), MeshUsage::PostPass));
-    awaspr.push(UIplane::new_from_file(&mut eng, mati, ["assets/ui/awa4.png".to_string()].to_vec(), MeshUsage::PostPass));
+    awaspr.push(UIplane::new_from_file(
+        &mut eng,
+        mati,
+        ["assets/ui/awa1.png".to_string()].to_vec(),
+        MeshUsage::PostPass,
+    ));
+    awaspr.push(UIplane::new_from_file(
+        &mut eng,
+        mati,
+        ["assets/ui/awa2.png".to_string()].to_vec(),
+        MeshUsage::PostPass,
+    ));
+    awaspr.push(UIplane::new_from_file(
+        &mut eng,
+        mati,
+        ["assets/ui/awa3.png".to_string()].to_vec(),
+        MeshUsage::PostPass,
+    ));
+    awaspr.push(UIplane::new_from_file(
+        &mut eng,
+        mati,
+        ["assets/ui/awa4.png".to_string()].to_vec(),
+        MeshUsage::PostPass,
+    ));
 
-    for pl in &mut awaspr{
+    for pl in &mut awaspr {
         pl.object.physic_object.is_static = false;
         pl.object.physic_object.gravity = false;
         pl.object.physic_object.solid = false;
@@ -117,7 +162,7 @@ pub fn initialize() -> GameSession {
     }
 
     let mut menu_text = Vec::new();
-    for i in 0..3 {
+    for _ in 0..menu_item_capacity {
         let t = UItext::new_from_file(
             &mut eng,
             matt,
@@ -158,45 +203,37 @@ pub fn initialize() -> GameSession {
 
     let imgbl = Image::new_color(&mut eng, [0, 0, 0, u8::MAX]);
     let mut spbg = Vec::new();
-    for i in 0..4 {
-        let t = UIplane::new(
-            &mut eng,
-            mati2,
-            vec![imgbl.clone()],
-            MeshUsage::PostPass,
-        );
+    for _ in 0..4 {
+        let t = UIplane::new(&mut eng, mati2, vec![imgbl.clone()], MeshUsage::PostPass);
         spbg.push(t);
     }
 
     let imgw = Image::new_color(&mut eng, [u8::MAX, u8::MAX, u8::MAX, u8::MAX]);
     let mut wbg = Vec::new();
-    for i in 0..4 {
-        let t = UIplane::new(
-            &mut eng,
-            mati,
-            vec![imgw.clone()],
-            MeshUsage::PostPass,
-        );
+    for _ in 0..4 {
+        let t = UIplane::new(&mut eng, mati, vec![imgw.clone()], MeshUsage::PostPass);
         wbg.push(t);
     }
 
     let mut bbg = Vec::new();
-    for i in 0..4 {
-        let t = UIplane::new(
-            &mut eng,
-            mati,
-            vec![imgbl],
-            MeshUsage::PostPass,
-        );
+    for _ in 0..=menu_item_capacity {
+        let t = UIplane::new(&mut eng, mati, vec![imgbl], MeshUsage::PostPass);
         bbg.push(t);
     }
 
     let orimg = Image::new_color(&mut eng, [255, 213, 128, u8::MAX]);
+    let blimg = Image::new_color(&mut eng, [5, 1, 74, u8::MAX]);
     let mut menubg = Vec::new();
     menubg.push(UIplane::new(
         &mut eng,
         mati,
         vec![orimg],
+        MeshUsage::PostPass,
+    ));
+    menubg.push(UIplane::new(
+        &mut eng,
+        mati,
+        vec![blimg],
         MeshUsage::PostPass,
     ));
 
@@ -207,28 +244,55 @@ pub fn initialize() -> GameSession {
         MeshUsage::PostPass,
     ));
 
+    let lgi = Image::new_from_files(&eng, vec!["assets/ui/tlogo.png".to_string()]);
+
+    let logoplane = UIplane::new(&mut eng, mati, vec![lgi], MeshUsage::PostPass);
+
     fpscnt.new_line_symbol = b'|';
 
-    let mut scn = Scene::load_from_gltf(&mut eng, "assets/cpc.glb", matgeneral, Some(SceneVoxelizer {
-        settings: VoxelizerSettings{ 
-            size: Some(Ivec3{ x: 400, y: 225, z: 204}), 
-            origin: Some(Vec3 { x: -21.5, y: -1.0, z: -17.0 }),
-            voxel_size: 0.1,
-            //size: Some(Ivec3{ x: 800, y: 450, z: 480}), 
-            //origin: Some(Vec3 { x: -21.5, y: -1.0, z: -17.0 }),
-            //voxel_size: 0.05,
-            //size: None, 
-            //origin: None,
-        },
-        object_filters: vec![
-            ("pivot".to_string(), false),
-            ("ph_".to_string(), false),
-            ("enemy1_".to_string(), false),
-            ("light1_".to_string(), false),
-        ],
-    }));
-    let black3d = Image::new(&eng, scn.voxel_representation.size, scn.voxel_representation.data.clone(), true, TextureFormat::R8g8b8a8Unorm, false);
-    println!("voxelized scene size: {}MB", scn.voxel_representation.data.len() as f32/1048576.0);
+    let mut scn = Scene::load_from_gltf(
+        &mut eng,
+        "assets/cpc.glb",
+        matgeneral,
+        Some(SceneVoxelizer {
+            settings: VoxelizerSettings {
+                size: Some(Ivec3 {
+                    x: 400,
+                    y: 225,
+                    z: 204,
+                }),
+                origin: Some(Vec3 {
+                    x: -21.5,
+                    y: -1.0,
+                    z: -17.0,
+                }),
+                voxel_size: 0.1,
+                //size: Some(Ivec3{ x: 800, y: 450, z: 480}),
+                //origin: Some(Vec3 { x: -21.5, y: -1.0, z: -17.0 }),
+                //voxel_size: 0.05,
+                //size: None,
+                //origin: None,
+            },
+            object_filters: vec![
+                ("pivot".to_string(), false),
+                ("ph_".to_string(), false),
+                ("enemy1_".to_string(), false),
+                ("light1_".to_string(), false),
+            ],
+        }),
+    );
+    let black3d = Image::new(
+        &eng,
+        scn.voxel_representation.size,
+        scn.voxel_representation.data.clone(),
+        true,
+        TextureFormat::R8g8b8a8Unorm,
+        false,
+    );
+    println!(
+        "voxelized scene size: {}MB",
+        scn.voxel_representation.data.len() as f32 / 1048576.0
+    );
     //let black3d = Image::new(
     //    &eng,
     //    [1, 1, 1],
@@ -281,23 +345,23 @@ pub fn initialize() -> GameSession {
             pivot.id = i;
             pivot.start_pos = scn.objects[i].physic_object.pos;
             configure_actor(&mut scn.objects[i].physic_object);
-        }else if name.contains("tactica_") {
+        } else if name.contains("tactica_") {
             tbtplates.push(TBTplate {
                 id: i,
                 safe: false,
                 enemy_id: None,
             });
-        }else if name.contains("safe_") {
+        } else if name.contains("safe_") {
             tbtplates.push(TBTplate {
                 id: i,
                 safe: true,
                 enemy_id: None,
             });
-        }else if name.contains("ph_") {
+        } else if name.contains("ph_") {
             scn.objects[i].physic_object.is_static = false;
             scn.objects[i].physic_object.compute_torque = false;
             physics_objects.push((i, scn.objects[i].physic_object.pos));
-        }else if name.contains("enemy1_") {
+        } else if name.contains("enemy1_") {
             enemies.push(Enemy {
                 id: i,
                 direction: Vec3 {
@@ -311,11 +375,16 @@ pub fn initialize() -> GameSession {
                 initial_tile_id: None,
             });
             configure_actor(&mut scn.objects[i].physic_object);
-        }else if name.contains("light1_") {
+        } else if name.contains("light1_") {
             eng.lights.push(Light::new(LightType::Spot));
             let lastltmt = eng.lights.last_mut().unwrap();
             lastltmt.pos = scn.objects[i].physic_object.pos;
-            lastltmt.rot = Vec3{ x: -1.5708, y: 0.0, z: 0.0}.to_quat();
+            lastltmt.rot = Vec3 {
+                x: -1.5708,
+                y: 0.0,
+                z: 0.0,
+            }
+            .to_quat();
             lastltmt.color = Vec3 {
                 x: 1.25,
                 y: 0.56,
@@ -337,7 +406,10 @@ pub fn initialize() -> GameSession {
     //eng.render.resolution_scale = 0.75;
     eng.cameras[0].physic_object.solid = false;
     eng.cameras[0].physic_object.gravity = false;
-    println!("shadowmapresolution(ignore if shadowmaps are off): {}", eng.render.shadow_map_resolution);
+    println!(
+        "shadowmapresolution(ignore if shadowmaps are off): {}",
+        eng.render.shadow_map_resolution
+    );
 
     eng.render.resolution_scale = 0.65;
 
@@ -370,11 +442,6 @@ pub fn initialize() -> GameSession {
     speakers[5].play = true;
     speakers[5].volume = 0.1;
 
-    let gmtxt = JsonF::load_from_file("assets/text.json");
-    let chosen_language = 0;
-    let text_content = TextContent::from_json(&gmtxt, chosen_language)
-        .expect("failed to load text content from assets/text.json");
-
     GameSession {
         eng,
         scn,
@@ -387,6 +454,7 @@ pub fn initialize() -> GameSession {
         white_background: wbg,
         black_background: bbg,
         menu_background: menubg,
+        logo: logoplane,
         speech_bubble_background: spbg,
         awarness_signs: awaspr,
         ui_scale: 1.0,
@@ -450,11 +518,21 @@ pub fn initialize() -> GameSession {
                 key: String::new(),
             },
         },
-        controller_mappings: ControllerMappings{
+        controller_mappings: ControllerMappings {
             arrows: [12, 10, 11, 13],
-            arrows_key: ["d".to_string(), "t".to_string(), "r".to_string(), "l".to_string()],
+            arrows_key: [
+                "d".to_string(),
+                "t".to_string(),
+                "r".to_string(),
+                "l".to_string(),
+            ],
             abxy: [0, 1, 2, 3],
-            abxy_key: ["a".to_string(), "x".to_string(), "b".to_string(), "y".to_string()],
+            abxy_key: [
+                "a".to_string(),
+                "x".to_string(),
+                "b".to_string(),
+                "y".to_string(),
+            ],
             axis: [0, 1, 2, 3],
             bumpers: [4, 5],
             start: 7,

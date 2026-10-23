@@ -217,6 +217,7 @@ pub struct GameSession {
     pub menu_background: Vec<UIplane>,
     pub black_background: Vec<UIplane>,
     pub awarness_signs: Vec<UIplane>,
+    pub logo: UIplane,
     pub ui_scale: f32,
     pub pivot: Pivot,
     pub tbtplates: Vec<TBTplate>,

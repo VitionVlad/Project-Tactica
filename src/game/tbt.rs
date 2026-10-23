@@ -1,4 +1,4 @@
-use super::{Action, Awarness, GameSession, tile_test, tile_test_point};
+use super::{tile_test, tile_test_point, Action, Awarness, GameSession};
 
 pub fn update(session: &mut GameSession) {
     if let Some(action) = session.active_action.take() {

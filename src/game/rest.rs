@@ -1,6 +1,12 @@
-use crate::{engine::math::{vec3::Vec3, vec4::Vec4}, game::{Action::{Skip, Step, StepWithElemination}, Awarness}};
+use crate::{
+    engine::math::{vec3::Vec3, vec4::Vec4},
+    game::{
+        Action::{Skip, Step, StepWithElemination},
+        Awarness,
+    },
+};
 
-use super::{Direction, GameSession, InputType, smooth_value_towards, tile_test};
+use super::{smooth_value_towards, tile_test, Direction, GameSession, InputType};
 
 pub fn update(session: &mut GameSession) {
     for speaker in &mut session.speakers {
@@ -33,224 +39,416 @@ pub fn update(session: &mut GameSession) {
     session.fpscnt.draw = true;
     session.fpscnt.exec(&mut session.eng, &fps_text);
 
-    for plates in &session.tbtplates{
+    for plates in &session.tbtplates {
         session.scn.objects[plates.id].mesh.ubo[53] = 0.0;
     }
-    for i in 0..5{
-        if session.action_list[i].is_some() && !session.making_step && session.action_cooldown <= 0.0{
+    for i in 0..5 {
+        if session.action_list[i].is_some()
+            && !session.making_step
+            && session.action_cooldown <= 0.0
+        {
             let action = session.action_list[i].as_ref().unwrap();
             match action {
                 Step(plate) => {
                     session.scn.objects[plate.1].mesh.ubo[53] = 2.0;
                     let mut pos = session.scn.objects[plate.1].physic_object.pos;
-                    pos.y = session.scn.objects[plate.1].physic_object.collider.aabb_max.y;
-                    let mut cammat = session.eng.cameras[0].get_projection((session.eng.render.resolution_x as f32)/(session.eng.render.resolution_y as f32));
+                    pos.y = session.scn.objects[plate.1]
+                        .physic_object
+                        .collider
+                        .aabb_max
+                        .y;
+                    let mut cammat = session.eng.cameras[0].get_projection(
+                        (session.eng.render.resolution_x as f32)
+                            / (session.eng.render.resolution_y as f32),
+                    );
                     cammat.transpose();
-                    let screenpos = cammat.vec4mul(Vec4{ x: pos.x, y: pos.y, z: pos.z, w: 1.0});
-                    let screenpos = Vec3{ x: ((screenpos.x/screenpos.w+1.0)/2.0)*(session.eng.render.resolution_x as f32), y: (session.eng.render.resolution_y as f32) - ((screenpos.y/screenpos.w+1.0)/2.0)*(session.eng.render.resolution_y as f32), z: 0.0};
+                    let screenpos = cammat.vec4mul(Vec4 {
+                        x: pos.x,
+                        y: pos.y,
+                        z: pos.z,
+                        w: 1.0,
+                    });
+                    let screenpos = Vec3 {
+                        x: ((screenpos.x / screenpos.w + 1.0) / 2.0)
+                            * (session.eng.render.resolution_x as f32),
+                        y: (session.eng.render.resolution_y as f32)
+                            - ((screenpos.y / screenpos.w + 1.0) / 2.0)
+                                * (session.eng.render.resolution_y as f32),
+                        z: 0.0,
+                    };
 
                     session.text[i].size.x = 10.0 * session.ui_scale;
                     session.text[i].size.y = 20.0 * session.ui_scale;
                     session.text[i].pos.x = screenpos.x;
-                    session.text[i].pos.y = screenpos.y - session.text[i].size.y/2.0;
+                    session.text[i].pos.y = screenpos.y - session.text[i].size.y / 2.0;
                     session.text[i].auto_recalculate_clickzone = true;
                     session.text[i].rotate_each_character = false;
-                    session.text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.1 }.to_quat();
+                    session.text[i].rotation = Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: -0.1,
+                    }
+                    .to_quat();
                     session.text[i].pos.z = 0.1;
                     session.text[i].draw = true;
                     session.text[i].signal = true;
                     session.text[i].per_symbol = false;
                     let text = &session.text_content.tbt_ui[0];
-                    if session.text[i].exec(&mut session.eng, text) && session.action_cooldown <= 0.0 && session.eng.control.mousebtn[2] {
+                    if session.text[i].exec(&mut session.eng, text)
+                        && session.action_cooldown <= 0.0
+                        && session.eng.control.mousebtn[2]
+                    {
                         session.input_type = InputType::Touchscreen;
-                        session.active_action = Some(Step((match i {
-                            0 => Direction::Up,
-                            1 => Direction::Down,
-                            2 => Direction::Left,
-                            3 => Direction::Right,
-                            _ => Direction::Up,
-                        }, plate.1)));
+                        session.active_action = Some(Step((
+                            match i {
+                                0 => Direction::Up,
+                                1 => Direction::Down,
+                                2 => Direction::Left,
+                                3 => Direction::Right,
+                                _ => Direction::Up,
+                            },
+                            plate.1,
+                        )));
                     }
-                    session.speech_bubble_background[i].object.physic_object.scale.x = (session.text[i].size.x * text.len() as f32 + 12.0) * session.ui_scale;
-                    session.speech_bubble_background[i].object.physic_object.scale.y = (session.text[i].size.y + 12.0) * session.ui_scale;
-                    session.speech_bubble_background[i].object.physic_object.pos.x = session.text[i].pos.x - 6.0 * session.ui_scale;
-                    session.speech_bubble_background[i].object.physic_object.pos.y = session.text[i].pos.y - 6.0 * session.ui_scale;
-                    session.speech_bubble_background[i].object.physic_object.pos.z = 0.2;
-                    session.speech_bubble_background[i].object.physic_object.rot = Vec3{ x: 0.0, y: 0.0, z: -0.1 }.to_quat();
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .scale
+                        .x = (session.text[i].size.x * text.len() as f32 + 12.0) * session.ui_scale;
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .scale
+                        .y = (session.text[i].size.y + 12.0) * session.ui_scale;
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .pos
+                        .x = session.text[i].pos.x - 6.0 * session.ui_scale;
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .pos
+                        .y = session.text[i].pos.y - 6.0 * session.ui_scale;
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .pos
+                        .z = 0.2;
+                    session.speech_bubble_background[i].object.physic_object.rot = Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: -0.1,
+                    }
+                    .to_quat();
                     session.speech_bubble_background[i].object.draw = true;
                     session.speech_bubble_background[i].exec(&mut session.eng);
 
                     session.keyimg[i].size.x = 40.0 * session.ui_scale;
                     session.keyimg[i].size.y = 40.0 * session.ui_scale;
                     session.keyimg[i].pos.z = 0.1;
-                    session.keyimg[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.1 }.to_quat();
+                    session.keyimg[i].rotation = Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: -0.1,
+                    }
+                    .to_quat();
                     match i {
                         0 => {
                             session.keyimg[i].pos.x = session.text[i].pos.x;
-                            session.keyimg[i].pos.y = session.text[i].pos.y + session.text[i].size.y;
-                        },
+                            session.keyimg[i].pos.y =
+                                session.text[i].pos.y + session.text[i].size.y;
+                        }
                         1 => {
                             session.keyimg[i].pos.x = session.text[i].pos.x;
-                            session.keyimg[i].pos.y = session.text[i].pos.y - session.keyimg[i].size.y;
-                        },
+                            session.keyimg[i].pos.y =
+                                session.text[i].pos.y - session.keyimg[i].size.y;
+                        }
                         2 => {
-                            session.keyimg[i].pos.x = session.text[i].pos.x + (text.len() as f32)*session.text[i].size.x;
-                            session.keyimg[i].pos.y = session.text[i].pos.y - session.keyimg[i].size.y/4.0;
-                        },
+                            session.keyimg[i].pos.x = session.text[i].pos.x
+                                + (text.len() as f32) * session.text[i].size.x;
+                            session.keyimg[i].pos.y =
+                                session.text[i].pos.y - session.keyimg[i].size.y / 4.0;
+                        }
                         3 => {
-                            session.keyimg[i].pos.x = session.text[i].pos.x - session.keyimg[i].size.x;
-                            session.keyimg[i].pos.y = session.text[i].pos.y - session.keyimg[i].size.y/4.0;
-                        },
-                        _ => {},
+                            session.keyimg[i].pos.x =
+                                session.text[i].pos.x - session.keyimg[i].size.x;
+                            session.keyimg[i].pos.y =
+                                session.text[i].pos.y - session.keyimg[i].size.y / 4.0;
+                        }
+                        _ => {}
                     }
                     match session.input_type {
                         InputType::Keyboard => {
                             session.keyimg[i].draw = true;
-                            session.keyimg[i].exec(&mut session.eng, &session.keyboard_bindings.arrows[i].key);
-                        },
+                            session.keyimg[i]
+                                .exec(&mut session.eng, &session.keyboard_bindings.arrows[i].key);
+                        }
                         InputType::Gamepad => {
                             session.keyimg[i].draw = true;
-                            session.keyimg[i].exec(&mut session.eng, &session.controller_mappings.arrows_key[i]);
-                        },
+                            session.keyimg[i]
+                                .exec(&mut session.eng, &session.controller_mappings.arrows_key[i]);
+                        }
                         InputType::Touchscreen => {
                             session.keyimg[i].draw = false;
                             session.keyimg[i].exec(&mut session.eng, " ");
-                        },
+                        }
                     }
-                },
+                }
                 StepWithElemination(plate) => {
                     session.scn.objects[plate.1].mesh.ubo[53] = 2.0;
                     let mut pos = session.scn.objects[plate.1].physic_object.pos;
-                    pos.y = session.scn.objects[plate.1].physic_object.collider.aabb_max.y;
-                    let mut cammat = session.eng.cameras[0].get_projection((session.eng.render.resolution_x as f32)/(session.eng.render.resolution_y as f32));
+                    pos.y = session.scn.objects[plate.1]
+                        .physic_object
+                        .collider
+                        .aabb_max
+                        .y;
+                    let mut cammat = session.eng.cameras[0].get_projection(
+                        (session.eng.render.resolution_x as f32)
+                            / (session.eng.render.resolution_y as f32),
+                    );
                     cammat.transpose();
-                    let screenpos = cammat.vec4mul(Vec4{ x: pos.x, y: pos.y, z: pos.z, w: 1.0});
-                    let screenpos = Vec3{ x: ((screenpos.x/screenpos.w+1.0)/2.0)*(session.eng.render.resolution_x as f32), y: (session.eng.render.resolution_y as f32) - ((screenpos.y/screenpos.w+1.0)/2.0)*(session.eng.render.resolution_y as f32), z: 0.0};
+                    let screenpos = cammat.vec4mul(Vec4 {
+                        x: pos.x,
+                        y: pos.y,
+                        z: pos.z,
+                        w: 1.0,
+                    });
+                    let screenpos = Vec3 {
+                        x: ((screenpos.x / screenpos.w + 1.0) / 2.0)
+                            * (session.eng.render.resolution_x as f32),
+                        y: (session.eng.render.resolution_y as f32)
+                            - ((screenpos.y / screenpos.w + 1.0) / 2.0)
+                                * (session.eng.render.resolution_y as f32),
+                        z: 0.0,
+                    };
 
                     session.text[i].size.x = 10.0 * session.ui_scale;
                     session.text[i].size.y = 20.0 * session.ui_scale;
                     session.text[i].pos.x = screenpos.x;
-                    session.text[i].pos.y = screenpos.y - session.text[i].size.y/2.0;
+                    session.text[i].pos.y = screenpos.y - session.text[i].size.y / 2.0;
                     session.text[i].pos.z = 0.1;
                     session.text[i].draw = true;
                     session.text[i].signal = true;
                     session.text[i].per_symbol = false;
                     session.text[i].auto_recalculate_clickzone = true;
                     session.text[i].rotate_each_character = false;
-                    session.text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: 0.1 }.to_quat();
+                    session.text[i].rotation = Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.1,
+                    }
+                    .to_quat();
                     let text = &session.text_content.tbt_ui[1];
 
-                    session.speech_bubble_background[i].object.physic_object.scale.x = (session.text[i].size.x * text.len() as f32 + 12.0) * session.ui_scale;
-                    session.speech_bubble_background[i].object.physic_object.scale.y = (session.text[i].size.y + 12.0) * session.ui_scale;
-                    session.speech_bubble_background[i].object.physic_object.pos.x = session.text[i].pos.x - 6.0 * session.ui_scale;
-                    session.speech_bubble_background[i].object.physic_object.pos.y = session.text[i].pos.y - 6.0 * session.ui_scale;
-                    session.speech_bubble_background[i].object.physic_object.pos.z = 0.2;
-                    session.speech_bubble_background[i].object.physic_object.rot = Vec3{ x: 0.0, y: 0.0, z: 0.1 }.to_quat();
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .scale
+                        .x = (session.text[i].size.x * text.len() as f32 + 12.0) * session.ui_scale;
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .scale
+                        .y = (session.text[i].size.y + 12.0) * session.ui_scale;
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .pos
+                        .x = session.text[i].pos.x - 6.0 * session.ui_scale;
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .pos
+                        .y = session.text[i].pos.y - 6.0 * session.ui_scale;
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .pos
+                        .z = 0.2;
+                    session.speech_bubble_background[i].object.physic_object.rot = Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.1,
+                    }
+                    .to_quat();
                     session.speech_bubble_background[i].object.draw = true;
 
                     session.keyimg[i].size.x = 50.0 * session.ui_scale;
                     session.keyimg[i].size.y = 50.0 * session.ui_scale;
-                    session.keyimg[i].rotation = Vec3{ x: 0.0, y: 0.0, z: 0.1 }.to_quat();
+                    session.keyimg[i].rotation = Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.1,
+                    }
+                    .to_quat();
                     session.keyimg[i].pos.z = 0.1;
                     match i {
                         0 => {
                             session.keyimg[i].pos.x = session.text[i].pos.x;
-                            session.keyimg[i].pos.y = session.text[i].pos.y + session.text[i].size.y;
-                        },
+                            session.keyimg[i].pos.y =
+                                session.text[i].pos.y + session.text[i].size.y;
+                        }
                         1 => {
                             session.keyimg[i].pos.x = session.text[i].pos.x;
-                            session.keyimg[i].pos.y = session.text[i].pos.y - session.keyimg[i].size.y;
-                        },
+                            session.keyimg[i].pos.y =
+                                session.text[i].pos.y - session.keyimg[i].size.y;
+                        }
                         2 => {
-                            session.keyimg[i].pos.x = session.text[i].pos.x + (text.len() as f32)*session.text[i].size.x;
-                            session.keyimg[i].pos.y = session.text[i].pos.y - session.keyimg[i].size.y/4.0;
-                        },
+                            session.keyimg[i].pos.x = session.text[i].pos.x
+                                + (text.len() as f32) * session.text[i].size.x;
+                            session.keyimg[i].pos.y =
+                                session.text[i].pos.y - session.keyimg[i].size.y / 4.0;
+                        }
                         3 => {
-                            session.text[i].pos.x -= (text.len() as f32 / 4.0) * session.text[i].size.x;
-                            session.speech_bubble_background[i].object.physic_object.pos.x = session.text[i].pos.x - 6.0 * session.ui_scale;
-                            session.keyimg[i].pos.x = session.text[i].pos.x - session.keyimg[i].size.x;
-                            session.keyimg[i].pos.y = session.text[i].pos.y - session.keyimg[i].size.y/4.0;
-                        },
-                        _ => {},
+                            session.text[i].pos.x -=
+                                (text.len() as f32 / 4.0) * session.text[i].size.x;
+                            session.speech_bubble_background[i]
+                                .object
+                                .physic_object
+                                .pos
+                                .x = session.text[i].pos.x - 6.0 * session.ui_scale;
+                            session.keyimg[i].pos.x =
+                                session.text[i].pos.x - session.keyimg[i].size.x;
+                            session.keyimg[i].pos.y =
+                                session.text[i].pos.y - session.keyimg[i].size.y / 4.0;
+                        }
+                        _ => {}
                     }
                     match session.input_type {
                         InputType::Keyboard => {
                             session.keyimg[i].draw = true;
-                            session.keyimg[i].exec(&mut session.eng, &session.keyboard_bindings.arrows[i].key);
-                        },
+                            session.keyimg[i]
+                                .exec(&mut session.eng, &session.keyboard_bindings.arrows[i].key);
+                        }
                         InputType::Gamepad => {
                             session.keyimg[i].draw = true;
-                            session.keyimg[i].exec(&mut session.eng, &session.controller_mappings.arrows_key[i]);
-                        },
+                            session.keyimg[i]
+                                .exec(&mut session.eng, &session.controller_mappings.arrows_key[i]);
+                        }
                         InputType::Touchscreen => {
                             session.keyimg[i].draw = false;
                             session.keyimg[i].exec(&mut session.eng, " ");
-                        },
+                        }
                     }
                     session.speech_bubble_background[i].exec(&mut session.eng);
-                    if session.text[i].exec(&mut session.eng, text) && session.action_cooldown <= 0.0 && session.eng.control.mousebtn[2] {
+                    if session.text[i].exec(&mut session.eng, text)
+                        && session.action_cooldown <= 0.0
+                        && session.eng.control.mousebtn[2]
+                    {
                         session.input_type = InputType::Touchscreen;
-                        session.active_action = Some(StepWithElemination((match i {
-                            0 => Direction::Up,
-                            1 => Direction::Down,
-                            2 => Direction::Left,
-                            3 => Direction::Right,
-                            _ => Direction::Up,
-                        }, plate.1)));
+                        session.active_action = Some(StepWithElemination((
+                            match i {
+                                0 => Direction::Up,
+                                1 => Direction::Down,
+                                2 => Direction::Left,
+                                3 => Direction::Right,
+                                _ => Direction::Up,
+                            },
+                            plate.1,
+                        )));
                     }
-                },
+                }
                 Skip => {
                     let text = &session.text_content.tbt_ui[2];
                     session.text[i].size.x = 15.0 * session.ui_scale;
                     session.text[i].size.y = 30.0 * session.ui_scale;
-                    session.text[i].pos.x = session.eng.render.resolution_x as f32 / 2.0 - text.len() as f32;
-                    session.text[i].pos.y = session.eng.render.resolution_y as f32 - session.text[i].size.y*2.0;
+                    session.text[i].pos.x =
+                        session.eng.render.resolution_x as f32 / 2.0 - text.len() as f32;
+                    session.text[i].pos.y =
+                        session.eng.render.resolution_y as f32 - session.text[i].size.y * 2.0;
                     session.text[i].pos.z = 0.1;
                     session.text[i].draw = true;
                     session.text[i].signal = true;
                     session.text[i].per_symbol = false;
                     session.text[i].auto_recalculate_clickzone = true;
                     session.text[i].rotate_each_character = false;
-                    session.text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: 0.1 }.to_quat();
+                    session.text[i].rotation = Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.1,
+                    }
+                    .to_quat();
 
-                    session.speech_bubble_background[i].object.physic_object.scale.x = (session.text[i].size.x * text.len() as f32 + 12.0) * session.ui_scale;
-                    session.speech_bubble_background[i].object.physic_object.scale.y = (session.text[i].size.y + 12.0) * session.ui_scale;
-                    session.speech_bubble_background[i].object.physic_object.pos.x = session.text[i].pos.x - 6.0 * session.ui_scale;
-                    session.speech_bubble_background[i].object.physic_object.pos.y = session.text[i].pos.y - 6.0 * session.ui_scale;
-                    session.speech_bubble_background[i].object.physic_object.pos.z = 0.2;
-                    session.speech_bubble_background[i].object.physic_object.rot = Vec3{ x: 0.0, y: 0.0, z: 0.1 }.to_quat();
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .scale
+                        .x = (session.text[i].size.x * text.len() as f32 + 12.0) * session.ui_scale;
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .scale
+                        .y = (session.text[i].size.y + 12.0) * session.ui_scale;
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .pos
+                        .x = session.text[i].pos.x - 6.0 * session.ui_scale;
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .pos
+                        .y = session.text[i].pos.y - 6.0 * session.ui_scale;
+                    session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .pos
+                        .z = 0.2;
+                    session.speech_bubble_background[i].object.physic_object.rot = Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.1,
+                    }
+                    .to_quat();
                     session.speech_bubble_background[i].object.draw = true;
 
                     session.keyimg[i].size.x = 50.0 * session.ui_scale;
                     session.keyimg[i].size.y = 50.0 * session.ui_scale;
-                    session.keyimg[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.1 }.to_quat();
+                    session.keyimg[i].rotation = Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: -0.1,
+                    }
+                    .to_quat();
                     session.keyimg[i].pos.z = 0.1;
-                    session.keyimg[i].pos.x = session.speech_bubble_background[i].object.physic_object.pos.x - session.keyimg[i].size.x/1.125;
-                    session.keyimg[i].pos.y = session.eng.render.resolution_y as f32 - session.keyimg[i].size.y*1.5;
+                    session.keyimg[i].pos.x = session.speech_bubble_background[i]
+                        .object
+                        .physic_object
+                        .pos
+                        .x
+                        - session.keyimg[i].size.x / 1.125;
+                    session.keyimg[i].pos.y =
+                        session.eng.render.resolution_y as f32 - session.keyimg[i].size.y * 1.5;
 
                     match session.input_type {
                         InputType::Keyboard => {
                             session.keyimg[i].draw = true;
-                            session.keyimg[i].exec(&mut session.eng, &session.keyboard_bindings.abxy[0].key);
-                        },
+                            session.keyimg[i]
+                                .exec(&mut session.eng, &session.keyboard_bindings.abxy[0].key);
+                        }
                         InputType::Gamepad => {
                             session.keyimg[i].draw = true;
-                            session.keyimg[i].exec(&mut session.eng, &session.controller_mappings.abxy_key[0]);
-                        },
+                            session.keyimg[i]
+                                .exec(&mut session.eng, &session.controller_mappings.abxy_key[0]);
+                        }
                         InputType::Touchscreen => {
                             session.keyimg[i].draw = false;
                             session.keyimg[i].exec(&mut session.eng, " ");
-                        },
+                        }
                     }
 
                     session.speech_bubble_background[i].exec(&mut session.eng);
-                    if session.text[i].exec(&mut session.eng, text) && session.action_cooldown <= 0.0 && session.eng.control.mousebtn[2] {
+                    if session.text[i].exec(&mut session.eng, text)
+                        && session.action_cooldown <= 0.0
+                        && session.eng.control.mousebtn[2]
+                    {
                         session.input_type = InputType::Touchscreen;
                         session.active_action = Some(Skip);
                     }
-                },
+                }
             }
-        }else{
+        } else {
             session.speech_bubble_background[i].object.draw = false;
             session.speech_bubble_background[i].exec(&mut session.eng);
             session.text[i].draw = false;
@@ -296,26 +494,22 @@ pub fn update(session: &mut GameSession) {
         }
 
         session.scn.objects[session.pivot.id].mesh.ubo[53] = 0.0;
-        for enemy in &session.enemies{
+        for enemy in &session.enemies {
             session.scn.objects[enemy.id].mesh.ubo[53] = 0.0;
         }
 
-        for pl in &mut session.awarness_signs{
-            pl.object.physic_object.pos.x = smooth_value_towards(
-                pl.object.physic_object.pos.x,
-                -150.0,
-                &session.eng,
-                1.0,
-            );
+        for pl in &mut session.awarness_signs {
+            pl.object.physic_object.pos.x =
+                smooth_value_towards(pl.object.physic_object.pos.x, -150.0, &session.eng, 1.0);
             pl.object.physic_object.scale.x = 100.0 * session.ui_scale;
             pl.object.physic_object.scale.y = 100.0 * session.ui_scale;
             pl.object.physic_object.pos.y = 10.0;
             pl.object.draw = true;
             pl.exec(&mut session.eng);
         }
-    }else{
+    } else {
         session.scn.objects[session.pivot.id].mesh.ubo[53] = 1.0;
-        for enemy in &session.enemies{
+        for enemy in &session.enemies {
             session.scn.objects[enemy.id].mesh.ubo[53] = 1.0;
         }
 
@@ -334,7 +528,7 @@ pub fn update(session: &mut GameSession) {
                 session.awarness_signs[0].object.draw = true;
                 session.awarness_signs[0].exec(&mut session.eng);
 
-                for i in 1..3{
+                for i in 1..3 {
                     //session.awarness_signs[i].object.draw = false;
                     session.awarness_signs[i].object.physic_object.pos.y = 10.0;
                     session.awarness_signs[i].object.physic_object.pos.x = smooth_value_towards(
@@ -346,7 +540,7 @@ pub fn update(session: &mut GameSession) {
                     session.awarness_signs[i].object.draw = true;
                     session.awarness_signs[i].exec(&mut session.eng);
                 }
-            },
+            }
             Awarness::Suspected(l) => {
                 session.awarness_signs[0].object.physic_object.scale.x = 100.0 * session.ui_scale;
                 session.awarness_signs[0].object.physic_object.scale.y = 100.0 * session.ui_scale;
@@ -375,7 +569,7 @@ pub fn update(session: &mut GameSession) {
                 session.awarness_signs[1].object.draw = true;
                 session.awarness_signs[1].exec(&mut session.eng);
 
-                for i in 2..3{
+                for i in 2..3 {
                     session.awarness_signs[i].object.physic_object.pos.x = smooth_value_towards(
                         session.awarness_signs[i].object.physic_object.pos.x,
                         -150.0,
@@ -385,7 +579,7 @@ pub fn update(session: &mut GameSession) {
                     session.awarness_signs[i].object.draw = true;
                     session.awarness_signs[i].exec(&mut session.eng);
                 }
-            },
+            }
             Awarness::Detected(l) => {
                 session.awarness_signs[0].object.physic_object.scale.x = 100.0 * session.ui_scale;
                 session.awarness_signs[0].object.physic_object.scale.y = 100.0 * session.ui_scale;
@@ -436,7 +630,7 @@ pub fn update(session: &mut GameSession) {
                 );
                 session.awarness_signs[3].object.draw = true;
                 session.awarness_signs[3].exec(&mut session.eng);
-            },
+            }
             Awarness::Compromised(l) => {
                 session.awarness_signs[0].object.physic_object.scale.x = 100.0 * session.ui_scale;
                 session.awarness_signs[0].object.physic_object.scale.y = 100.0 * session.ui_scale;
@@ -492,7 +686,7 @@ pub fn update(session: &mut GameSession) {
                 session.awarness_signs[3].object.physic_object.pos.z = 0.4;
                 session.awarness_signs[3].object.draw = true;
                 session.awarness_signs[3].exec(&mut session.eng);
-            },
+            }
         }
     }
 
@@ -501,7 +695,7 @@ pub fn update(session: &mut GameSession) {
         if direction.0.is_some() {
             let object = &mut session.scn.objects[direction.0.unwrap()].physic_object;
             object.acceleration = (point - object.pos) * 100.0;
-        }else{
+        } else {
             for object_id in &session.physics_objects {
                 let object = &mut session.scn.objects[object_id.0].physic_object;
                 if (object.pos - point).length_squared().sqrt() <= 1.8 {
@@ -513,25 +707,28 @@ pub fn update(session: &mut GameSession) {
         }
     }
 
-    for wbg in &mut session.white_background{
+    for wbg in &mut session.white_background {
         wbg.object.draw = false;
         wbg.exec(&mut session.eng);
     }
 
-    for bbg in &mut session.black_background{
+    for bbg in &mut session.black_background {
         bbg.object.draw = false;
         bbg.exec(&mut session.eng);
     }
 
-    for mbg in &mut session.menu_background{
+    for mbg in &mut session.menu_background {
         mbg.object.draw = false;
         mbg.exec(&mut session.eng);
     }
 
-    for txt in &mut session.menu_text{
+    for txt in &mut session.menu_text {
         txt.draw = false;
         txt.exec(&mut session.eng, " ");
     }
+
+    session.logo.object.draw = false;
+    session.logo.exec(&mut session.eng);
 
     session.viewport.object.physic_object.scale.x = session.eng.render.resolution_x as f32;
     session.viewport.object.physic_object.scale.y = session.eng.render.resolution_y as f32;
