@@ -151,7 +151,7 @@ pub fn update(session: &mut GameSession) {
         let background = &mut session.black_background[i + 1];
         let padding = 7.5 * ui_scale;
         background.object.physic_object.scale.x =
-            session.menu_text[i].size.x * (menu_items[i].len() as f32 + 1.0) + padding * 2.0;
+            session.menu_text[i].size.x * (menu_items[i].len() as f32) + padding * 2.0;
         background.object.physic_object.scale.y = session.menu_text[i].size.y + padding * 2.0;
         background.object.physic_object.pos.x = session.menu_text[i].pos.x - padding;
         background.object.physic_object.pos.y = session.menu_text[i].pos.y - padding;
