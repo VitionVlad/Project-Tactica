@@ -127,12 +127,13 @@ pub enum InputType {
     Touchscreen,
 }
 
-pub enum SubMenu{
+#[derive(PartialEq, Clone, Copy)]
+pub enum SubMenu {
     Main,
     Settings,
     Game,
     Audio,
-    Graphics
+    Graphics,
 }
 
 pub enum GameState{

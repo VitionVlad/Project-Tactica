@@ -26,13 +26,11 @@ pub fn initialize() -> GameSession {
     let chosen_language = 0;
     let text_content = TextContent::from_json(&gmtxt, chosen_language)
         .expect("failed to load text content from assets/text.json");
-    let menu_item_capacity = text_content
-        .pause
-        .len()
-        .max(text_content.settings.len())
-        .max(text_content.game_set.len())
-        .max(text_content.audio.len())
-        .max(text_content.graphics.len());
+    let menu_item_capacity = text_content.pause.len()
+        + text_content.settings.len()
+        + text_content.game_set.len()
+        + text_content.audio.len()
+        + text_content.graphics.len();
 
     let vert = readfs("shaders/vert");
     let frag = readfs("shaders/frag");
@@ -162,7 +160,7 @@ pub fn initialize() -> GameSession {
     }
 
     let mut menu_text = Vec::new();
-    for _ in 0..menu_item_capacity {
+    for _ in 0..30 {
         let t = UItext::new_from_file(
             &mut eng,
             matt,
@@ -216,7 +214,7 @@ pub fn initialize() -> GameSession {
     }
 
     let mut bbg = Vec::new();
-    for _ in 0..=menu_item_capacity {
+    for _ in 0..31 {
         let t = UIplane::new(&mut eng, mati, vec![imgbl], MeshUsage::PostPass);
         bbg.push(t);
     }
