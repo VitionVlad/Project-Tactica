@@ -12,10 +12,10 @@ pub fn updatesubemnumenu(session: &mut GameSession){
         session.menu_text[i].pos.y = session.eng.render.resolution_y as f32 / 2.0 + (session.menu_text[i].size.y + 30.0)*(i as f32) + session.viewport.object.physic_object.pos.y;
         session.menu_text[i].pos.z = 0.7;
         session.menu_text[i].draw = true;
-        session.menu_text[i].signal = true;
+        session.menu_text[i].signal = session.submenu == Main;
         session.menu_text[i].per_symbol = false;
         session.menu_text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-        if session.menu_text[i].exec(&mut session.eng, &session.text_content.pause[i]) && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+        if session.menu_text[i].exec(&mut session.eng, &session.text_content.pause[i]) && session.submenu == Main && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
             match i {
                 0 => {
                     session.returning_to_game = true;
@@ -79,10 +79,10 @@ pub fn updatesubemnusettings(session: &mut GameSession){
         session.menu_text[i].pos.y = session.viewport.object.physic_object.pos.y -(session.eng.render.resolution_y as f32 * 0.6) + (session.menu_text[i].size.y + 30.0)*(i as f32 - 4.0);
         session.menu_text[i].pos.z = 0.7;
         session.menu_text[i].draw = true;
-        session.menu_text[i].signal = true;
+        session.menu_text[i].signal = session.submenu == Settings;
         session.menu_text[i].per_symbol = false;
         session.menu_text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-        if session.menu_text[i].exec(&mut session.eng, &session.text_content.settings[i-4]) && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+        if session.menu_text[i].exec(&mut session.eng, &session.text_content.settings[i-4]) && session.submenu == Settings && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
             match i {
                 4 => {
                     session.submenu = SubMenu::Game;
@@ -149,10 +149,10 @@ pub fn updatesubemnugame(session: &mut GameSession){
         session.menu_text[i].pos.y = session.viewport.object.physic_object.pos.y -(session.eng.render.resolution_y as f32 * 0.6) + (session.menu_text[i].size.y + 30.0)*(i as f32 - 9.0);
         session.menu_text[i].pos.z = 0.7;
         session.menu_text[i].draw = true;
-        session.menu_text[i].signal = true;
+        session.menu_text[i].signal = session.submenu == Game;
         session.menu_text[i].per_symbol = false;
         session.menu_text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-        if session.menu_text[i].exec(&mut session.eng, &session.text_content.game_set[i-9]) && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+        if session.menu_text[i].exec(&mut session.eng, &session.text_content.game_set[i-9]) && session.submenu == Game && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
             match i {
                 9 => {
                     //session.returning_to_game = true;
@@ -172,7 +172,7 @@ pub fn updatesubemnugame(session: &mut GameSession){
             session.action_cooldown = 0.25;
         }
 
-        session.black_background[i+1].object.physic_object.scale.x = session.menu_text[i].size.x*(session.text_content.settings[i-9].len() as f32)+15.0;
+        session.black_background[i+1].object.physic_object.scale.x = session.menu_text[i].size.x*(session.text_content.game_set[i-9].len() as f32)+15.0;
         session.black_background[i+1].object.physic_object.scale.y = session.menu_text[i].size.y+15.0;
         session.black_background[i+1].object.physic_object.pos.x = session.menu_text[i].pos.x-7.5;
         session.black_background[i+1].object.physic_object.pos.y = session.menu_text[i].pos.y-7.5;
@@ -219,10 +219,10 @@ pub fn updatesubemnuaudio(session: &mut GameSession){
         session.menu_text[i].pos.y = session.viewport.object.physic_object.pos.y -(session.eng.render.resolution_y as f32 * 0.6) + (session.menu_text[i].size.y + 30.0)*(i as f32 - 14.0);
         session.menu_text[i].pos.z = 0.7;
         session.menu_text[i].draw = true;
-        session.menu_text[i].signal = true;
+        session.menu_text[i].signal = session.submenu == Audio;
         session.menu_text[i].per_symbol = false;
         session.menu_text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-        if session.menu_text[i].exec(&mut session.eng, &session.text_content.audio[i-14]) && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+        if session.menu_text[i].exec(&mut session.eng, &session.text_content.audio[i-14]) && session.submenu == Audio && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
             match i {
                 14 => {
                     //session.returning_to_game = true;
@@ -283,10 +283,10 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
         session.menu_text[i].pos.y = session.viewport.object.physic_object.pos.y -(session.eng.render.resolution_y as f32 * 0.675) + (session.menu_text[i].size.y + 30.0)*(i as f32 - 17.0);
         session.menu_text[i].pos.z = 0.7;
         session.menu_text[i].draw = true;
-        session.menu_text[i].signal = true;
+        session.menu_text[i].signal = session.submenu == Graphics;
         session.menu_text[i].per_symbol = false;
         session.menu_text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-        if session.menu_text[i].exec(&mut session.eng, &session.text_content.graphics[i-17]) && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+        if session.menu_text[i].exec(&mut session.eng, &session.text_content.graphics[i-17]) && session.submenu == Graphics && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
             match i {
                 17 => {
                     //session.returning_to_game = true;
