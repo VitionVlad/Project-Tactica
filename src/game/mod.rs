@@ -205,6 +205,7 @@ impl TextContent {
 }
 
 pub struct GameSession {
+    pub show_dbg_stat: bool,
     pub eng: Engine,
     pub scn: Scene,
     pub viewport: UIplane,
@@ -247,6 +248,7 @@ pub struct GameSession {
     pub exit: bool,
     pub gamepadsel: usize,
     pub submenu: SubMenu,
+    pub use_rt_lighting: bool,
 }
 
 pub fn tile_test(

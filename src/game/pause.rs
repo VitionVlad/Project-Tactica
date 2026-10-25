@@ -6,8 +6,8 @@ use super::GameSession;
 
 pub fn updatesubemnumenu(session: &mut GameSession){
     for i in 0..session.text_content.pause.len(){
-        session.menu_text[i].size.x = 30.0 * session.ui_scale;
-        session.menu_text[i].size.y = 60.0 * session.ui_scale;
+        session.menu_text[i].size.x = 25.0 * session.ui_scale;
+        session.menu_text[i].size.y = 50.0 * session.ui_scale;
         session.menu_text[i].pos.x = session.black_background[0].object.physic_object.pos.x - (session.eng.render.resolution_x as f32 / 2.0) + session.menu_text[i].size.x*2.0;
         session.menu_text[i].pos.y = session.eng.render.resolution_y as f32 / 2.0 + (session.menu_text[i].size.y + 30.0)*(i as f32) + session.viewport.object.physic_object.pos.y;
         session.menu_text[i].pos.z = 0.7;
@@ -69,8 +69,8 @@ pub fn updatesubemnusettings(session: &mut GameSession){
     session.black_background[4].exec(&mut session.eng);
 
     for i in 4..(session.text_content.settings.len()+4){
-        session.menu_text[i].size.x = 30.0 * session.ui_scale;
-        session.menu_text[i].size.y = 60.0 * session.ui_scale;
+        session.menu_text[i].size.x = 20.0 * session.ui_scale;
+        session.menu_text[i].size.y = 40.0 * session.ui_scale;
         if session.submenu != Settings && session.submenu != Main{
             session.menu_text[i].pos.x = smooth_value_towards(session.menu_text[i].pos.x, session.menu_text[0].pos.x + session.eng.render.resolution_x as f32*0.9, &session.eng, 2.0);
         }else{
@@ -119,7 +119,7 @@ pub fn updatesubemnugame(session: &mut GameSession){
     if session.submenu == Game{
         session.menu_text[8].pos.x = smooth_value_towards(session.menu_text[8].pos.x, session.menu_text[0].pos.x, &session.eng, 2.0);
     }else{
-        session.menu_text[8].pos.x = smooth_value_towards(session.menu_text[8].pos.x, session.menu_text[0].pos.x - session.eng.render.resolution_x as f32, &session.eng, 2.0);
+        session.menu_text[8].pos.x = smooth_value_towards(session.menu_text[8].pos.x, session.menu_text[0].pos.x - 1000.0*session.ui_scale, &session.eng, 2.0);
     }
     session.menu_text[8].pos.y = session.viewport.object.physic_object.pos.y -(session.eng.render.resolution_y as f32 * 0.6) - (session.menu_text[3].size.y + 30.0);
     session.menu_text[8].pos.z = 0.7;
@@ -138,13 +138,13 @@ pub fn updatesubemnugame(session: &mut GameSession){
     session.black_background[9].object.physic_object.rot = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
     session.black_background[9].exec(&mut session.eng);
 
-    for i in 9..(session.text_content.game_set.len()+9){
-        session.menu_text[i].size.x = 30.0 * session.ui_scale;
-        session.menu_text[i].size.y = 60.0 * session.ui_scale;
+    for i in 9..(session.text_content.game_set.len()+7){
+        session.menu_text[i].size.x = 20.0 * session.ui_scale;
+        session.menu_text[i].size.y = 40.0 * session.ui_scale;
         if session.submenu == Game{
             session.menu_text[i].pos.x = smooth_value_towards(session.menu_text[i].pos.x, session.menu_text[0].pos.x, &session.eng, 2.0);
         }else{
-            session.menu_text[i].pos.x = smooth_value_towards(session.menu_text[i].pos.x, session.menu_text[0].pos.x - session.eng.render.resolution_x as f32, &session.eng, 2.0);
+            session.menu_text[i].pos.x = smooth_value_towards(session.menu_text[i].pos.x, session.menu_text[0].pos.x - 1000.0*session.ui_scale, &session.eng, 2.0);
         }
         session.menu_text[i].pos.y = session.viewport.object.physic_object.pos.y -(session.eng.render.resolution_y as f32 * 0.6) + (session.menu_text[i].size.y + 30.0)*(i as f32 - 9.0);
         session.menu_text[i].pos.z = 0.7;
@@ -152,16 +152,40 @@ pub fn updatesubemnugame(session: &mut GameSession){
         session.menu_text[i].signal = session.submenu == Game;
         session.menu_text[i].per_symbol = false;
         session.menu_text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-        if session.menu_text[i].exec(&mut session.eng, &session.text_content.game_set[i-9]) && session.submenu == Game && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+        let mut txt = session.text_content.game_set[i-9].clone();
+        match i {
+                10 => {
+                    txt += &session.ui_scale.to_string();
+                    txt += " ";
+                },
+                11 => {
+                    match session.show_dbg_stat {
+                        true => {
+                            txt += &session.text_content.game_set[4].clone();
+                        },
+                        false => {
+                            txt += &session.text_content.game_set[5].clone();
+                        },
+                    }
+                    //session.returning_to_game = true;
+                }
+                _ => {}
+            }
+        if session.menu_text[i].exec(&mut session.eng, &txt) && session.submenu == Game && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
             match i {
                 9 => {
                     //session.returning_to_game = true;
                 },
                 10 => {
                     //session.returning_to_game = true;
+                    session.ui_scale = ((session.ui_scale*10.0) as i32 + 1) as f32 / 10.0;
+                    if session.ui_scale > 1.5{
+                        session.ui_scale = 0.5;
+                    }
                 },
                 11 => {
                     //session.returning_to_game = true;
+                    session.show_dbg_stat = !session.show_dbg_stat;
                 }
                 12 => {
                     session.submenu = SubMenu::Settings;
@@ -172,7 +196,7 @@ pub fn updatesubemnugame(session: &mut GameSession){
             session.action_cooldown = 0.25;
         }
 
-        session.black_background[i+1].object.physic_object.scale.x = session.menu_text[i].size.x*(session.text_content.game_set[i-9].len() as f32)+15.0;
+        session.black_background[i+1].object.physic_object.scale.x = session.menu_text[i].size.x*(txt.len() as f32)+15.0;
         session.black_background[i+1].object.physic_object.scale.y = session.menu_text[i].size.y+15.0;
         session.black_background[i+1].object.physic_object.pos.x = session.menu_text[i].pos.x-7.5;
         session.black_background[i+1].object.physic_object.pos.y = session.menu_text[i].pos.y-7.5;
@@ -189,7 +213,7 @@ pub fn updatesubemnuaudio(session: &mut GameSession){
     if session.submenu == Audio{
         session.menu_text[13].pos.x = smooth_value_towards(session.menu_text[13].pos.x, session.menu_text[0].pos.x, &session.eng, 2.0);
     }else{
-        session.menu_text[13].pos.x = smooth_value_towards(session.menu_text[13].pos.x, session.menu_text[0].pos.x - session.eng.render.resolution_x as f32, &session.eng, 2.0);
+        session.menu_text[13].pos.x = smooth_value_towards(session.menu_text[13].pos.x, session.menu_text[0].pos.x - 1000.0*session.ui_scale, &session.eng, 2.0);
     }
     session.menu_text[13].pos.y = session.viewport.object.physic_object.pos.y -(session.eng.render.resolution_y as f32 * 0.6) - (session.menu_text[3].size.y + 30.0);
     session.menu_text[13].pos.z = 0.7;
@@ -209,12 +233,12 @@ pub fn updatesubemnuaudio(session: &mut GameSession){
     session.black_background[14].exec(&mut session.eng);
 
     for i in 14..(session.text_content.audio.len()+14){
-        session.menu_text[i].size.x = 30.0 * session.ui_scale;
-        session.menu_text[i].size.y = 60.0 * session.ui_scale;
+        session.menu_text[i].size.x = 20.0 * session.ui_scale;
+        session.menu_text[i].size.y = 40.0 * session.ui_scale;
         if session.submenu == Audio{
             session.menu_text[i].pos.x = smooth_value_towards(session.menu_text[i].pos.x, session.menu_text[0].pos.x, &session.eng, 2.0);
         }else{
-            session.menu_text[i].pos.x = smooth_value_towards(session.menu_text[i].pos.x, session.menu_text[0].pos.x - session.eng.render.resolution_x as f32, &session.eng, 2.0);
+            session.menu_text[i].pos.x = smooth_value_towards(session.menu_text[i].pos.x, session.menu_text[0].pos.x - 1000.0*session.ui_scale, &session.eng, 2.0);
         }
         session.menu_text[i].pos.y = session.viewport.object.physic_object.pos.y -(session.eng.render.resolution_y as f32 * 0.6) + (session.menu_text[i].size.y + 30.0)*(i as f32 - 14.0);
         session.menu_text[i].pos.z = 0.7;
@@ -222,10 +246,18 @@ pub fn updatesubemnuaudio(session: &mut GameSession){
         session.menu_text[i].signal = session.submenu == Audio;
         session.menu_text[i].per_symbol = false;
         session.menu_text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-        if session.menu_text[i].exec(&mut session.eng, &session.text_content.audio[i-14]) && session.submenu == Audio && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+        let mut txt = session.text_content.audio[i-14].clone();
+        if i == 14{
+            txt += &session.eng.audio.vol.to_string();
+            txt += " ";
+        }
+        if session.menu_text[i].exec(&mut session.eng, &txt) && session.submenu == Audio && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
             match i {
                 14 => {
-                    //session.returning_to_game = true;
+                    session.eng.audio.vol = ((session.eng.audio.vol*10.0) as i32 + 1) as f32 / 10.0;
+                    if session.eng.audio.vol > 1.0{
+                        session.eng.audio.vol = 0.0;
+                    }
                 },
                 15 => {
                     session.submenu = SubMenu::Settings;
@@ -236,7 +268,7 @@ pub fn updatesubemnuaudio(session: &mut GameSession){
             session.action_cooldown = 0.25;
         }
 
-        session.black_background[i+1].object.physic_object.scale.x = session.menu_text[i].size.x*(session.text_content.audio[i-14].len() as f32)+15.0;
+        session.black_background[i+1].object.physic_object.scale.x = session.menu_text[i].size.x*(txt.len() as f32)+15.0;
         session.black_background[i+1].object.physic_object.scale.y = session.menu_text[i].size.y+15.0;
         session.black_background[i+1].object.physic_object.pos.x = session.menu_text[i].pos.x-7.5;
         session.black_background[i+1].object.physic_object.pos.y = session.menu_text[i].pos.y-7.5;
@@ -253,7 +285,7 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
     if session.submenu == Graphics{
         session.menu_text[16].pos.x = smooth_value_towards(session.menu_text[16].pos.x, session.menu_text[0].pos.x, &session.eng, 2.0);
     }else{
-        session.menu_text[16].pos.x = smooth_value_towards(session.menu_text[16].pos.x, session.menu_text[0].pos.x - session.eng.render.resolution_x as f32, &session.eng, 2.0);
+        session.menu_text[16].pos.x = smooth_value_towards(session.menu_text[16].pos.x, session.menu_text[0].pos.x - 1000.0*session.ui_scale, &session.eng, 2.0);
     }
     session.menu_text[16].pos.y = session.viewport.object.physic_object.pos.y -(session.eng.render.resolution_y as f32 * 0.675) - (session.menu_text[3].size.y + 30.0);
     session.menu_text[16].pos.z = 0.7;
@@ -272,13 +304,13 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
     session.black_background[17].object.physic_object.rot = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
     session.black_background[17].exec(&mut session.eng);
 
-    for i in 17..(session.text_content.graphics.len()+15){
-        session.menu_text[i].size.x = 30.0 * session.ui_scale;
-        session.menu_text[i].size.y = 60.0 * session.ui_scale;
+    for i in 17..(session.text_content.graphics.len()+10){
+        session.menu_text[i].size.x = 20.0 * session.ui_scale;
+        session.menu_text[i].size.y = 40.0 * session.ui_scale;
         if session.submenu == Graphics{
             session.menu_text[i].pos.x = smooth_value_towards(session.menu_text[i].pos.x, session.menu_text[0].pos.x, &session.eng, 2.0);
         }else{
-            session.menu_text[i].pos.x = smooth_value_towards(session.menu_text[i].pos.x, session.menu_text[0].pos.x - session.eng.render.resolution_x as f32, &session.eng, 2.0);
+            session.menu_text[i].pos.x = smooth_value_towards(session.menu_text[i].pos.x, session.menu_text[0].pos.x - 1000.0*session.ui_scale, &session.eng, 2.0);
         }
         session.menu_text[i].pos.y = session.viewport.object.physic_object.pos.y -(session.eng.render.resolution_y as f32 * 0.675) + (session.menu_text[i].size.y + 30.0)*(i as f32 - 17.0);
         session.menu_text[i].pos.z = 0.7;
@@ -286,19 +318,80 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
         session.menu_text[i].signal = session.submenu == Graphics;
         session.menu_text[i].per_symbol = false;
         session.menu_text[i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-        if session.menu_text[i].exec(&mut session.eng, &session.text_content.graphics[i-17]) && session.submenu == Graphics && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
-            match i {
+        let mut txt = session.text_content.graphics[i-17].clone();
+        match i {
                 17 => {
+                    match session.use_rt_lighting {
+                        true => {
+                            txt += &session.text_content.graphics[11].clone();
+                        },
+                        false => {
+                            txt += &session.text_content.graphics[10].clone();
+                        },
+                    }
                     //session.returning_to_game = true;
                 },
                 18 => {
+                    txt += &session.eng.render.resolution_scale.to_string();
+                    txt += " ";
                     //session.submenu = SubMenu::Settings;
                 },
                 19 => {
-                    //session.submenu = SubMenu::Settings;
+                    match session.eng.render.shadow_map_resolution {
+                        512 => {
+                            txt += &session.text_content.graphics[7].clone();
+                        },
+                        1024 => {
+                            txt += &session.text_content.graphics[8].clone();
+                        },
+                        2048 => {
+                            txt += &session.text_content.graphics[9].clone();
+                        },
+                        _ => {}
+                    }
                 },
                 20 => {
-                    //session.submenu = SubMenu::Settings;
+                    match session.eng.render.fullscreen {
+                        true => {
+                            txt += &session.text_content.graphics[5].clone();
+                        },
+                        false => {
+                            txt += &session.text_content.graphics[6].clone();
+                        },
+                    }
+                },
+                _ => {}
+            }
+        if session.menu_text[i].exec(&mut session.eng, &txt) && session.submenu == Graphics && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+            match i {
+                17 => {
+                    session.use_rt_lighting = !session.use_rt_lighting;
+                    session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                },
+                18 => {
+                    session.eng.render.resolution_scale = ((session.eng.render.resolution_scale*10.0) as i32 + 1) as f32 / 10.0;
+                    if session.eng.render.resolution_scale > 1.0{
+                        session.eng.render.resolution_scale = 0.1;
+                    }
+                    session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                },
+                19 => {
+                    match session.eng.render.shadow_map_resolution {
+                        512 => {
+                            session.eng.render.shadow_map_resolution = 1024;
+                        },
+                        1024 => {
+                            session.eng.render.shadow_map_resolution = 2048;
+                        },
+                        2048 => {
+                            session.eng.render.shadow_map_resolution = 512;
+                        },
+                        _ => {}
+                    }
+                    session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                },
+                20 => {
+                    session.eng.render.fullscreen = !session.eng.render.fullscreen;
                 },
                 21 => {
                     session.submenu = SubMenu::Settings;
@@ -309,7 +402,7 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
             session.action_cooldown = 0.25;
         }
 
-        session.black_background[i+1].object.physic_object.scale.x = session.menu_text[i].size.x*(session.text_content.graphics[i-17].len() as f32)+15.0;
+        session.black_background[i+1].object.physic_object.scale.x = session.menu_text[i].size.x*(txt.len() as f32)+15.0;
         session.black_background[i+1].object.physic_object.scale.y = session.menu_text[i].size.y+15.0;
         session.black_background[i+1].object.physic_object.pos.x = session.menu_text[i].pos.x-7.5;
         session.black_background[i+1].object.physic_object.pos.y = session.menu_text[i].pos.y-7.5;
@@ -326,17 +419,22 @@ pub fn update(session: &mut GameSession) {
         speaker.exec(&mut session.eng);
     }
 
-    let fps_text = format!(
-        "CPU_dt:{}|GPU_fps:{}|detection_level: {:?}",
-        session.eng.cpu_fps, session.eng.gpu_fps, session.awareness
-    );
-    session.fpscnt.size.x = 10.0 * session.ui_scale;
-    session.fpscnt.size.y = 20.0 * session.ui_scale;
-    session.fpscnt.pos.x = session.eng.render.resolution_x as f32 - 400.0;
-    session.fpscnt.pos.y = 0.0;
-    session.fpscnt.pos.z = 0.1;
-    session.fpscnt.draw = true;
-    session.fpscnt.exec(&mut session.eng, &fps_text);
+    if session.show_dbg_stat{
+        let fps_text = format!(
+            "CPU_cps:{}|GPU_fps:{}",
+            session.eng.cpu_fps, session.eng.gpu_fps
+        );
+        session.fpscnt.size.x = 10.0 * session.ui_scale;
+        session.fpscnt.size.y = 20.0 * session.ui_scale;
+        session.fpscnt.pos.x = session.eng.render.resolution_x as f32 - 200.0;
+        session.fpscnt.pos.y = 0.0;
+        session.fpscnt.pos.z = 0.1;
+        session.fpscnt.draw = true;
+        session.fpscnt.exec(&mut session.eng, &fps_text);
+    }else{
+        session.fpscnt.draw = false;
+        session.fpscnt.exec(&mut session.eng, " ");
+    }
 
     for text in &mut session.text {
         text.draw = false;

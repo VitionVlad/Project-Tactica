@@ -19,7 +19,7 @@ use super::{Awarness, Enemy, GameSession, Pivot, TBTplate, TextContent};
 
 pub fn initialize() -> GameSession {
     let mut eng = Engine::new(false);
-    eng.render.set_title("rttest");
+    eng.render.set_title("Project Tactica -- Dev build --");
     eng.render.set_new_resolution(1280, 720);
 
     let gmtxt = JsonF::load_from_file("assets/text.json");
@@ -409,7 +409,7 @@ pub fn initialize() -> GameSession {
         eng.render.shadow_map_resolution
     );
 
-    eng.render.resolution_scale = 0.65;
+    eng.render.resolution_scale = 0.6;
 
     let audiofl = [
         "assets/audio/bell.mp3",
@@ -441,6 +441,7 @@ pub fn initialize() -> GameSession {
     speakers[5].volume = 0.1;
 
     GameSession {
+        show_dbg_stat: false,
         eng,
         scn,
         viewport,
@@ -549,6 +550,7 @@ pub fn initialize() -> GameSession {
         exit: false,
         gamepadsel: 0,
         submenu: crate::game::SubMenu::Main,
+        use_rt_lighting: true,
     }
 }
 

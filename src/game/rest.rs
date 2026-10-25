@@ -27,17 +27,22 @@ pub fn update(session: &mut GameSession) {
             },
     );
 
-    let fps_text = format!(
-        "CPU_dt:{}|GPU_fps:{}|detection_level: {:?}",
-        session.eng.cpu_fps, session.eng.gpu_fps, session.awareness
-    );
-    session.fpscnt.size.x = 10.0 * session.ui_scale;
-    session.fpscnt.size.y = 20.0 * session.ui_scale;
-    session.fpscnt.pos.x = session.eng.render.resolution_x as f32 - 400.0;
-    session.fpscnt.pos.y = 0.0;
-    session.fpscnt.pos.z = 0.1;
-    session.fpscnt.draw = true;
-    session.fpscnt.exec(&mut session.eng, &fps_text);
+    if session.show_dbg_stat{
+        let fps_text = format!(
+            "CPU_cps:{}|GPU_fps:{}",
+            session.eng.cpu_fps, session.eng.gpu_fps
+        );
+        session.fpscnt.size.x = 10.0 * session.ui_scale;
+        session.fpscnt.size.y = 20.0 * session.ui_scale;
+        session.fpscnt.pos.x = session.eng.render.resolution_x as f32 - 200.0;
+        session.fpscnt.pos.y = 0.0;
+        session.fpscnt.pos.z = 0.1;
+        session.fpscnt.draw = true;
+        session.fpscnt.exec(&mut session.eng, &fps_text);
+    }else{
+        session.fpscnt.draw = false;
+        session.fpscnt.exec(&mut session.eng, " ");
+    }
 
     for plates in &session.tbtplates {
         session.scn.objects[plates.id].mesh.ubo[53] = 0.0;
@@ -114,22 +119,22 @@ pub fn update(session: &mut GameSession) {
                         .object
                         .physic_object
                         .scale
-                        .x = (session.text[i].size.x * text.len() as f32 + 12.0) * session.ui_scale;
+                        .x = session.text[i].size.x * text.len() as f32 + 12.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .scale
-                        .y = (session.text[i].size.y + 12.0) * session.ui_scale;
+                        .y = session.text[i].size.y + 12.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .pos
-                        .x = session.text[i].pos.x - 6.0 * session.ui_scale;
+                        .x = session.text[i].pos.x - 6.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .pos
-                        .y = session.text[i].pos.y - 6.0 * session.ui_scale;
+                        .y = session.text[i].pos.y - 6.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
@@ -245,22 +250,22 @@ pub fn update(session: &mut GameSession) {
                         .object
                         .physic_object
                         .scale
-                        .x = (session.text[i].size.x * text.len() as f32 + 12.0) * session.ui_scale;
+                        .x = session.text[i].size.x * text.len() as f32 + 12.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .scale
-                        .y = (session.text[i].size.y + 12.0) * session.ui_scale;
+                        .y = session.text[i].size.y + 12.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .pos
-                        .x = session.text[i].pos.x - 6.0 * session.ui_scale;
+                        .x = session.text[i].pos.x - 6.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .pos
-                        .y = session.text[i].pos.y - 6.0 * session.ui_scale;
+                        .y = session.text[i].pos.y - 6.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
@@ -374,22 +379,22 @@ pub fn update(session: &mut GameSession) {
                         .object
                         .physic_object
                         .scale
-                        .x = (session.text[i].size.x * text.len() as f32 + 12.0) * session.ui_scale;
+                        .x = session.text[i].size.x * text.len() as f32 + 12.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .scale
-                        .y = (session.text[i].size.y + 12.0) * session.ui_scale;
+                        .y = session.text[i].size.y + 12.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .pos
-                        .x = session.text[i].pos.x - 6.0 * session.ui_scale;
+                        .x = session.text[i].pos.x - 6.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .pos
-                        .y = session.text[i].pos.y - 6.0 * session.ui_scale;
+                        .y = session.text[i].pos.y - 6.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
