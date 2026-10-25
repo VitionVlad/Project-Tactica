@@ -219,7 +219,7 @@ pub fn initialize() -> GameSession {
         bbg.push(t);
     }
 
-    let orimg = Image::new_color(&mut eng, [255, 213, 128, u8::MAX]);
+    let orimg = Image::new_color(&mut eng, [139, 0, 0, u8::MAX]);
     let blimg = Image::new_color(&mut eng, [5, 1, 74, u8::MAX]);
     let mut menubg = Vec::new();
     menubg.push(UIplane::new(

@@ -584,53 +584,149 @@ pub fn handle_input(session: &mut GameSession) {
             }
             Settings => {
                 session.submenu = Main;
+                session.gamepadsel = 1;
             }
-            _ => {
+            Game => {
                 session.submenu = Settings;
+                session.gamepadsel = 4;
+            }
+            Audio => {
+                session.submenu = Settings;
+                session.gamepadsel = 5;
+            }
+            Graphics => {
+                session.submenu = Settings;
+                session.gamepadsel = 6;
             }
         }
         session.action_cooldown = 0.25;
     }
 
-    match session.submenu {
-        Main => {
-            for mt in &mut session.menu_text{
-                mt.implicit_on = false;
+    let (first_item, last_item) = match session.submenu {
+        Main => (0, 2),
+        Settings => (4, 7),
+        Game => (9, session.text_content.game_set.len() + 6),
+        Audio => (14, session.text_content.audio.len() + 13),
+        Graphics => (17, session.text_content.graphics.len() + 9),
+    };
+    if session.gamepadsel < first_item || session.gamepadsel > last_item {
+        session.gamepadsel = first_item;
+    }
+
+    for menu_text in &mut session.menu_text {
+        menu_text.implicit_on = false;
+    }
+
+    if session.eng.control.gamepad_connected {
+        let move_previous = session
+            .eng
+            .control
+            .get_gamepad_button_state(session.controller_mappings.arrows[1] as u8);
+        let move_next = session
+            .eng
+            .control
+            .get_gamepad_button_state(session.controller_mappings.arrows[0] as u8);
+        let confirm = session
+            .eng
+            .control
+            .get_gamepad_button_state(session.controller_mappings.abxy[0] as u8);
+
+        if session.action_cooldown <= 0.0 && move_previous && session.gamepadsel > first_item {
+            session.gamepadsel -= 1;
+            session.action_cooldown = 0.25;
+            session.input_type = InputType::Gamepad;
+        } else if session.action_cooldown <= 0.0 && move_next && session.gamepadsel < last_item {
+            session.gamepadsel += 1;
+            session.action_cooldown = 0.25;
+            session.input_type = InputType::Gamepad;
+        } else if session.action_cooldown <= 0.0 && confirm {
+            activate_gamepad_selection(session);
+            session.action_cooldown = 0.25;
+            session.input_type = InputType::Gamepad;
+        }
+    }
+
+    if session.input_type == InputType::Gamepad {
+        if let Some(selected_item) = session.menu_text.get_mut(session.gamepadsel) {
+            selected_item.implicit_on = true;
+        }
+    }
+}
+
+fn activate_gamepad_selection(session: &mut GameSession) {
+    match (session.submenu, session.gamepadsel) {
+        (Main, 0) => session.returning_to_game = true,
+        (Main, 1) => {
+            session.submenu = Settings;
+            session.gamepadsel = 4;
+        }
+        (Main, 2) => session.exit = true,
+        (Settings, 4) => {
+            session.submenu = Game;
+            session.gamepadsel = 9;
+        }
+        (Settings, 5) => {
+            session.submenu = Audio;
+            session.gamepadsel = 14;
+        }
+        (Settings, 6) => {
+            session.submenu = Graphics;
+            session.gamepadsel = 17;
+        }
+        (Settings, 7) => {
+            session.submenu = Main;
+            session.gamepadsel = 1;
+        }
+        (Game, 10) => {
+            session.ui_scale = ((session.ui_scale * 10.0) as i32 + 1) as f32 / 10.0;
+            if session.ui_scale > 1.5 {
+                session.ui_scale = 0.5;
             }
-            if session.eng.control.gamepad_connected{
-                if session.eng.control.get_gamepad_button_state(session.controller_mappings.arrows[1] as u8) && session.gamepadsel > 0 && session.action_cooldown <= 0.0{
-                    session.action_cooldown = 0.25;
-                    session.gamepadsel -= 1;
-                    session.input_type = InputType::Gamepad;
-                }else if session.eng.control.get_gamepad_button_state(session.controller_mappings.arrows[0] as u8) && session.gamepadsel < 2 && session.action_cooldown <= 0.0{
-                    session.action_cooldown = 0.25;
-                    session.gamepadsel += 1;
-                    session.input_type = InputType::Gamepad;
-                }else if session.eng.control.get_gamepad_button_state(session.controller_mappings.abxy[0] as u8) && session.gamepadsel < 3 && session.action_cooldown <= 0.0{
-                    match session.gamepadsel {
-                        0 => {
-                            session.returning_to_game = true;
-                        },
-                        1 => {},
-                        2 => {
-                            session.exit = true;
-                        },
-                        _ => {}
-                    }
-                    session.action_cooldown = 0.25;
-                    session.input_type = InputType::Gamepad;
-                }
-                if session.input_type == InputType::Gamepad{
-                    if session.gamepadsel > 2{
-                        session.gamepadsel = 2;
-                    }
-                    session.menu_text[session.gamepadsel].implicit_on = true;
-                }
+        }
+        (Game, 11) => session.show_dbg_stat = !session.show_dbg_stat,
+        (Game, 12) => {
+            session.submenu = Settings;
+            session.gamepadsel = 4;
+        }
+        (Audio, 14) => {
+            session.eng.audio.vol = ((session.eng.audio.vol * 10.0) as i32 + 1) as f32 / 10.0;
+            if session.eng.audio.vol > 1.0 {
+                session.eng.audio.vol = 0.0;
             }
-        },
-        Settings => {},
-        Game => {},
-        Audio => {},
-        Graphics => {},
+        }
+        (Audio, 15) => {
+            session.submenu = Settings;
+            session.gamepadsel = 5;
+        }
+        (Graphics, 17) => {
+            session.use_rt_lighting = !session.use_rt_lighting;
+            session.tredr = ((1.0 / session.eng.gpu_fps as f32) * 2.0).max(0.1);
+        }
+        (Graphics, 18) => {
+            session.eng.render.resolution_scale =
+                ((session.eng.render.resolution_scale * 10.0) as i32 + 1) as f32 / 10.0;
+            if session.eng.render.resolution_scale > 1.0 {
+                session.eng.render.resolution_scale = 0.1;
+            }
+            session.tredr = ((1.0 / session.eng.gpu_fps as f32) * 2.0).max(0.1);
+        }
+        (Graphics, 19) => {
+            session.eng.render.shadow_map_resolution =
+                match session.eng.render.shadow_map_resolution {
+                    512 => 1024,
+                    1024 => 2048,
+                    2048 => 512,
+                    resolution => resolution,
+                };
+            session.tredr = ((1.0 / session.eng.gpu_fps as f32) * 2.0).max(0.1);
+        }
+        (Graphics, 20) => {
+            session.eng.render.fullscreen = !session.eng.render.fullscreen;
+        }
+        (Graphics, 21) => {
+            session.submenu = Settings;
+            session.gamepadsel = 6;
+        }
+        _ => {}
     }
 }
