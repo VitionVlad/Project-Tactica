@@ -19,21 +19,28 @@
         "game_set": [
             " Language: English ",
             " UI scale:",
-            " Show performance statistics ",
-            " Back "
+            " Show FPS:",
+            " Back ",
+            "True ",
+            "False "
         ],
         "audio": [
             " Volume:",
             " Back "
         ],
         "graphics": [
-            " Lighting type:",
-            " only rasterization ",
-            " voxel ray-traced lighting ",
+            " Lighting:",
             " Resolution scale:",
             " Shadowmaps quality:",
             " Fullscreen:",
-            " Back "
+            " Back ",
+            "True ",
+            "False ",
+            "Low ",
+            "Medium ",
+            "High ",
+            "Classic ",
+            "RT "
         ]
     }
 }

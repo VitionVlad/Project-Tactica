@@ -4957,7 +4957,7 @@ uint8_t setrenderpassactiveonresize(uint32_t eh, uint8_t pass, uint8_t active){
     return 1;
 }
 
-uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug){
+uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug, uint8_t debug_only_init){
     uint32_t eh = euclid.size;
     euclid.size++;
     if(euclid.size >= 100){
@@ -5117,6 +5117,10 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug){
     pthread_create(&euclid.handle[eh].threads[3], NULL, renderarbeite, eht);
 
     if (euclid.handle[eh].debug == 1) printf("\e[1;36mEuclidVK\e[0;37m: Engine initializaion complete\n");
+
+    if (euclid.handle[eh].debug == 1 && debug_only_init == 1){
+        euclid.handle[eh].debug = 0;
+    }
 
     return eh;
 }

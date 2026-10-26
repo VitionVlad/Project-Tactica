@@ -295,7 +295,7 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
     session.menu_text[16].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
     session.menu_text[16].exec(&mut session.eng, &session.text_content.settings[2]);
 
-    session.black_background[17].object.physic_object.scale.x = session.menu_text[16].size.x*(session.text_content.settings[1].len() as f32)+15.0;
+    session.black_background[17].object.physic_object.scale.x = session.menu_text[16].size.x*(session.text_content.settings[2].len() as f32)+15.0;
     session.black_background[17].object.physic_object.scale.y = session.menu_text[16].size.y+15.0;
     session.black_background[17].object.physic_object.pos.x = session.menu_text[16].pos.x-7.5;
     session.black_background[17].object.physic_object.pos.y = session.menu_text[16].pos.y-7.5;

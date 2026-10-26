@@ -49,7 +49,7 @@ unsafe extern "C" {
         pass: cty::uint8_t,
         active: cty::uint8_t,
     ) -> cty::uint8_t;
-    fn neweng(shadowMapResolution: cty::uint32_t, debug: cty::uint8_t) -> cty::uint32_t;
+    fn neweng(shadowMapResolution: cty::uint32_t, debug: cty::uint8_t, debug_only_init: cty::uint8_t) -> cty::uint32_t;
     fn destroy(eh: cty::uint32_t);
     fn newmaterial(
         eh: cty::uint32_t,
@@ -159,15 +159,22 @@ pub struct Render {
     fullscreeno: bool,
 }
 
+#[derive(Copy, Clone, PartialEq)]
+pub enum RenderDebug{
+    OnlyInit,
+    Complete,
+    None
+}
+
 impl Render {
     pub const RENDER_PASS_SHADOW: u8 = 0;
     pub const RENDER_PASS_DEFFERED: u8 = 1;
     pub const RENDER_PASS_LIGHTING: u8 = 2;
     pub const RENDER_PASS_MAIN: u8 = 3;
 
-    pub fn new(debug: bool) -> Render {
+    pub fn new(debug: RenderDebug) -> Render {
         Render {
-            euclid: unsafe { neweng(1000, if debug { 1 } else { 0 }) },
+            euclid: unsafe { neweng(1000, if debug != RenderDebug::None { 1 } else { 0 }, if debug == RenderDebug::OnlyInit { 1 } else { 0 }) },
             shadow_map_count: 1,
             shadow_map_resolution: 1000,
             camera_count: 1,

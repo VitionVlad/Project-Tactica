@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use crate::engine::{light::LightType, physics::force};
+use crate::engine::{light::LightType, physics::force, render::render::RenderDebug};
 
 use super::{
     audio::audio::AudioEngine,
@@ -36,7 +36,7 @@ pub struct Engine {
 }
 
 impl Engine {
-    pub fn new(debug: bool) -> Engine {
+    pub fn new(debug: RenderDebug) -> Engine {
         let rn = Render::new(debug);
         Engine {
             render: rn,
