@@ -10,6 +10,10 @@ pub fn checkfs(path: &str) -> bool {
     fs::exists(path).unwrap()
 }
 
+pub fn mkdirfs(path: &str) {
+    let _ = fs::create_dir_all(path);
+}
+
 pub fn writefs(path: &str, content: Vec<u8>) {
     let _ = fs::write(path, content);
 }

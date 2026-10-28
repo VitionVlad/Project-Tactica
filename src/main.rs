@@ -3,6 +3,8 @@ mod game;
 
 use game::{control, game_over, initialization, pause, rest, tbt};
 
+use crate::game::settings::save_settings;
+
 fn main() {
     let mut session = initialization::initialize();
 
@@ -13,6 +15,10 @@ fn main() {
 
         match session.game_state{
             game::GameState::InGame => {
+                if session.resize_cnt != session.eng.render.resize_count{
+                    session.resize_cnt = session.eng.render.resize_count;
+                    save_settings(&session);
+                }
                 session.eng.render.active_renderpasses = [true, true, true, true];
                 tbt::update(&mut session);
                 control::update(&mut session);
@@ -24,6 +30,7 @@ fn main() {
                 if session.resize_cnt != session.eng.render.resize_count{
                     session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
                     session.resize_cnt = session.eng.render.resize_count;
+                    save_settings(&session);
                 }
                 session.eng.render.active_renderpasses = [false, false, false, true];
                 if session.tredr > 0.0{

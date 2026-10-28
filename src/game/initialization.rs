@@ -16,6 +16,7 @@ use crate::{
 };
 
 use super::{Awarness, Enemy, GameSession, Pivot, TBTplate, TextContent};
+use super::settings::load_settings;
 
 pub fn initialize() -> GameSession {
     let mut eng = Engine::new(crate::engine::render::render::RenderDebug::None);
@@ -440,7 +441,7 @@ pub fn initialize() -> GameSession {
     speakers[5].play = true;
     speakers[5].volume = 0.1;
 
-    GameSession {
+    let mut session = GameSession {
         show_dbg_stat: false,
         eng,
         scn,
@@ -551,7 +552,10 @@ pub fn initialize() -> GameSession {
         gamepadsel: 0,
         submenu: crate::game::SubMenu::Main,
         use_rt_lighting: true,
-    }
+    };
+
+    load_settings(&mut session);
+    session
 }
 
 fn configure_actor(object: &mut crate::engine::physics::physics::PhysicsObject) {

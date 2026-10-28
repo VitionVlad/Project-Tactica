@@ -6,6 +6,7 @@ pub mod game_over;
 pub mod initialization;
 pub mod pause;
 pub mod rest;
+pub mod settings;
 pub mod tbt;
 
 use crate::engine::{

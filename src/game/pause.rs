@@ -1,6 +1,6 @@
 use crate::engine::{math::vec3::Vec3, physics::physics::PhysicsObject};
 use crate::game::SubMenu::{self, Audio, Game, Graphics, Main, Settings};
-use crate::game::{InputType, smooth_value_towards};
+use crate::game::{InputType, settings::save_settings, smooth_value_towards};
 
 use super::GameSession;
 
@@ -182,10 +182,12 @@ pub fn updatesubemnugame(session: &mut GameSession){
                     if session.ui_scale > 1.5{
                         session.ui_scale = 0.5;
                     }
+                    save_settings(session);
                 },
                 11 => {
                     //session.returning_to_game = true;
                     session.show_dbg_stat = !session.show_dbg_stat;
+                    save_settings(session);
                 }
                 12 => {
                     session.submenu = SubMenu::Settings;
@@ -258,6 +260,7 @@ pub fn updatesubemnuaudio(session: &mut GameSession){
                     if session.eng.audio.vol > 1.0{
                         session.eng.audio.vol = 0.0;
                     }
+                    save_settings(session);
                 },
                 15 => {
                     session.submenu = SubMenu::Settings;
@@ -367,6 +370,7 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                 17 => {
                     session.use_rt_lighting = !session.use_rt_lighting;
                     session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                    save_settings(session);
                 },
                 18 => {
                     session.eng.render.resolution_scale = ((session.eng.render.resolution_scale*10.0) as i32 + 1) as f32 / 10.0;
@@ -374,6 +378,7 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                         session.eng.render.resolution_scale = 0.1;
                     }
                     session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                    save_settings(session);
                 },
                 19 => {
                     match session.eng.render.shadow_map_resolution {
@@ -386,12 +391,14 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                         2048 => {
                             session.eng.render.shadow_map_resolution = 512;
                         },
-                        _ => {}
+                        _ => { session.eng.render.shadow_map_resolution = 512; }
                     }
                     session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                    save_settings(session);
                 },
                 20 => {
                     session.eng.render.fullscreen = !session.eng.render.fullscreen;
+                    save_settings(session);
                 },
                 21 => {
                     session.submenu = SubMenu::Settings;
@@ -682,8 +689,12 @@ fn activate_gamepad_selection(session: &mut GameSession) {
             if session.ui_scale > 1.5 {
                 session.ui_scale = 0.5;
             }
+            save_settings(session);
         }
-        (Game, 11) => session.show_dbg_stat = !session.show_dbg_stat,
+        (Game, 11) => {
+            session.show_dbg_stat = !session.show_dbg_stat;
+            save_settings(session);
+        }
         (Game, 12) => {
             session.submenu = Settings;
             session.gamepadsel = 4;
@@ -693,6 +704,7 @@ fn activate_gamepad_selection(session: &mut GameSession) {
             if session.eng.audio.vol > 1.0 {
                 session.eng.audio.vol = 0.0;
             }
+            save_settings(session);
         }
         (Audio, 15) => {
             session.submenu = Settings;
@@ -701,6 +713,7 @@ fn activate_gamepad_selection(session: &mut GameSession) {
         (Graphics, 17) => {
             session.use_rt_lighting = !session.use_rt_lighting;
             session.tredr = ((1.0 / session.eng.gpu_fps as f32) * 2.0).max(0.1);
+            save_settings(session);
         }
         (Graphics, 18) => {
             session.eng.render.resolution_scale =
@@ -708,6 +721,7 @@ fn activate_gamepad_selection(session: &mut GameSession) {
             if session.eng.render.resolution_scale > 1.0 {
                 session.eng.render.resolution_scale = 0.1;
             }
+            save_settings(session);
             session.tredr = ((1.0 / session.eng.gpu_fps as f32) * 2.0).max(0.1);
         }
         (Graphics, 19) => {
