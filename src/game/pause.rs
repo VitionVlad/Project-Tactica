@@ -350,7 +350,10 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                         2048 => {
                             txt += &session.text_content.graphics[9].clone();
                         },
-                        _ => {}
+                        _ => {
+                            txt += &session.eng.render.shadow_map_resolution.to_string();
+                            txt += " ";
+                        }
                     }
                 },
                 20 => {
@@ -466,6 +469,10 @@ pub fn update(session: &mut GameSession) {
     session.menu_background[0].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y;
     session.menu_background[0].object.physic_object.pos.z = 0.99;
     session.menu_background[0].object.draw = true;
+    session.menu_background[0].object.mesh.ubo[52] = session.current_time as f32;
+    session.menu_background[0].object.mesh.ubo[53] = 2000.0;
+    session.menu_background[0].object.mesh.ubo[54] = 2000.0;
+    session.menu_background[0].object.mesh.ubo[55] = session.frame_count as f32;
     session.menu_background[0].exec(&mut session.eng);
 
     session.menu_background[1].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
@@ -474,6 +481,10 @@ pub fn update(session: &mut GameSession) {
     session.menu_background[1].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y - session.eng.render.resolution_y as f32 - 30.0;
     session.menu_background[1].object.physic_object.pos.z = 0.99;
     session.menu_background[1].object.draw = true;
+    session.menu_background[1].object.mesh.ubo[52] = session.current_time as f32;
+    session.menu_background[1].object.mesh.ubo[53] = 2000.0;
+    session.menu_background[1].object.mesh.ubo[54] = 2000.0;
+    session.menu_background[1].object.mesh.ubo[55] = session.frame_count as f32;
     session.menu_background[1].exec(&mut session.eng);
 
     session.black_background[0].object.physic_object.scale.x = session.viewport.object.physic_object.scale.x + 50.0;
@@ -584,7 +595,7 @@ pub fn handle_input(session: &mut GameSession) {
     }
 
     let start_pressed = super::control::start_pressed(session);
-    if session.action_cooldown <= 0.0 && start_pressed {
+    if session.action_cooldown <= 0.0 && (start_pressed || session.eng.control.get_gamepad_button_state(session.controller_mappings.abxy[1] as u8)) {
         match session.submenu {
             Main => {
                 session.returning_to_game = true;

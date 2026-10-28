@@ -42,6 +42,7 @@ pub fn initialize() -> GameSession {
     let textf = readfs("shaders/ftext");
     let textf2 = readfs("shaders/ftext2");
     let imgf = readfs("shaders/fimg");
+    let bgf = readfs("shaders/fbg");
     let imgf2 = readfs("shaders/fimg2");
 
     let matt = Material::new(
@@ -62,6 +63,13 @@ pub fn initialize() -> GameSession {
         &eng,
         vert.clone(),
         imgf,
+        vec![],
+        [CullMode::CullModeNone, CullMode::CullModeNone],
+    );
+    let bgfi = Material::new(
+        &eng,
+        vert.clone(),
+        bgf,
         vec![],
         [CullMode::CullModeNone, CullMode::CullModeNone],
     );
@@ -220,18 +228,18 @@ pub fn initialize() -> GameSession {
         bbg.push(t);
     }
 
-    let orimg = Image::new_color(&mut eng, [139, 0, 0, u8::MAX]);
-    let blimg = Image::new_color(&mut eng, [5, 1, 74, u8::MAX]);
+    let orimg = Image::new_color(&mut eng, [239, 0, 0, u8::MAX]);
+    let blimg = Image::new_color(&mut eng, [5, 1, 174, u8::MAX]);
     let mut menubg = Vec::new();
     menubg.push(UIplane::new(
         &mut eng,
-        mati,
+        bgfi,
         vec![orimg],
         MeshUsage::PostPass,
     ));
     menubg.push(UIplane::new(
         &mut eng,
-        mati,
+        bgfi,
         vec![blimg],
         MeshUsage::PostPass,
     ));
@@ -552,6 +560,8 @@ pub fn initialize() -> GameSession {
         gamepadsel: 0,
         submenu: crate::game::SubMenu::Main,
         use_rt_lighting: true,
+        current_time: 0.0,
+        tmcoef: 1.0,
     };
 
     load_settings(&mut session);

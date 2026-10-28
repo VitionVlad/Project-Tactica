@@ -58,6 +58,11 @@ fn main() {
         }
 
         session.frame_count += 1;
+        session.current_time += session.eng.logic_frametime*session.tmcoef;
+        if session.current_time >= 16777216.0{
+            session.current_time = 16777215.0;
+            session.tmcoef = -session.tmcoef;
+        }
         if session.frame_count > 100000{
             session.frame_count = 0;
         }

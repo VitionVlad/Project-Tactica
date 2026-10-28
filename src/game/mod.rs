@@ -250,6 +250,8 @@ pub struct GameSession {
     pub gamepadsel: usize,
     pub submenu: SubMenu,
     pub use_rt_lighting: bool,
+    pub current_time: f32,
+    pub tmcoef: f32,
 }
 
 pub fn tile_test(
