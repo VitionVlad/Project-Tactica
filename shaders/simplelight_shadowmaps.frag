@@ -49,7 +49,7 @@ vec3 SampleAlbedo(vec2 uv) {
     return texture(sampler2DArray(defferedTexture, attachmentSampler), vec3(uv, 0)).rgb;
 }
 vec3 SampleRMA(vec2 uv) {
-    return texture(sampler2DArray(defferedTexture, attachmentSampler), vec3(uv, 1)).rgb;
+    return texture(sampler2DArray(defferedTexture, attachmentSampler), vec3(uv, 1)).grb;
 }
 vec3 SampleNormal(vec2 uv) {
     return texture(sampler2DArray(defferedTexture, attachmentSampler), vec3(uv, 2)).rgb;

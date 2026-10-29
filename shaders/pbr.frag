@@ -49,13 +49,15 @@ const float SPOT_EDGE_FADE      = 0.04;
 
 #define VOLUMETRICS 1
 #define VOL_STEPS   5
-const float VOL_DENSITY  = 0.05;
+const float VOL_DENSITY  = 0.025;
 const float VOL_MAX_DIST = 40.0;
 const float VOL_ANISO    = 0.35;
 const float VOL_CULL     = 0.0008;
 
 const float GA_COS = -0.7373688780783197;
 const float GA_SIN =  0.6754902942615238;
+
+const vec3  SKY_COLOR    = vec3(0.005, 0.005, 0.0125);
 
 float DistributionGGX(vec3 N, vec3 H, float roughness){
   float a      = roughness*roughness;
@@ -280,6 +282,26 @@ float LinearizeDepth(float d) {
     return near * far / (far + d * (far - near));
 }
 
+const float FOG_EDGE_FADE_FRACTION = 0.06;
+
+float sdBoxXZ(vec2 p, vec2 bmin, vec2 bmax) {
+  vec2 center = (bmin + bmax) * 0.5;
+  vec2 halfSize = (bmax - bmin) * 0.5;
+  vec2 d = abs(p - center) - halfSize;
+  return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+}
+
+float BoundaryFogFactor(vec2 worldXZ) {
+  vec3 gridMin  = mi.rtinfo.xyz;
+  vec3 gridSize = mi.addinfo.yzw;
+  vec2 bmin = gridMin.xz;
+  vec2 bmax = gridMin.xz + gridSize.xz * mi.rtinfo.w;
+
+  float fadeDist = FOG_EDGE_FADE_FRACTION * min(bmax.x - bmin.x, bmax.y - bmin.y);
+  float dist = sdBoxXZ(worldXZ, bmin, bmax);
+  return smoothstep(-fadeDist, 0.0, dist);
+}
+
 void main() {
   vec2 uv = vec2(fuv.x, 1.0 - fuv.y);
   float d = texture(sampler2DArray(defferedDepthTexture, attachmentSampler), vec3(uv, 0)).r;
@@ -290,6 +312,9 @@ void main() {
   vec4 rma = texture(sampler2DArray(defferedTexture, attachmentSampler), vec3(uv, 1)).rgba;
   vec3 normal = texture(sampler2DArray(defferedTexture, attachmentSampler), vec3(uv, 2)).rgb;
   vec3 wrldpos = WorldPosFromDepth(d, uv, dmi.defferedMVPInverse[0]);
+
+  float fog = BoundaryFogFactor(wrldpos.xz);
+  albedo = mix(albedo, SKY_COLOR, fog);
 
   vec4 op = vec4(PBR(normal, albedo, rma.x, rma.y, 1.0, wrldpos), 1.0);
 

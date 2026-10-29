@@ -493,6 +493,13 @@ pub fn update(session: &mut GameSession) {
                 session.eng.render.resolution_y as f32 * session.eng.render.resolution_scale;
             session.ltsviewport.object.physic_object.pos.z = 0.9;
             session.ltsviewport.object.mesh.ubo[48] = session.frame_count as f32;
+            session.ltsviewport.object.mesh.ubo[49] = session.scn.voxel_representation.size[0] as f32;
+            session.ltsviewport.object.mesh.ubo[50] = session.scn.voxel_representation.size[1] as f32;
+            session.ltsviewport.object.mesh.ubo[51] = session.scn.voxel_representation.size[2] as f32;
+            session.ltsviewport.object.mesh.ubo[52] = session.scn.voxel_representation.origin.x as f32;
+            session.ltsviewport.object.mesh.ubo[53] = session.scn.voxel_representation.origin.y as f32;
+            session.ltsviewport.object.mesh.ubo[54] = session.scn.voxel_representation.origin.z as f32;
+            session.ltsviewport.object.mesh.ubo[55] = session.scn.voxel_representation.voxel_size;
             session.ltsviewport.object.draw = true;
             session.ltsviewport.exec(&mut session.eng);
 
