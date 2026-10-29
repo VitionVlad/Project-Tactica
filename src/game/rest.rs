@@ -464,21 +464,42 @@ pub fn update(session: &mut GameSession) {
     }
 
     session.scn.exec(&mut session.eng);
-    session.ltviewport.object.physic_object.scale.x =
-        session.eng.render.resolution_x as f32 * session.eng.render.resolution_scale;
-    session.ltviewport.object.physic_object.scale.y =
-        session.eng.render.resolution_y as f32 * session.eng.render.resolution_scale;
-    session.ltviewport.object.physic_object.pos.z = 0.9;
-    session.ltviewport.object.mesh.ubo[48] = session.frame_count as f32;
-    session.ltviewport.object.mesh.ubo[49] = session.scn.voxel_representation.size[0] as f32;
-    session.ltviewport.object.mesh.ubo[50] = session.scn.voxel_representation.size[1] as f32;
-    session.ltviewport.object.mesh.ubo[51] = session.scn.voxel_representation.size[2] as f32;
-    session.ltviewport.object.mesh.ubo[52] = session.scn.voxel_representation.origin.x as f32;
-    session.ltviewport.object.mesh.ubo[53] = session.scn.voxel_representation.origin.y as f32;
-    session.ltviewport.object.mesh.ubo[54] = session.scn.voxel_representation.origin.z as f32;
-    session.ltviewport.object.mesh.ubo[55] = session.scn.voxel_representation.voxel_size;
-    session.ltviewport.object.draw = true;
-    session.ltviewport.exec(&mut session.eng);
+
+    match session.use_rt_lighting{
+        true => {
+            session.ltviewport.object.physic_object.scale.x =
+                session.eng.render.resolution_x as f32 * session.eng.render.resolution_scale;
+            session.ltviewport.object.physic_object.scale.y =
+                session.eng.render.resolution_y as f32 * session.eng.render.resolution_scale;
+            session.ltviewport.object.physic_object.pos.z = 0.9;
+            session.ltviewport.object.mesh.ubo[48] = session.frame_count as f32;
+            session.ltviewport.object.mesh.ubo[49] = session.scn.voxel_representation.size[0] as f32;
+            session.ltviewport.object.mesh.ubo[50] = session.scn.voxel_representation.size[1] as f32;
+            session.ltviewport.object.mesh.ubo[51] = session.scn.voxel_representation.size[2] as f32;
+            session.ltviewport.object.mesh.ubo[52] = session.scn.voxel_representation.origin.x as f32;
+            session.ltviewport.object.mesh.ubo[53] = session.scn.voxel_representation.origin.y as f32;
+            session.ltviewport.object.mesh.ubo[54] = session.scn.voxel_representation.origin.z as f32;
+            session.ltviewport.object.mesh.ubo[55] = session.scn.voxel_representation.voxel_size;
+            session.ltviewport.object.draw = true;
+            session.ltviewport.exec(&mut session.eng);
+
+            session.ltsviewport.object.draw = false;
+            session.ltsviewport.exec(&mut session.eng);
+        }
+        false => {
+            session.ltsviewport.object.physic_object.scale.x =
+                session.eng.render.resolution_x as f32 * session.eng.render.resolution_scale;
+            session.ltsviewport.object.physic_object.scale.y =
+                session.eng.render.resolution_y as f32 * session.eng.render.resolution_scale;
+            session.ltsviewport.object.physic_object.pos.z = 0.9;
+            session.ltsviewport.object.mesh.ubo[48] = session.frame_count as f32;
+            session.ltsviewport.object.draw = true;
+            session.ltsviewport.exec(&mut session.eng);
+
+            session.ltviewport.object.draw = false;
+            session.ltviewport.exec(&mut session.eng);
+        }
+    }
 
     session.scn.objects[session.pivot.id].mesh.ubo[52] = 1.0;
 

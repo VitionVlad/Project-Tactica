@@ -211,6 +211,7 @@ pub struct GameSession {
     pub scn: Scene,
     pub viewport: UIplane,
     pub ltviewport: UIplane,
+    pub ltsviewport: UIplane,
     pub fpscnt: UItext,
     pub text: Vec<UItext>,
     pub menu_text: Vec<UItext>,

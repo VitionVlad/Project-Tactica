@@ -506,6 +506,8 @@ pub fn update(session: &mut GameSession) {
         let viewport = &mut session.viewport.object.physic_object;
         viewport.pos.x = smooth_value_towards(viewport.pos.x, 0.0, &session.eng, 2.0);
         viewport.pos.y = smooth_value_towards(viewport.pos.y, 0.0, &session.eng, 2.0);
+        viewport.scale.x = session.eng.render.resolution_x as f32;
+        viewport.scale.y = session.eng.render.resolution_y as f32;
 
         if viewport_is_normal(
             viewport,

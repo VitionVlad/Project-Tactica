@@ -44,6 +44,7 @@ pub fn initialize() -> GameSession {
     let imgf = readfs("shaders/fimg");
     let bgf = readfs("shaders/fbg");
     let imgf2 = readfs("shaders/fimg2");
+    let pbrs = readfs("shaders/pbr");
 
     let matt = Material::new(
         &eng,
@@ -91,6 +92,13 @@ pub fn initialize() -> GameSession {
         &eng,
         vert.clone(),
         lfrag,
+        vec![],
+        [CullMode::CullModeNone, CullMode::CullModeNone],
+    );
+    let pbrmat = Material::new(
+        &eng,
+        vert.clone(),
+        pbrs,
         vec![],
         [CullMode::CullModeNone, CullMode::CullModeNone],
     );
@@ -319,6 +327,15 @@ pub fn initialize() -> GameSession {
     ltviewport.signal = false;
     scn.voxel_representation.data.resize(0, 0);
 
+    let mut ltsviewport = UIplane::new(
+        &mut eng,
+        pbrmat,
+        vec![orimg],
+        MeshUsage::LightingPass,
+    );
+    ltsviewport.object.physic_object.pos.z = 1.0;
+    ltsviewport.signal = false;
+
     eng.render.shadow_map_count = 0;
     eng.used_light_count = 0;
     eng.lights = Vec::new();
@@ -455,6 +472,7 @@ pub fn initialize() -> GameSession {
         scn,
         viewport,
         ltviewport,
+        ltsviewport,
         fpscnt,
         text,
         menu_text,
