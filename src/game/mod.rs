@@ -147,10 +147,12 @@ pub enum GameState{
 pub struct TextContent{
     pub tbt_ui: Vec<String>,
     pub pause: Vec<String>,
+    pub main_menu: Vec<String>,
     pub settings: Vec<String>,
     pub game_set: Vec<String>,
     pub audio: Vec<String>,
     pub graphics: Vec<String>,
+    pub game_over: Vec<String>,
 }
 
 impl TextContent {
@@ -197,10 +199,12 @@ impl TextContent {
         Ok(Self {
             tbt_ui: parse_list("tbt_ui")?,
             pause: parse_list("pause")?,
+            main_menu: parse_list("main_menu")?,
             settings: parse_list("settings")?,
             game_set: parse_list("game_set")?,
             audio: parse_list("audio")?,
             graphics: parse_list("graphics")?,
+            game_over: parse_list("game_over")?,
         })
     }
 }

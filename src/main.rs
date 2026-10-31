@@ -49,7 +49,7 @@ fn main() {
                             session.ltviewport.object.mesh.ubo[53] = session.scn.voxel_representation.origin.y as f32;
                             session.ltviewport.object.mesh.ubo[54] = session.scn.voxel_representation.origin.z as f32;
                             session.ltviewport.object.mesh.ubo[55] = session.scn.voxel_representation.voxel_size;
-                            session.ltviewport.object.draw = true;
+                            session.ltviewport.object.draw = true;  
                             session.ltviewport.exec(&mut session.eng);
                         
                             session.ltsviewport.object.draw = false;
