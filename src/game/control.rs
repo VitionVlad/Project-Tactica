@@ -216,6 +216,15 @@ fn update_tbt_controls(session: &mut GameSession) {
 }
 
 fn update_adventure_controls(session: &mut GameSession) {
+
+    if session
+        .eng
+        .control
+        .get_key_state(0)
+    {
+        session.game_state = super::GameState::Gameover;
+    }
+
     let pivot_id = session.pivot.id;
     if session
         .eng
