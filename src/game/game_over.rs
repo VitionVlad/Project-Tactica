@@ -135,6 +135,28 @@ pub fn handle_gom(session: &mut GameSession){
     session.black_background[1].object.physic_object.rot = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
     session.black_background[1].exec(&mut session.eng);
 
+    if session.eng.control.gamepad_connected {
+        if session.eng.control.get_gamepad_button_state(session.controller_mappings.abxy[0] as u8) && session.action_cooldown <= 0.0{
+            session.awareness = Awarness::Unseen(0);
+            session.pivot.tbtmode = false;
+            session.making_step = false;
+            session.scn.objects[session.pivot.id].physic_object.pos = session.pivot.start_pos;
+            for enemy in &mut session.enemies {
+                enemy.alive = true;
+                enemy.plate_id = enemy.initial_tile_id;
+                session.scn.objects[enemy.id].physic_object.pos = enemy.start_pos;
+                session.scn.objects[enemy.id].draw = true;
+            }
+            for object_id in &session.physics_objects {
+                let object = &mut session.scn.objects[object_id.0].physic_object;
+                object.pos = object_id.1;
+            }
+            session.input_type = InputType::Gamepad;
+            session.action_cooldown = 0.25;
+            session.returning_to_game = true;
+        }
+    }
+
     if session.returning_to_game {
         let viewport = &mut session.viewport.object.physic_object;
         viewport.pos.x = smooth_value_towards(viewport.pos.x, 0.0, &session.eng, 2.0);
