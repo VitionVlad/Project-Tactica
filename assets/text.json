@@ -10,6 +10,11 @@
             " Settings ",
             " Exit "
         ],
+        "main_menu": [
+            " New game ",
+            " Settings ",
+            " Exit "
+        ],
         "settings": [
             " Game ",
             " Audio ",
@@ -41,6 +46,10 @@
             "High ",
             "Classic ",
             "RT "
+        ],
+        "game_over":[
+            " Too suspicious ",
+            " Retry "
         ]
     }
 }
