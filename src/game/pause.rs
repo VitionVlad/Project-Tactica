@@ -1,5 +1,6 @@
 use crate::engine::{math::vec3::Vec3, physics::physics::PhysicsObject};
 use crate::game::SubMenu::{self, Audio, Game, Graphics, Main, Settings};
+use crate::game::{do_paper_sound, do_paper2_sound};
 use crate::game::{InputType, settings::save_settings, smooth_value_towards};
 
 use super::GameSession;
@@ -28,6 +29,7 @@ pub fn updatesubemnumenu(session: &mut GameSession){
                 }
                 _ => {}
             }
+            do_paper_sound(session);
             session.input_type = InputType::Touchscreen;
             session.action_cooldown = 0.25;
         }
@@ -86,15 +88,19 @@ pub fn updatesubemnusettings(session: &mut GameSession){
             match i {
                 4 => {
                     session.submenu = SubMenu::Game;
+                    do_paper_sound(session);
                 }
                 5 => {
                     session.submenu = SubMenu::Audio;
+                    do_paper_sound(session);
                 }
                 6 => {
                     session.submenu = SubMenu::Graphics;
+                    do_paper_sound(session);
                 }
                 7 => {
                     session.submenu = SubMenu::Main;
+                    do_paper2_sound(session);
                 }
                 _ => {}
             }
@@ -183,14 +189,17 @@ pub fn updatesubemnugame(session: &mut GameSession){
                         session.ui_scale = 0.5;
                     }
                     save_settings(session);
+                    do_paper_sound(session);
                 },
                 11 => {
                     //session.returning_to_game = true;
                     session.show_dbg_stat = !session.show_dbg_stat;
                     save_settings(session);
+                    do_paper_sound(session);
                 }
                 12 => {
                     session.submenu = SubMenu::Settings;
+                    do_paper2_sound(session);
                 }
                 _ => {}
             }
@@ -261,9 +270,11 @@ pub fn updatesubemnuaudio(session: &mut GameSession){
                         session.eng.audio.vol = 0.0;
                     }
                     save_settings(session);
+                    do_paper_sound(session);
                 },
                 15 => {
                     session.submenu = SubMenu::Settings;
+                    do_paper2_sound(session);
                 }
                 _ => {}
             }
@@ -374,6 +385,7 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                     session.use_rt_lighting = !session.use_rt_lighting;
                     session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
                     save_settings(session);
+                    do_paper_sound(session);
                 },
                 18 => {
                     session.eng.render.resolution_scale = ((session.eng.render.resolution_scale*10.0) as i32 + 1) as f32 / 10.0;
@@ -382,6 +394,7 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                     }
                     session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
                     save_settings(session);
+                    do_paper_sound(session);
                 },
                 19 => {
                     match session.eng.render.shadow_map_resolution {
@@ -398,13 +411,16 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                     }
                     session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
                     save_settings(session);
+                    do_paper_sound(session);
                 },
                 20 => {
                     session.eng.render.fullscreen = !session.eng.render.fullscreen;
                     save_settings(session);
+                    do_paper_sound(session);
                 },
                 21 => {
                     session.submenu = SubMenu::Settings;
+                    do_paper2_sound(session);
                 }
                 _ => {}
             }
@@ -634,6 +650,7 @@ pub fn handle_input(session: &mut GameSession) {
                 session.gamepadsel = 6;
             }
         }
+        do_paper2_sound(session);
         session.action_cooldown = 0.25;
     }
 
@@ -694,23 +711,28 @@ fn activate_gamepad_selection(session: &mut GameSession) {
         (Main, 1) => {
             session.submenu = Settings;
             session.gamepadsel = 4;
+            do_paper_sound(session);
         }
         (Main, 2) => session.exit = true,
         (Settings, 4) => {
             session.submenu = Game;
             session.gamepadsel = 9;
+            do_paper_sound(session);
         }
         (Settings, 5) => {
             session.submenu = Audio;
             session.gamepadsel = 14;
+            do_paper_sound(session);
         }
         (Settings, 6) => {
             session.submenu = Graphics;
             session.gamepadsel = 17;
+            do_paper_sound(session);
         }
         (Settings, 7) => {
             session.submenu = Main;
             session.gamepadsel = 1;
+            do_paper2_sound(session);
         }
         (Game, 10) => {
             session.ui_scale = ((session.ui_scale * 10.0) as i32 + 1) as f32 / 10.0;
@@ -718,14 +740,17 @@ fn activate_gamepad_selection(session: &mut GameSession) {
                 session.ui_scale = 0.5;
             }
             save_settings(session);
+            do_paper_sound(session);
         }
         (Game, 11) => {
             session.show_dbg_stat = !session.show_dbg_stat;
             save_settings(session);
+            do_paper_sound(session);
         }
         (Game, 12) => {
             session.submenu = Settings;
             session.gamepadsel = 4;
+            do_paper2_sound(session);
         }
         (Audio, 14) => {
             session.eng.audio.vol = ((session.eng.audio.vol * 10.0) as i32 + 1) as f32 / 10.0;
@@ -733,15 +758,18 @@ fn activate_gamepad_selection(session: &mut GameSession) {
                 session.eng.audio.vol = 0.0;
             }
             save_settings(session);
+            do_paper_sound(session);
         }
         (Audio, 15) => {
             session.submenu = Settings;
             session.gamepadsel = 5;
+            do_paper2_sound(session);
         }
         (Graphics, 17) => {
             session.use_rt_lighting = !session.use_rt_lighting;
             session.tredr = ((1.0 / session.eng.gpu_fps as f32) * 2.0).max(0.1);
             save_settings(session);
+            do_paper_sound(session);
         }
         (Graphics, 18) => {
             session.eng.render.resolution_scale =
@@ -751,6 +779,7 @@ fn activate_gamepad_selection(session: &mut GameSession) {
             }
             save_settings(session);
             session.tredr = ((1.0 / session.eng.gpu_fps as f32) * 2.0).max(0.1);
+            do_paper_sound(session);
         }
         (Graphics, 19) => {
             session.eng.render.shadow_map_resolution =
@@ -761,13 +790,16 @@ fn activate_gamepad_selection(session: &mut GameSession) {
                     resolution => resolution,
                 };
             session.tredr = ((1.0 / session.eng.gpu_fps as f32) * 2.0).max(0.1);
+            do_paper_sound(session);
         }
         (Graphics, 20) => {
             session.eng.render.fullscreen = !session.eng.render.fullscreen;
+            do_paper_sound(session);
         }
         (Graphics, 21) => {
             session.submenu = Settings;
             session.gamepadsel = 6;
+            do_paper2_sound(session);
         }
         _ => {}
     }

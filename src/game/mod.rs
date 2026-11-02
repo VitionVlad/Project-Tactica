@@ -259,6 +259,16 @@ pub struct GameSession {
     pub tmcoef: f32,
 }
 
+pub fn do_paper_sound(session: &mut GameSession) {
+    session.speakers[1].move_sound_cursor(0.0);
+    session.speakers[1].play = true;
+}
+
+pub fn do_paper2_sound(session: &mut GameSession) {
+    session.speakers[7].move_sound_cursor(0.0);
+    session.speakers[7].play = true;
+}
+
 pub fn tile_test(
     pivot: &crate::engine::physics::physics::PhysicsObject,
     plate: &crate::engine::physics::physics::PhysicsObject,

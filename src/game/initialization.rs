@@ -444,13 +444,15 @@ pub fn initialize() -> GameSession {
         "assets/audio/walking.mp3",
         "assets/audio/knife.mp3",
         "assets/audio/cityambient.mp3",
+        "assets/audio/shutter.mp3",
+        "assets/audio/paper2.mp3",
     ];
 
     let mut speakers = Vec::new();
 
     for fl in audiofl {
         let mut sp = Speaker::new(&mut eng, fl);
-        sp.volume = 0.5;
+        sp.volume = 0.75;
         sp.loopsound = false;
         sp.play = false;
         sp.use_pan = false;
