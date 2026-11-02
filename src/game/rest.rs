@@ -769,6 +769,8 @@ pub fn update(session: &mut GameSession) {
     session.viewport.object.mesh.ubo[49] = 0.0;
     session.viewport.object.mesh.ubo[50] = 0.2;
     session.viewport.object.mesh.ubo[51] = 0.18;
+    session.viewport.object.mesh.ubo[52] = 0.0;
+    session.viewport.object.mesh.ubo[53] = 0.0;
     session.viewport.object.draw = true;
     session.viewport.exec(&mut session.eng);
 }

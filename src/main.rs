@@ -20,7 +20,9 @@ fn main() {
                     save_settings(&session);
                 }
                 session.eng.render.active_renderpasses = [true, true, true, true];
-                tbt::update(&mut session);
+                if session.pivot.tbtmode{
+                    tbt::update(&mut session);
+                }
                 control::update(&mut session);
                 rest::update(&mut session);
                 game_over::handle(&mut session);

@@ -106,20 +106,6 @@ pub fn handle_gom(session: &mut GameSession){
     session.menu_text[1].per_symbol = false;
     session.menu_text[1].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
     if session.menu_text[1].exec(&mut session.eng, &session.text_content.game_over[1]) && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
-        session.awareness = Awarness::Unseen(0);
-        session.pivot.tbtmode = false;
-        session.making_step = false;
-        session.scn.objects[session.pivot.id].physic_object.pos = session.pivot.start_pos;
-        for enemy in &mut session.enemies {
-            enemy.alive = true;
-            enemy.plate_id = enemy.initial_tile_id;
-            session.scn.objects[enemy.id].physic_object.pos = enemy.start_pos;
-            session.scn.objects[enemy.id].draw = true;
-        }
-        for object_id in &session.physics_objects {
-            let object = &mut session.scn.objects[object_id.0].physic_object;
-            object.pos = object_id.1;
-        }
         session.input_type = InputType::Touchscreen;
         session.action_cooldown = 0.25;
         //session.game_state = super::GameState::InGame;
@@ -137,20 +123,6 @@ pub fn handle_gom(session: &mut GameSession){
 
     if session.eng.control.gamepad_connected {
         if session.eng.control.get_gamepad_button_state(session.controller_mappings.abxy[0] as u8) && session.action_cooldown <= 0.0{
-            session.awareness = Awarness::Unseen(0);
-            session.pivot.tbtmode = false;
-            session.making_step = false;
-            session.scn.objects[session.pivot.id].physic_object.pos = session.pivot.start_pos;
-            for enemy in &mut session.enemies {
-                enemy.alive = true;
-                enemy.plate_id = enemy.initial_tile_id;
-                session.scn.objects[enemy.id].physic_object.pos = enemy.start_pos;
-                session.scn.objects[enemy.id].draw = true;
-            }
-            for object_id in &session.physics_objects {
-                let object = &mut session.scn.objects[object_id.0].physic_object;
-                object.pos = object_id.1;
-            }
             session.input_type = InputType::Gamepad;
             session.action_cooldown = 0.25;
             session.returning_to_game = true;
@@ -158,6 +130,19 @@ pub fn handle_gom(session: &mut GameSession){
     }
 
     if session.returning_to_game {
+        session.viewport.object.mesh.ubo[52] = smooth_value_towards(
+            session.viewport.object.mesh.ubo[52],
+            1.0,
+            &session.eng,
+            2.0,
+        );
+        session.viewport.object.mesh.ubo[53] = smooth_value_towards(
+            session.viewport.object.mesh.ubo[53],
+            1.0,
+            &session.eng,
+            2.0,
+        );
+
         let viewport = &mut session.viewport.object.physic_object;
         viewport.pos.x = smooth_value_towards(viewport.pos.x, 0.0, &session.eng, 2.0);
         viewport.pos.y = smooth_value_towards(viewport.pos.y, 0.0, &session.eng, 2.0);
@@ -173,10 +158,34 @@ pub fn handle_gom(session: &mut GameSession){
             viewport.scale.y = session.eng.render.resolution_y as f32;
             viewport.pos.x = 0.0;
             viewport.pos.y = 0.0;
+
+            session.awareness = Awarness::Unseen(0);
+            session.pivot.tbtmode = false;
+            session.making_step = false;
+            session.scn.objects[session.pivot.id].physic_object.pos = session.pivot.start_pos;
+            for enemy in &mut session.enemies {
+                enemy.alive = true;
+                enemy.plate_id = enemy.initial_tile_id;
+                session.scn.objects[enemy.id].physic_object.pos = enemy.start_pos;
+                session.scn.objects[enemy.id].draw = true;
+            }
+            for object_id in &session.physics_objects {
+                let object = &mut session.scn.objects[object_id.0].physic_object;
+                object.pos = object_id.1;
+            }
+
             session.returning_to_game = false;
             session.game_state = super::GameState::InGame;
         }
     } else {
+        session.viewport.object.mesh.ubo[52] = smooth_value_towards(
+            session.viewport.object.mesh.ubo[52],
+            1.0,
+            &session.eng,
+            2.0,
+        );
+        session.viewport.object.mesh.ubo[53] = 0.0;
+
         let viewport = &mut session.viewport.object.physic_object;
         viewport.scale.x = session.eng.render.resolution_x as f32;
         viewport.scale.y = session.eng.render.resolution_y as f32;

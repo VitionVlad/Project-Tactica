@@ -503,6 +503,13 @@ pub fn update(session: &mut GameSession) {
     updatesubemnugraphics(session);
 
     if session.returning_to_game {
+        session.viewport.object.mesh.ubo[52] = smooth_value_towards(
+            session.viewport.object.mesh.ubo[52],
+            0.0,
+            &session.eng,
+            2.0,
+        );
+
         let viewport = &mut session.viewport.object.physic_object;
         viewport.pos.x = smooth_value_towards(viewport.pos.x, 0.0, &session.eng, 2.0);
         viewport.pos.y = smooth_value_towards(viewport.pos.y, 0.0, &session.eng, 2.0);
@@ -523,6 +530,14 @@ pub fn update(session: &mut GameSession) {
             session.game_state = super::GameState::InGame;
         }
     } else {
+        session.viewport.object.mesh.ubo[52] = smooth_value_towards(
+            session.viewport.object.mesh.ubo[52],
+            1.0,
+            &session.eng,
+            2.0,
+        );
+        session.viewport.object.mesh.ubo[53] = 0.0;
+
         let viewport = &mut session.viewport.object.physic_object;
         viewport.scale.x = session.eng.render.resolution_x as f32;
         viewport.scale.y = session.eng.render.resolution_y as f32;

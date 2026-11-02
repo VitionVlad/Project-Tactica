@@ -188,6 +188,12 @@ void main() {
     }
     vec3 denoised = colorAccum / max(weightAccum, 0.0001);
 
-    outColor = vec4(denoised, 1.0);
+    float bwimg = 0.21 * denoised.r + 0.71 * denoised.g + 0.07 * denoised.b;
+
+    vec3 fincolor = mix(denoised, vec3(bwimg), mi.rtinfo.x);
+
+    fincolor = mix(fincolor, vec3(1.0), mi.rtinfo.y);
+
+    outColor = vec4(fincolor, 1.0);
     //outColor = vec4(SampleRT(uv), 1.0);
 }
