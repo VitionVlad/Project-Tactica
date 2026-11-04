@@ -48,7 +48,7 @@
             "RT "
         ],
         "game_over":[
-            " Too suspicious ",
+            " Too suspicious! ",
             " Retry "
         ]
     }

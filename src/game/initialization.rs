@@ -160,7 +160,7 @@ pub fn initialize() -> GameSession {
         &mut eng,
         matt,
         "assets/consolas.png",
-        "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`~$% ",
+        "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`?!% ",
         MeshUsage::PostPass,
     );
 
@@ -170,7 +170,7 @@ pub fn initialize() -> GameSession {
             &mut eng,
             matt2,
             "assets/comicmonoinv.png",
-            "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`~$% ",
+            "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`?!% ",
             MeshUsage::PostPass,
         );
         text.push(t);
@@ -182,7 +182,7 @@ pub fn initialize() -> GameSession {
             &mut eng,
             matt,
             "assets/comicmonoinv.png",
-            "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`~$% ",
+            "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`?!% ",
             MeshUsage::PostPass,
         );
         menu_text.push(t);
@@ -192,7 +192,7 @@ pub fn initialize() -> GameSession {
         &mut eng,
         matt,
         "assets/comicmonoinv.png",
-        "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`~$% ",
+        "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`?!% ",
         MeshUsage::PostPass,
     ));
 
