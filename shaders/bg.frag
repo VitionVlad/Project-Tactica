@@ -4,6 +4,8 @@ layout(location = 0) out vec4 outColor;
 
 layout(location = 0) in vec2 uv;
 
+layout(location = 1) in vec3 opos;
+
 layout(binding = 0) uniform MeshInput {
     vec4 resolutions;
     vec4 lightinfo;
@@ -53,8 +55,7 @@ float edge(float v, float th) {
 }
 
 void main() {
-    vec3 base = pow(texture(sampler2DArray(texTexture, imageSampler),
-                            vec3(uv.x, 1.0 - uv.y, 0)).rgb, vec3(2.2)) / 16.0;
+    vec3 base = pow(texture(sampler2DArray(texTexture, imageSampler), vec3(uv.x, 1.0 - uv.y, 0)).rgb, vec3(2.2)) / 16.0;
 
     float t    = mi.rtinfo.x;
     float cps  = clamp(mi.rtinfo.y / 2000.0, 0.0, 1.0);

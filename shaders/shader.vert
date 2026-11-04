@@ -12,6 +12,8 @@ layout(location = 4) in vec3 ctg;
 
 layout(location = 0) out vec2 fuv;
 
+layout(location = 1) out vec3 opos;
+
 layout(binding = 0) uniform MeshInput {
     vec4 resolutions;
     vec4 lightinfo;
@@ -38,5 +40,6 @@ layout(binding = 2) uniform DefferedMatricesInput {
 void main() {
     fuv = uv;
     vec4 fpos = mi.t * mi.r * mi.s * vec4(pos, 1.0);
+    opos = fpos.xyz;
     gl_Position = vec4((fpos.x/mi.resolutions.x)*2.0-1.0, (fpos.y/mi.resolutions.y)*2.0-1.0, fpos.z, fpos.w);
 }

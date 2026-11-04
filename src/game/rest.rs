@@ -511,6 +511,7 @@ pub fn update(session: &mut GameSession) {
     session.scn.objects[session.pivot.id].mesh.ubo[52] = 1.0;
 
     if !session.pivot.tbtmode {
+        session.bwgcoef = 0.0;
         for i in 0..session.action_list.len() {
             session.action_list[i] = None;
         }
@@ -573,6 +574,8 @@ pub fn update(session: &mut GameSession) {
                     session.awarness_signs[i].object.draw = true;
                     session.awarness_signs[i].exec(&mut session.eng);
                 }
+
+                session.bwgcoef = 0.0;
             }
             Awarness::Suspected(l) => {
                 session.awarness_signs[0].object.physic_object.scale.x = 100.0 * session.ui_scale;
@@ -612,6 +615,8 @@ pub fn update(session: &mut GameSession) {
                     session.awarness_signs[i].object.draw = true;
                     session.awarness_signs[i].exec(&mut session.eng);
                 }
+
+                session.bwgcoef = 0.15;
             }
             Awarness::Detected(l) => {
                 session.awarness_signs[0].object.physic_object.scale.x = 100.0 * session.ui_scale;
@@ -663,6 +668,8 @@ pub fn update(session: &mut GameSession) {
                 );
                 session.awarness_signs[3].object.draw = true;
                 session.awarness_signs[3].exec(&mut session.eng);
+
+                session.bwgcoef = 0.3;
             }
             Awarness::Compromised(l) => {
                 session.awarness_signs[0].object.physic_object.scale.x = 100.0 * session.ui_scale;
@@ -719,6 +726,8 @@ pub fn update(session: &mut GameSession) {
                 session.awarness_signs[3].object.physic_object.pos.z = 0.4;
                 session.awarness_signs[3].object.draw = true;
                 session.awarness_signs[3].exec(&mut session.eng);
+
+                session.bwgcoef = 0.45;
             }
         }
     }
@@ -769,7 +778,12 @@ pub fn update(session: &mut GameSession) {
     session.viewport.object.mesh.ubo[49] = 0.0;
     session.viewport.object.mesh.ubo[50] = 0.2;
     session.viewport.object.mesh.ubo[51] = 0.18;
-    session.viewport.object.mesh.ubo[52] = 0.0;
+    session.viewport.object.mesh.ubo[52] = smooth_value_towards(
+        session.viewport.object.mesh.ubo[52],
+        session.bwgcoef,
+        &session.eng,
+        2.0,
+    );
     session.viewport.object.mesh.ubo[53] = 0.0;
     session.viewport.object.draw = true;
     session.viewport.exec(&mut session.eng);

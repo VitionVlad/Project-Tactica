@@ -257,6 +257,7 @@ pub struct GameSession {
     pub use_rt_lighting: bool,
     pub current_time: f32,
     pub tmcoef: f32,
+    pub bwgcoef: f32,
 }
 
 pub fn do_paper_sound(session: &mut GameSession) {

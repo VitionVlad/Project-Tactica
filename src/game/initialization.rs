@@ -582,6 +582,7 @@ pub fn initialize() -> GameSession {
         use_rt_lighting: true,
         current_time: 0.0,
         tmcoef: 1.0,
+        bwgcoef: 1.0,
     };
 
     load_settings(&mut session);

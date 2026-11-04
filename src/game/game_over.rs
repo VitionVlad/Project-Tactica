@@ -180,6 +180,9 @@ pub fn handle_gom(session: &mut GameSession){
             session.speakers[6].move_sound_cursor(0.0);
             session.speakers[6].play = true;
 
+            session.bwgcoef = 0.0;
+            session.viewport.object.mesh.ubo[52] = 0.0;
+
             session.returning_to_game = false;
             session.game_state = super::GameState::InGame;
         }

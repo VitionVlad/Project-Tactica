@@ -521,7 +521,7 @@ pub fn update(session: &mut GameSession) {
     if session.returning_to_game {
         session.viewport.object.mesh.ubo[52] = smooth_value_towards(
             session.viewport.object.mesh.ubo[52],
-            0.0,
+            session.bwgcoef,
             &session.eng,
             2.0,
         );
