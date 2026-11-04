@@ -82,24 +82,24 @@ pub fn update(session: &mut GameSession) {
                         z: 0.0,
                     };
 
-                    session.text[i].size.x = 10.0 * session.ui_scale;
-                    session.text[i].size.y = 20.0 * session.ui_scale;
-                    session.text[i].pos.x = screenpos.x;
-                    session.text[i].pos.y = screenpos.y - session.text[i].size.y / 2.0;
-                    session.text[i].auto_recalculate_clickzone = true;
-                    session.text[i].rotate_each_character = false;
-                    session.text[i].rotation = Vec3 {
+                    session.text[session.writing_system as usize][i].size.x = 10.0 * session.ui_scale;
+                    session.text[session.writing_system as usize][i].size.y = 20.0 * session.ui_scale;
+                    session.text[session.writing_system as usize][i].pos.x = screenpos.x;
+                    session.text[session.writing_system as usize][i].pos.y = screenpos.y - session.text[session.writing_system as usize][i].size.y / 2.0;
+                    session.text[session.writing_system as usize][i].auto_recalculate_clickzone = true;
+                    session.text[session.writing_system as usize][i].rotate_each_character = false;
+                    session.text[session.writing_system as usize][i].rotation = Vec3 {
                         x: 0.0,
                         y: 0.0,
                         z: -0.1,
                     }
                     .to_quat();
-                    session.text[i].pos.z = 0.1;
-                    session.text[i].draw = true;
-                    session.text[i].signal = true;
-                    session.text[i].per_symbol = false;
-                    let text = &session.text_content.tbt_ui[0];
-                    if session.text[i].exec(&mut session.eng, text)
+                    session.text[session.writing_system as usize][i].pos.z = 0.1;
+                    session.text[session.writing_system as usize][i].draw = true;
+                    session.text[session.writing_system as usize][i].signal = true;
+                    session.text[session.writing_system as usize][i].per_symbol = false;
+                    let text = &session.text_content[session.chosen_language].tbt_ui[0];
+                    if session.text[session.writing_system as usize][i].exec(&mut session.eng, text)
                         && session.action_cooldown <= 0.0
                         && session.eng.control.mousebtn[2]
                     {
@@ -119,22 +119,22 @@ pub fn update(session: &mut GameSession) {
                         .object
                         .physic_object
                         .scale
-                        .x = session.text[i].size.x * text.len() as f32 + 12.0;
+                        .x = session.text[session.writing_system as usize][i].size.x * text.len() as f32 + 12.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .scale
-                        .y = session.text[i].size.y + 12.0;
+                        .y = session.text[session.writing_system as usize][i].size.y + 12.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .pos
-                        .x = session.text[i].pos.x - 6.0;
+                        .x = session.text[session.writing_system as usize][i].pos.x - 6.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .pos
-                        .y = session.text[i].pos.y - 6.0;
+                        .y = session.text[session.writing_system as usize][i].pos.y - 6.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
@@ -160,26 +160,26 @@ pub fn update(session: &mut GameSession) {
                     .to_quat();
                     match i {
                         0 => {
-                            session.keyimg[i].pos.x = session.text[i].pos.x;
+                            session.keyimg[i].pos.x = session.text[session.writing_system as usize][i].pos.x;
                             session.keyimg[i].pos.y =
-                                session.text[i].pos.y + session.text[i].size.y;
+                                session.text[session.writing_system as usize][i].pos.y + session.text[session.writing_system as usize][i].size.y;
                         }
                         1 => {
-                            session.keyimg[i].pos.x = session.text[i].pos.x;
+                            session.keyimg[i].pos.x = session.text[session.writing_system as usize][i].pos.x;
                             session.keyimg[i].pos.y =
-                                session.text[i].pos.y - session.keyimg[i].size.y;
+                                session.text[session.writing_system as usize][i].pos.y - session.keyimg[i].size.y;
                         }
                         2 => {
-                            session.keyimg[i].pos.x = session.text[i].pos.x
-                                + (text.len() as f32) * session.text[i].size.x;
+                            session.keyimg[i].pos.x = session.text[session.writing_system as usize][i].pos.x
+                                + (text.len() as f32) * session.text[session.writing_system as usize][i].size.x;
                             session.keyimg[i].pos.y =
-                                session.text[i].pos.y - session.keyimg[i].size.y / 4.0;
+                                session.text[session.writing_system as usize][i].pos.y - session.keyimg[i].size.y / 4.0;
                         }
                         3 => {
                             session.keyimg[i].pos.x =
-                                session.text[i].pos.x - session.keyimg[i].size.x;
+                                session.text[session.writing_system as usize][i].pos.x - session.keyimg[i].size.x;
                             session.keyimg[i].pos.y =
-                                session.text[i].pos.y - session.keyimg[i].size.y / 4.0;
+                                session.text[session.writing_system as usize][i].pos.y - session.keyimg[i].size.y / 4.0;
                         }
                         _ => {}
                     }
@@ -228,44 +228,44 @@ pub fn update(session: &mut GameSession) {
                         z: 0.0,
                     };
 
-                    session.text[i].size.x = 10.0 * session.ui_scale;
-                    session.text[i].size.y = 20.0 * session.ui_scale;
-                    session.text[i].pos.x = screenpos.x;
-                    session.text[i].pos.y = screenpos.y - session.text[i].size.y / 2.0;
-                    session.text[i].pos.z = 0.1;
-                    session.text[i].draw = true;
-                    session.text[i].signal = true;
-                    session.text[i].per_symbol = false;
-                    session.text[i].auto_recalculate_clickzone = true;
-                    session.text[i].rotate_each_character = false;
-                    session.text[i].rotation = Vec3 {
+                    session.text[session.writing_system as usize][i].size.x = 10.0 * session.ui_scale;
+                    session.text[session.writing_system as usize][i].size.y = 20.0 * session.ui_scale;
+                    session.text[session.writing_system as usize][i].pos.x = screenpos.x;
+                    session.text[session.writing_system as usize][i].pos.y = screenpos.y - session.text[session.writing_system as usize][i].size.y / 2.0;
+                    session.text[session.writing_system as usize][i].pos.z = 0.1;
+                    session.text[session.writing_system as usize][i].draw = true;
+                    session.text[session.writing_system as usize][i].signal = true;
+                    session.text[session.writing_system as usize][i].per_symbol = false;
+                    session.text[session.writing_system as usize][i].auto_recalculate_clickzone = true;
+                    session.text[session.writing_system as usize][i].rotate_each_character = false;
+                    session.text[session.writing_system as usize][i].rotation = Vec3 {
                         x: 0.0,
                         y: 0.0,
                         z: 0.1,
                     }
                     .to_quat();
-                    let text = &session.text_content.tbt_ui[1];
+                    let text = &session.text_content[session.chosen_language].tbt_ui[1];
 
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .scale
-                        .x = session.text[i].size.x * text.len() as f32 + 12.0;
+                        .x = session.text[session.writing_system as usize][i].size.x * text.len() as f32 + 12.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .scale
-                        .y = session.text[i].size.y + 12.0;
+                        .y = session.text[session.writing_system as usize][i].size.y + 12.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .pos
-                        .x = session.text[i].pos.x - 6.0;
+                        .x = session.text[session.writing_system as usize][i].pos.x - 6.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .pos
-                        .y = session.text[i].pos.y - 6.0;
+                        .y = session.text[session.writing_system as usize][i].pos.y - 6.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
@@ -290,33 +290,33 @@ pub fn update(session: &mut GameSession) {
                     session.keyimg[i].pos.z = 0.1;
                     match i {
                         0 => {
-                            session.keyimg[i].pos.x = session.text[i].pos.x;
+                            session.keyimg[i].pos.x = session.text[session.writing_system as usize][i].pos.x;
                             session.keyimg[i].pos.y =
-                                session.text[i].pos.y + session.text[i].size.y;
+                                session.text[session.writing_system as usize][i].pos.y + session.text[session.writing_system as usize][i].size.y;
                         }
                         1 => {
-                            session.keyimg[i].pos.x = session.text[i].pos.x;
+                            session.keyimg[i].pos.x = session.text[session.writing_system as usize][i].pos.x;
                             session.keyimg[i].pos.y =
-                                session.text[i].pos.y - session.keyimg[i].size.y;
+                                session.text[session.writing_system as usize][i].pos.y - session.keyimg[i].size.y;
                         }
                         2 => {
-                            session.keyimg[i].pos.x = session.text[i].pos.x
-                                + (text.len() as f32) * session.text[i].size.x;
+                            session.keyimg[i].pos.x = session.text[session.writing_system as usize][i].pos.x
+                                + (text.len() as f32) * session.text[session.writing_system as usize][i].size.x;
                             session.keyimg[i].pos.y =
-                                session.text[i].pos.y - session.keyimg[i].size.y / 4.0;
+                                session.text[session.writing_system as usize][i].pos.y - session.keyimg[i].size.y / 4.0;
                         }
                         3 => {
-                            session.text[i].pos.x -=
-                                (text.len() as f32 / 4.0) * session.text[i].size.x;
+                            session.text[session.writing_system as usize][i].pos.x -=
+                                (text.len() as f32 / 4.0) * session.text[session.writing_system as usize][i].size.x;
                             session.speech_bubble_background[i]
                                 .object
                                 .physic_object
                                 .pos
-                                .x = session.text[i].pos.x - 6.0 * session.ui_scale;
+                                .x = session.text[session.writing_system as usize][i].pos.x - 6.0 * session.ui_scale;
                             session.keyimg[i].pos.x =
-                                session.text[i].pos.x - session.keyimg[i].size.x;
+                                session.text[session.writing_system as usize][i].pos.x - session.keyimg[i].size.x;
                             session.keyimg[i].pos.y =
-                                session.text[i].pos.y - session.keyimg[i].size.y / 4.0;
+                                session.text[session.writing_system as usize][i].pos.y - session.keyimg[i].size.y / 4.0;
                         }
                         _ => {}
                     }
@@ -337,7 +337,7 @@ pub fn update(session: &mut GameSession) {
                         }
                     }
                     session.speech_bubble_background[i].exec(&mut session.eng);
-                    if session.text[i].exec(&mut session.eng, text)
+                    if session.text[session.writing_system as usize][i].exec(&mut session.eng, text)
                         && session.action_cooldown <= 0.0
                         && session.eng.control.mousebtn[2]
                     {
@@ -355,20 +355,20 @@ pub fn update(session: &mut GameSession) {
                     }
                 }
                 Skip => {
-                    let text = &session.text_content.tbt_ui[2];
-                    session.text[i].size.x = 15.0 * session.ui_scale;
-                    session.text[i].size.y = 30.0 * session.ui_scale;
-                    session.text[i].pos.x =
+                    let text = &session.text_content[session.chosen_language].tbt_ui[2];
+                    session.text[session.writing_system as usize][i].size.x = 15.0 * session.ui_scale;
+                    session.text[session.writing_system as usize][i].size.y = 30.0 * session.ui_scale;
+                    session.text[session.writing_system as usize][i].pos.x =
                         session.eng.render.resolution_x as f32 / 2.0 - text.len() as f32;
-                    session.text[i].pos.y =
-                        session.eng.render.resolution_y as f32 - session.text[i].size.y * 2.0;
-                    session.text[i].pos.z = 0.1;
-                    session.text[i].draw = true;
-                    session.text[i].signal = true;
-                    session.text[i].per_symbol = false;
-                    session.text[i].auto_recalculate_clickzone = true;
-                    session.text[i].rotate_each_character = false;
-                    session.text[i].rotation = Vec3 {
+                    session.text[session.writing_system as usize][i].pos.y =
+                        session.eng.render.resolution_y as f32 - session.text[session.writing_system as usize][i].size.y * 2.0;
+                    session.text[session.writing_system as usize][i].pos.z = 0.1;
+                    session.text[session.writing_system as usize][i].draw = true;
+                    session.text[session.writing_system as usize][i].signal = true;
+                    session.text[session.writing_system as usize][i].per_symbol = false;
+                    session.text[session.writing_system as usize][i].auto_recalculate_clickzone = true;
+                    session.text[session.writing_system as usize][i].rotate_each_character = false;
+                    session.text[session.writing_system as usize][i].rotation = Vec3 {
                         x: 0.0,
                         y: 0.0,
                         z: 0.1,
@@ -379,22 +379,22 @@ pub fn update(session: &mut GameSession) {
                         .object
                         .physic_object
                         .scale
-                        .x = session.text[i].size.x * text.len() as f32 + 12.0;
+                        .x = session.text[session.writing_system as usize][i].size.x * text.len() as f32 + 12.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .scale
-                        .y = session.text[i].size.y + 12.0;
+                        .y = session.text[session.writing_system as usize][i].size.y + 12.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .pos
-                        .x = session.text[i].pos.x - 6.0;
+                        .x = session.text[session.writing_system as usize][i].pos.x - 6.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
                         .pos
-                        .y = session.text[i].pos.y - 6.0;
+                        .y = session.text[session.writing_system as usize][i].pos.y - 6.0;
                     session.speech_bubble_background[i]
                         .object
                         .physic_object
@@ -444,7 +444,7 @@ pub fn update(session: &mut GameSession) {
                     }
 
                     session.speech_bubble_background[i].exec(&mut session.eng);
-                    if session.text[i].exec(&mut session.eng, text)
+                    if session.text[session.writing_system as usize][i].exec(&mut session.eng, text)
                         && session.action_cooldown <= 0.0
                         && session.eng.control.mousebtn[2]
                     {
@@ -456,8 +456,8 @@ pub fn update(session: &mut GameSession) {
         } else {
             session.speech_bubble_background[i].object.draw = false;
             session.speech_bubble_background[i].exec(&mut session.eng);
-            session.text[i].draw = false;
-            session.text[i].exec(&mut session.eng, " ");
+            session.text[session.writing_system as usize][i].draw = false;
+            session.text[session.writing_system as usize][i].exec(&mut session.eng, " ");
             session.keyimg[i].draw = false;
             session.keyimg[i].exec(&mut session.eng, " ");
         }
@@ -764,7 +764,7 @@ pub fn update(session: &mut GameSession) {
         mbg.exec(&mut session.eng);
     }
 
-    for txt in &mut session.menu_text {
+    for txt in &mut session.menu_text[session.writing_system as usize] {
         txt.draw = false;
         txt.exec(&mut session.eng, " ");
     }

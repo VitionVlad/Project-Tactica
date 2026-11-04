@@ -15,7 +15,8 @@ pub fn save_settings(session: &GameSession) {
     ensure_settings_dir();
 
     let json = format!(
-        "{{\n  \"ui_scale\": {},\n  \"show_dbg_stat\": {},\n  \"audio_volume\": {},\n  \"use_rt_lighting\": {},\n  \"resolution_scale\": {},\n  \"fullscreen\": {},\n  \"shadowmaps_resolution\": {},\n  \"resolution_x\": {},\n  \"resolution_y\": {}\n}}\n",
+        "{{\n  \"chosen_language\": {},\n  \"ui_scale\": {},\n  \"show_dbg_stat\": {},\n  \"audio_volume\": {},\n  \"use_rt_lighting\": {},\n  \"resolution_scale\": {},\n  \"fullscreen\": {},\n  \"shadowmaps_resolution\": {},\n  \"resolution_x\": {},\n  \"resolution_y\": {}\n}}\n",
+        session.chosen_language,
         session.ui_scale,
         session.show_dbg_stat,
         session.eng.audio.vol,
@@ -45,6 +46,10 @@ pub fn load_settings(session: &mut GameSession) {
             "ui_scale" if option.node_type == NodeType::Number => {
                 session.ui_scale = option.numeral_val as f32;
             }
+            "chosen_language" if option.node_type == NodeType::Number => {
+                session.chosen_language = (option.numeral_val as usize)
+                    .min(session.text_content.len().saturating_sub(1));
+            }
             "show_dbg_stat" if option.node_type == NodeType::Bolean => {
                 session.show_dbg_stat = option.bolean;
             }
@@ -72,5 +77,6 @@ pub fn load_settings(session: &mut GameSession) {
             _ => {}
         }
     }
+    session.writing_system = session.text_content[session.chosen_language].writing_system;
     session.eng.render.set_new_resolution(nr.0, nr.1);
 }

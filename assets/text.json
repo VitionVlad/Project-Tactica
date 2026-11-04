@@ -1,5 +1,7 @@
 {
-    "en":{
+    "en": {
+        "language_name": "English",
+        "writing_system": "Latin",
         "tbt_ui": [
             " Step ",
             " Neutralize ",
@@ -22,7 +24,7 @@
             " Back "
         ],
         "game_set": [
-            " Language: English ",
+            " Language: ",
             " UI scale:",
             " Show FPS:",
             " Back ",
@@ -47,9 +49,64 @@
             "Classic ",
             "RT "
         ],
-        "game_over":[
+        "game_over": [
             " Too suspicious! ",
             " Retry "
+        ]
+    },
+    "ru": {
+        "language_name": "Russkiy",
+        "writing_system": "Cyrillic",
+        "tbt_ui": [
+            " {ag ",
+            " Obezvredit$ ",
+            " Propustit$ "
+        ],
+        "pause": [
+            " Prodoljit$ ",
+            " Nastroyki ",
+            " V@hod "
+        ],
+        "main_menu": [
+            " Nova' igra ",
+            " Nastroyki ",
+            " V@hod "
+        ],
+        "settings": [
+            " Igra ",
+            " Zvuk ",
+            " Grafika ",
+            " Nazad "
+        ],
+        "game_set": [
+            " )z@k: ",
+            " Mas}tab interfeysa:",
+            " Pokaz@vat$ FPS:",
+            " Nazad ",
+            "Da ",
+            "Net "
+        ],
+        "audio": [
+            " Gromkost$:",
+            " Nazad "
+        ],
+        "graphics": [
+            " Osve*enie:",
+            " Mas}tab razre}eni':",
+            " Kacestvo kart teney:",
+            " Poln@y ^kran:",
+            " Nazad ",
+            "Da ",
+            "Net ",
+            "Nizkoe ",
+            "Srednee ",
+            "V@sokoe ",
+            "Klassiceskoe ",
+            "RT "
+        ],
+        "game_over": [
+            " Sli}kom podozritel$no! ",
+            " Povtorit$ "
         ]
     }
 }

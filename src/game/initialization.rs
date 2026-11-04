@@ -25,13 +25,14 @@ pub fn initialize() -> GameSession {
 
     let gmtxt = JsonF::load_from_file("assets/text.json");
     let chosen_language = 0;
-    let text_content = TextContent::from_json(&gmtxt, chosen_language)
+    let text_content = TextContent::all_from_json(&gmtxt)
         .expect("failed to load text content from assets/text.json");
-    let menu_item_capacity = text_content.pause.len()
-        + text_content.settings.len()
-        + text_content.game_set.len()
-        + text_content.audio.len()
-        + text_content.graphics.len();
+    let writing_system = text_content[chosen_language].writing_system;
+    let menu_item_capacity = text_content[chosen_language].pause.len()
+        + text_content[chosen_language].settings.len()
+        + text_content[chosen_language].game_set.len()
+        + text_content[chosen_language].audio.len()
+        + text_content[chosen_language].graphics.len();
 
     let vert = readfs("shaders/vert");
     let frag = readfs("shaders/frag");
@@ -193,6 +194,38 @@ pub fn initialize() -> GameSession {
         matt,
         "assets/comicmonoinv.png",
         "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`?!% ",
+        MeshUsage::PostPass,
+    ));
+
+    let mut textcyr = Vec::new();
+    for i in 0..4 {
+        let t = UItext::new_from_file(
+            &mut eng,
+            matt2,
+            "assets/comiccyrinv.png",
+            "AaBbVvGgDdEe[]JjZzIiYyKkLlMmNnOoPpRrSsTtUuFfHhXxCc{}/*`~=@#$%^&()'0123456789,.;:'+-<>_?! ",
+            MeshUsage::PostPass,
+        );
+        textcyr.push(t);
+    }
+
+    let mut menu_textcyr = Vec::new();
+    for _ in 0..30 {
+        let t = UItext::new_from_file(
+            &mut eng,
+            matt,
+            "assets/comiccyrinv.png",
+            "AaBbVvGgDdEe[]JjZzIiYyKkLlMmNnOoPpRrSsTtUuFfHhXxCc{}/*`~=@#$%^&()'0123456789,.;:'+-<>_?! ",
+            MeshUsage::PostPass,
+        );
+        menu_textcyr.push(t);
+    }
+
+    textcyr.push(UItext::new_from_file(
+        &mut eng,
+        matt,
+        "assets/comiccyrinv.png",
+        "AaBbVvGgDdEe[]JjZzIiYyKkLlMmNnOoPpRrSsTtUuFfHhXxCc{}/*`~=@#$%^&()'0123456789,.;:'+-<>_?! ",
         MeshUsage::PostPass,
     ));
 
@@ -476,8 +509,8 @@ pub fn initialize() -> GameSession {
         ltviewport,
         ltsviewport,
         fpscnt,
-        text,
-        menu_text,
+        text: vec![text, textcyr],
+        menu_text: vec![menu_text, menu_textcyr],
         keyimg,
         white_background: wbg,
         black_background: bbg,
@@ -572,6 +605,7 @@ pub fn initialize() -> GameSession {
         action_list: [None, None, None, None, None],
         active_action: None,
         chosen_language,
+        writing_system,
         text_content,
         game_state: crate::game::GameState::InGame,
         resize_cnt: 0,

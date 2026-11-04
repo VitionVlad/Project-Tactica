@@ -46,7 +46,7 @@ pub fn handle_gom(session: &mut GameSession){
         session.fpscnt.exec(&mut session.eng, " ");
     }
 
-    for text in &mut session.text {
+    for text in &mut session.text[session.writing_system as usize] {
         text.draw = false;
         text.exec(&mut session.eng, " ");
     }
@@ -76,37 +76,37 @@ pub fn handle_gom(session: &mut GameSession){
     session.menu_background[0].object.mesh.ubo[55] = session.frame_count as f32;
     session.menu_background[0].exec(&mut session.eng);
 
-    session.menu_text[0].size.x = 40.0 * session.ui_scale;
-    session.menu_text[0].size.y = 80.0 * session.ui_scale;
-    session.menu_text[0].pos.x = session.menu_background[0].object.physic_object.pos.x + 30.0;
-    session.menu_text[0].pos.y = session.eng.render.resolution_y as f32 * 0.2;
-    session.menu_text[0].pos.z = 0.7;
-    session.menu_text[0].draw = true;
-    session.menu_text[0].signal = false;
-    session.menu_text[0].per_symbol = false;
-    session.menu_text[0].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-    session.menu_text[0].exec(&mut session.eng, &session.text_content.game_over[0]);
+    session.menu_text[session.writing_system as usize][0].size.x = 40.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][0].size.y = 80.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][0].pos.x = session.menu_background[0].object.physic_object.pos.x + 30.0;
+    session.menu_text[session.writing_system as usize][0].pos.y = session.eng.render.resolution_y as f32 * 0.2;
+    session.menu_text[session.writing_system as usize][0].pos.z = 0.7;
+    session.menu_text[session.writing_system as usize][0].draw = true;
+    session.menu_text[session.writing_system as usize][0].signal = false;
+    session.menu_text[session.writing_system as usize][0].per_symbol = false;
+    session.menu_text[session.writing_system as usize][0].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
+    session.menu_text[session.writing_system as usize][0].exec(&mut session.eng, &session.text_content[session.chosen_language].game_over[0]);
 
-    session.black_background[0].object.physic_object.scale.x = session.menu_text[0].size.x*(session.text_content.game_over[0].len() as f32)+15.0;
-    session.black_background[0].object.physic_object.scale.y = session.menu_text[0].size.y+15.0;
-    session.black_background[0].object.physic_object.pos.x = session.menu_text[0].pos.x-7.5;
-    session.black_background[0].object.physic_object.pos.y = session.menu_text[0].pos.y-7.5;
+    session.black_background[0].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][0].size.x*(session.text_content[session.chosen_language].game_over[0].len() as f32)+15.0;
+    session.black_background[0].object.physic_object.scale.y = session.menu_text[session.writing_system as usize][0].size.y+15.0;
+    session.black_background[0].object.physic_object.pos.x = session.menu_text[session.writing_system as usize][0].pos.x-7.5;
+    session.black_background[0].object.physic_object.pos.y = session.menu_text[session.writing_system as usize][0].pos.y-7.5;
     session.black_background[0].object.physic_object.pos.z = 0.71;
     session.black_background[0].object.draw = true;
     session.black_background[0].object.physic_object.rot = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
     session.black_background[0].exec(&mut session.eng);
 
-    session.menu_text[1].size.x = 20.0 * session.ui_scale;
-    session.menu_text[1].size.y = 40.0 * session.ui_scale;
-    session.menu_text[1].pos.x = session.menu_background[0].object.physic_object.pos.x + 30.0;
-    session.menu_text[1].pos.y = session.eng.render.resolution_y as f32 * 0.4 + session.menu_text[1].size.y + 30.0;
-    session.menu_text[1].pos.z = 0.7;
-    session.menu_text[1].draw = true;
-    session.menu_text[1].signal = true;
-    session.menu_text[1].per_symbol = false;
-    session.menu_text[1].implicit_on = false;
-    session.menu_text[1].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-    if session.menu_text[1].exec(&mut session.eng, &session.text_content.game_over[1]) && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+    session.menu_text[session.writing_system as usize][1].size.x = 20.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][1].size.y = 40.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][1].pos.x = session.menu_background[0].object.physic_object.pos.x + 30.0;
+    session.menu_text[session.writing_system as usize][1].pos.y = session.eng.render.resolution_y as f32 * 0.4 + session.menu_text[session.writing_system as usize][1].size.y + 30.0;
+    session.menu_text[session.writing_system as usize][1].pos.z = 0.7;
+    session.menu_text[session.writing_system as usize][1].draw = true;
+    session.menu_text[session.writing_system as usize][1].signal = true;
+    session.menu_text[session.writing_system as usize][1].per_symbol = false;
+    session.menu_text[session.writing_system as usize][1].implicit_on = false;
+    session.menu_text[session.writing_system as usize][1].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
+    if session.menu_text[session.writing_system as usize][1].exec(&mut session.eng, &session.text_content[session.chosen_language].game_over[1]) && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
         session.input_type = InputType::Touchscreen;
         session.action_cooldown = 0.25;
         //session.game_state = super::GameState::InGame;
@@ -114,10 +114,10 @@ pub fn handle_gom(session: &mut GameSession){
         session.returning_to_game = true;
     }
 
-    session.black_background[1].object.physic_object.scale.x = session.menu_text[1].size.x*(session.text_content.game_over[1].len() as f32)+15.0;
-    session.black_background[1].object.physic_object.scale.y = session.menu_text[1].size.y+15.0;
-    session.black_background[1].object.physic_object.pos.x = session.menu_text[1].pos.x-7.5;
-    session.black_background[1].object.physic_object.pos.y = session.menu_text[1].pos.y-7.5;
+    session.black_background[1].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][1].size.x*(session.text_content[session.chosen_language].game_over[1].len() as f32)+15.0;
+    session.black_background[1].object.physic_object.scale.y = session.menu_text[session.writing_system as usize][1].size.y+15.0;
+    session.black_background[1].object.physic_object.pos.x = session.menu_text[session.writing_system as usize][1].pos.x-7.5;
+    session.black_background[1].object.physic_object.pos.y = session.menu_text[session.writing_system as usize][1].pos.y-7.5;
     session.black_background[1].object.physic_object.pos.z = 0.71;
     session.black_background[1].object.draw = true;
     session.black_background[1].object.physic_object.rot = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();

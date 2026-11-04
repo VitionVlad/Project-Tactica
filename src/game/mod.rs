@@ -28,6 +28,12 @@ pub fn smooth_value_towards(
     value + difference * step_factor
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WritingSystem{
+    Latin = 0,
+    Cyrillic = 1,
+}
+
 #[derive(Clone, Copy)]
 pub struct Pivot {
     pub id: usize,
@@ -145,6 +151,8 @@ pub enum GameState{
 }
 
 pub struct TextContent{
+    pub language_name: String,
+    pub writing_system: WritingSystem,
     pub tbt_ui: Vec<String>,
     pub pause: Vec<String>,
     pub main_menu: Vec<String>,
@@ -156,6 +164,22 @@ pub struct TextContent{
 }
 
 impl TextContent {
+    fn parse_writing_system(node: &JsonF, language_name: &str) -> Result<WritingSystem, String> {
+        if node.node_type != NodeType::String {
+            return Err(format!(
+                "writing_system is not a string for language {language_name}"
+            ));
+        }
+
+        match node.strval.as_str() {
+            "Latin" => Ok(WritingSystem::Latin),
+            "Cyrillic" => Ok(WritingSystem::Cyrillic),
+            writing_system => Err(format!(
+                "unsupported writing system {writing_system} for language {language_name}"
+            )),
+        }
+    }
+
     fn parse_string_list(node: &JsonF, field_name: &str, language_name: &str) -> Result<Vec<String>, String> {
         if node.node_type != NodeType::Other {
             return Err(format!(
@@ -182,6 +206,17 @@ impl TextContent {
             .other_nodes
             .get(language_index)
             .ok_or_else(|| format!("language index {language_index} is missing from text.json"))?;
+        let writing_system = language
+            .other_nodes
+            .iter()
+            .find(|node| node.name == "writing_system")
+            .ok_or_else(|| {
+                format!(
+                    "writing_system is missing for language {}",
+                    language.name
+                )
+            })
+            .and_then(|node| Self::parse_writing_system(node, &language.name))?;
         let parse_list = |field_name: &str| {
             let node = language
                 .other_nodes
@@ -197,6 +232,17 @@ impl TextContent {
         };
 
         Ok(Self {
+            language_name: language
+                .other_nodes
+                .iter()
+                .find(|node| node.name == "language_name")
+                .filter(|node| node.node_type == NodeType::String)
+                .ok_or_else(|| {
+                    format!("language_name is missing for language {}", language.name)
+                })?
+                .strval
+                .clone(),
+            writing_system,
             tbt_ui: parse_list("tbt_ui")?,
             pause: parse_list("pause")?,
             main_menu: parse_list("main_menu")?,
@@ -206,6 +252,73 @@ impl TextContent {
             graphics: parse_list("graphics")?,
             game_over: parse_list("game_over")?,
         })
+    }
+
+    pub fn all_from_json(json: &JsonF) -> Result<Vec<Self>, String> {
+        if json.other_nodes.is_empty() {
+            return Err("text.json does not contain any languages".to_string());
+        }
+
+        json.other_nodes
+            .iter()
+            .enumerate()
+            .map(|(language_index, _)| Self::from_json(json, language_index))
+            .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{TextContent, WritingSystem};
+    use crate::engine::loader::jsonparser::JsonF;
+
+    #[test]
+    fn loads_languages_in_json_order() {
+        let json = JsonF::from_text(
+            r#"{
+                "en": {
+                    "language_name": "English",
+                    "writing_system": "Latin",
+                    "tbt_ui": ["Step"],
+                    "pause": ["Continue"],
+                    "main_menu": ["Start"],
+                    "settings": ["Settings"],
+                    "game_set": ["Language"],
+                    "audio": ["Volume"],
+                    "graphics": ["Lighting"],
+                    "game_over": ["Retry"]
+                },
+                "ru": {
+                    "language_name": "Russian",
+                    "writing_system": "Cyrillic",
+                    "tbt_ui": ["Step"],
+                    "pause": ["Continue"],
+                    "main_menu": ["Start"],
+                    "settings": ["Settings"],
+                    "game_set": ["Language"],
+                    "audio": ["Volume"],
+                    "graphics": ["Lighting"],
+                    "game_over": ["Retry"]
+                }
+            }"#,
+        );
+
+        let languages = TextContent::all_from_json(&json).unwrap();
+        assert_eq!(languages.len(), 2);
+        assert_eq!(languages[0].language_name, "English");
+        assert_eq!(languages[0].writing_system, WritingSystem::Latin);
+        assert_eq!(languages[1].language_name, "Russian");
+        assert_eq!(languages[1].writing_system, WritingSystem::Cyrillic);
+    }
+
+    #[test]
+    fn loads_every_language_from_text_asset() {
+        let json = JsonF::load_from_file("assets/text.json");
+        let languages = TextContent::all_from_json(&json).unwrap();
+
+        assert_eq!(languages.len(), 2);
+        assert_eq!(languages[0].language_name, "English");
+        assert!(!languages[1].language_name.is_empty());
     }
 }
 
@@ -217,8 +330,8 @@ pub struct GameSession {
     pub ltviewport: UIplane,
     pub ltsviewport: UIplane,
     pub fpscnt: UItext,
-    pub text: Vec<UItext>,
-    pub menu_text: Vec<UItext>,
+    pub text: Vec<Vec<UItext>>,
+    pub menu_text: Vec<Vec<UItext>>,
     pub keyimg: Vec<UItext>,
     pub speech_bubble_background: Vec<UIplane>,
     pub white_background: Vec<UIplane>,
@@ -247,7 +360,8 @@ pub struct GameSession {
     pub action_list: [Option<Action>; 5],
     pub active_action: Option<Action>,
     pub chosen_language: usize,
-    pub text_content: TextContent,
+    pub writing_system: WritingSystem,
+    pub text_content: Vec<TextContent>,
     pub game_state: GameState,
     pub resize_cnt: u32,
     pub tredr: f32,
