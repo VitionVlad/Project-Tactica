@@ -194,6 +194,10 @@ void main() {
 
     fincolor = mix(fincolor, vec3(1.0), mi.rtinfo.y);
 
+    //if(mi.rtinfo.y > 2.0){
+    //    fincolor = vec3(1.0, 1.0, 1.0);
+    //}
+
     outColor = vec4(fincolor, 1.0);
     //outColor = vec4(SampleRT(uv), 1.0);
 }

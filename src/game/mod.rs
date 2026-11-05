@@ -5,6 +5,7 @@ pub mod control;
 pub mod game_over;
 pub mod initialization;
 pub mod pause;
+pub mod mainmenu;
 pub mod rest;
 pub mod settings;
 pub mod tbt;

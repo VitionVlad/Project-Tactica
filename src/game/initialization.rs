@@ -501,6 +501,19 @@ pub fn initialize() -> GameSession {
     speakers[5].play = true;
     speakers[5].volume = 0.1;
 
+    let pivot_position = scn.objects[pivot.id].physic_object.pos;
+    eng.cameras[0].physic_object.pos.x = pivot_position.x - 5.0;
+    eng.cameras[0].physic_object.pos.y = pivot_position.y + 7.5;
+    eng.cameras[0].physic_object.pos.z = pivot_position.z + 10.0;
+    eng.cameras[0].look_at(
+        pivot_position
+            + Vec3 {
+                x: 0.0,
+                y: 0.5,
+                z: 0.0,
+            },
+    );
+
     let mut session = GameSession {
         show_dbg_stat: false,
         eng,
@@ -607,9 +620,9 @@ pub fn initialize() -> GameSession {
         chosen_language,
         writing_system,
         text_content,
-        game_state: crate::game::GameState::InGame,
+        game_state: crate::game::GameState::MainMenu,
         resize_cnt: 0,
-        tredr: 0.0,
+        tredr: 0.1,
         exit: false,
         gamepadsel: 0,
         submenu: crate::game::SubMenu::Main,
