@@ -3,6 +3,7 @@
 
 pub mod control;
 pub mod game_over;
+pub mod demo_end;
 pub mod initialization;
 pub mod pause;
 pub mod mainmenu;
@@ -27,6 +28,36 @@ pub fn smooth_value_towards(
 
     let step_factor = (engine.logic_frametime * speed_modifier).clamp(0.0, 1.0);
     value + difference * step_factor
+}
+
+fn copy_text_layout(source: &[UItext], target: &mut [UItext]) {
+    for (source, target) in source.iter().zip(target) {
+        target.pos = source.pos;
+        target.size = source.size;
+        target.rotation = source.rotation;
+    }
+}
+
+pub(super) fn sync_writing_system_layout(
+    session: &mut GameSession,
+    previous_writing_system: usize,
+    next_writing_system: usize,
+) {
+    if previous_writing_system == next_writing_system {
+        return;
+    }
+
+    if previous_writing_system < next_writing_system {
+        let (previous, next) = session.text.split_at_mut(next_writing_system);
+        copy_text_layout(&previous[previous_writing_system], &mut next[0]);
+        let (previous, next) = session.menu_text.split_at_mut(next_writing_system);
+        copy_text_layout(&previous[previous_writing_system], &mut next[0]);
+    } else {
+        let (next, previous) = session.text.split_at_mut(previous_writing_system);
+        copy_text_layout(&previous[0], &mut next[next_writing_system]);
+        let (next, previous) = session.menu_text.split_at_mut(previous_writing_system);
+        copy_text_layout(&previous[0], &mut next[next_writing_system]);
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -149,6 +180,7 @@ pub enum GameState{
     Paused,
     Gameover,
     MainMenu,
+    DemoEnd,
 }
 
 pub struct TextContent{
@@ -162,6 +194,7 @@ pub struct TextContent{
     pub audio: Vec<String>,
     pub graphics: Vec<String>,
     pub game_over: Vec<String>,
+    pub demo_end: Vec<String>,
 }
 
 impl TextContent {
@@ -252,6 +285,7 @@ impl TextContent {
             audio: parse_list("audio")?,
             graphics: parse_list("graphics")?,
             game_over: parse_list("game_over")?,
+            demo_end: parse_list("demo_end")?,
         })
     }
 
@@ -287,7 +321,8 @@ mod tests {
                     "game_set": ["Language"],
                     "audio": ["Volume"],
                     "graphics": ["Lighting"],
-                    "game_over": ["Retry"]
+                    "game_over": ["Retry"],
+                    "demo_end": ["Demo ended", "Start"]
                 },
                 "ru": {
                     "language_name": "Russian",
@@ -299,7 +334,8 @@ mod tests {
                     "game_set": ["Language"],
                     "audio": ["Volume"],
                     "graphics": ["Lighting"],
-                    "game_over": ["Retry"]
+                    "game_over": ["Retry"],
+                    "demo_end": ["Demo ended", "Start"]
                 }
             }"#,
         );
@@ -308,8 +344,10 @@ mod tests {
         assert_eq!(languages.len(), 2);
         assert_eq!(languages[0].language_name, "English");
         assert_eq!(languages[0].writing_system, WritingSystem::Latin);
+        assert_eq!(languages[0].demo_end, ["Demo ended", "Start"]);
         assert_eq!(languages[1].language_name, "Russian");
         assert_eq!(languages[1].writing_system, WritingSystem::Cyrillic);
+        assert_eq!(languages[1].demo_end, ["Demo ended", "Start"]);
     }
 
     #[test]
@@ -319,6 +357,7 @@ mod tests {
 
         assert_eq!(languages.len(), 2);
         assert_eq!(languages[0].language_name, "English");
+        assert_eq!(languages[0].demo_end, [" Demo ended! ", " New game "]);
         assert!(!languages[1].language_name.is_empty());
     }
 }
@@ -373,6 +412,7 @@ pub struct GameSession {
     pub current_time: f32,
     pub tmcoef: f32,
     pub bwgcoef: f32,
+    pub x_max_lv: f32,
 }
 
 pub fn do_paper_sound(session: &mut GameSession) {

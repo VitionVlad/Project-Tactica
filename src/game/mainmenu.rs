@@ -3,7 +3,7 @@ use crate::game::SubMenu::{self, Audio, Game, Graphics, Main, Settings};
 use crate::game::{do_paper_sound, do_paper2_sound};
 use crate::game::{InputType, settings::save_settings, smooth_value_towards};
 
-use super::GameSession;
+use super::{GameSession, sync_writing_system_layout};
 
 pub fn updatesubemnumenu(session: &mut GameSession){
     for i in 0..session.text_content[session.chosen_language].pause.len(){
@@ -833,4 +833,9 @@ fn select_next_language(session: &mut GameSession) {
 
     session.chosen_language = (session.chosen_language + 1) % session.text_content.len();
     session.writing_system = session.text_content[session.chosen_language].writing_system;
+    sync_writing_system_layout(
+        session,
+        previous_writing_system,
+        session.writing_system as usize,
+    );
 }

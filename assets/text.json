@@ -52,6 +52,10 @@
         "game_over": [
             " Too suspicious! ",
             " Retry "
+        ],
+        "demo_end": [
+            " Demo ended! ",
+            " New game "
         ]
     },
     "ru": {
@@ -107,6 +111,10 @@
         "game_over": [
             " Sli}kom podozritel$no! ",
             " Povtorit$ "
+        ],
+        "demo_end": [
+            " Demo zakonceno! ",
+            " Nova' igra "
         ]
     }
 }

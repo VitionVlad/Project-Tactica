@@ -396,6 +396,8 @@ pub fn initialize() -> GameSession {
     let mut enemies = Vec::new();
     let mut physics_objects = Vec::new();
 
+    let mut x_max_lv = 0.0;
+
     for i in 0..scn.objects.len() {
         let name = scn.objects[i].name.clone();
         if name.contains("pivot") {
@@ -456,6 +458,9 @@ pub fn initialize() -> GameSession {
         if name.contains("cover_") {
             scn.objects[i].mesh.ubo[52] = 1.0;
         }
+        if name.contains("ext_") {
+            x_max_lv = scn.objects[i].physic_object.pos.x;
+        }
     }
 
     eng.render.shadow_map_resolution = 512;
@@ -514,7 +519,7 @@ pub fn initialize() -> GameSession {
             },
     );
 
-    viewport.object.physic_object.pos.x = eng.render.resolution_x as f32 * 5.0;
+    viewport.object.physic_object.pos.x = eng.render.resolution_x as f32 * 4.1;
 
     let mut session = GameSession {
         show_dbg_stat: false,
@@ -632,6 +637,7 @@ pub fn initialize() -> GameSession {
         current_time: 0.0,
         tmcoef: 1.0,
         bwgcoef: 1.0,
+        x_max_lv,
     };
 
     load_settings(&mut session);

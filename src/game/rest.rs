@@ -1,8 +1,6 @@
 use crate::{
-    engine::math::{vec3::Vec3, vec4::Vec4},
-    game::{
-        Action::{Skip, Step, StepWithElemination},
-        Awarness,
+    engine::math::{vec3::Vec3, vec4::Vec4}, game::{
+        Action::{Skip, Step, StepWithElemination}, Awarness, GameState,
     },
 };
 
@@ -787,4 +785,8 @@ pub fn update(session: &mut GameSession) {
     session.viewport.object.mesh.ubo[53] = 0.0;
     session.viewport.object.draw = true;
     session.viewport.exec(&mut session.eng);
+
+    if session.scn.objects[session.pivot.id].physic_object.pos.x >= session.x_max_lv - 0.5{
+        session.game_state = GameState::DemoEnd;
+    }
 }

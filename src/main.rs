@@ -3,7 +3,7 @@ mod game;
 
 use game::{control, game_over, initialization, pause, rest, tbt};
 
-use crate::game::{mainmenu, settings::save_settings};
+use crate::game::{demo_end, mainmenu, settings::save_settings};
 
 fn main() {
     let mut session = initialization::initialize();
@@ -78,6 +78,58 @@ fn main() {
                     session.tredr -= session.eng.logic_frametime;
                 }
                 game_over::handle_gom(&mut session);
+            },
+            game::GameState::DemoEnd => {
+                if session.resize_cnt != session.eng.render.resize_count{
+                    session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                    session.resize_cnt = session.eng.render.resize_count;
+                    save_settings(&session);
+                }
+                session.eng.render.active_renderpasses = [false, false, false, true];
+                if session.tredr > 0.0{
+                    session.eng.render.active_renderpasses = [true, true, true, true];
+                    session.scn.exec(&mut session.eng);
+                    match session.use_rt_lighting{
+                        true => {
+                            session.ltviewport.object.physic_object.scale.x = session.eng.render.resolution_x as f32 * session.eng.render.resolution_scale;
+                            session.ltviewport.object.physic_object.scale.y = session.eng.render.resolution_y as f32 * session.eng.render.resolution_scale;
+                            session.ltviewport.object.physic_object.pos.z = 0.9;
+                            session.ltviewport.object.mesh.ubo[48] = session.frame_count as f32;
+                            session.ltviewport.object.mesh.ubo[49] = session.scn.voxel_representation.size[0] as f32;
+                            session.ltviewport.object.mesh.ubo[50] = session.scn.voxel_representation.size[1] as f32;
+                            session.ltviewport.object.mesh.ubo[51] = session.scn.voxel_representation.size[2] as f32;
+                            session.ltviewport.object.mesh.ubo[52] = session.scn.voxel_representation.origin.x as f32;
+                            session.ltviewport.object.mesh.ubo[53] = session.scn.voxel_representation.origin.y as f32;
+                            session.ltviewport.object.mesh.ubo[54] = session.scn.voxel_representation.origin.z as f32;
+                            session.ltviewport.object.mesh.ubo[55] = session.scn.voxel_representation.voxel_size;
+                            session.ltviewport.object.draw = true;  
+                            session.ltviewport.exec(&mut session.eng);
+                        
+                            session.ltsviewport.object.draw = false;
+                            session.ltsviewport.exec(&mut session.eng);
+                        }
+                        false => {
+                            session.ltsviewport.object.physic_object.scale.x = session.eng.render.resolution_x as f32 * session.eng.render.resolution_scale;
+                            session.ltsviewport.object.physic_object.scale.y = session.eng.render.resolution_y as f32 * session.eng.render.resolution_scale;
+                            session.ltsviewport.object.physic_object.pos.z = 0.9;
+                            session.ltsviewport.object.mesh.ubo[48] = session.frame_count as f32;
+                            session.ltsviewport.object.mesh.ubo[49] = session.scn.voxel_representation.size[0] as f32;
+                            session.ltsviewport.object.mesh.ubo[50] = session.scn.voxel_representation.size[1] as f32;
+                            session.ltsviewport.object.mesh.ubo[51] = session.scn.voxel_representation.size[2] as f32;
+                            session.ltsviewport.object.mesh.ubo[52] = session.scn.voxel_representation.origin.x as f32;
+                            session.ltsviewport.object.mesh.ubo[53] = session.scn.voxel_representation.origin.y as f32;
+                            session.ltsviewport.object.mesh.ubo[54] = session.scn.voxel_representation.origin.z as f32;
+                            session.ltsviewport.object.mesh.ubo[55] = session.scn.voxel_representation.voxel_size;
+                            session.ltsviewport.object.draw = true;
+                            session.ltsviewport.exec(&mut session.eng);
+                        
+                            session.ltviewport.object.draw = false;
+                            session.ltviewport.exec(&mut session.eng);
+                        }
+                    }
+                    session.tredr -= session.eng.logic_frametime;
+                }
+                demo_end::handle_demoend(&mut session);
             },
             game::GameState::Paused => {
                 if session.resize_cnt != session.eng.render.resize_count{
