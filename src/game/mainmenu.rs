@@ -487,7 +487,7 @@ pub fn update(session: &mut GameSession) {
 
     session.menu_background[1].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
     session.menu_background[1].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
-    session.menu_background[1].object.physic_object.pos.x = 0.0;
+    session.menu_background[1].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 - 30.0;
     session.menu_background[1].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y;
     session.menu_background[1].object.physic_object.pos.z = 0.99;
     session.menu_background[1].object.draw = true;
@@ -499,7 +499,7 @@ pub fn update(session: &mut GameSession) {
 
     session.menu_background[0].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
     session.menu_background[0].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
-    session.menu_background[0].object.physic_object.pos.x = 0.0;
+    session.menu_background[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 - 30.;
     session.menu_background[0].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y - session.eng.render.resolution_y as f32 - 30.0;
     session.menu_background[0].object.physic_object.pos.z = 0.99;
     session.menu_background[0].object.draw = true;
@@ -570,7 +570,7 @@ pub fn update(session: &mut GameSession) {
         let viewport = &mut session.viewport.object.physic_object;
         viewport.scale.x = session.eng.render.resolution_x as f32;
         viewport.scale.y = session.eng.render.resolution_y as f32;
-        viewport.pos.x = session.eng.render.resolution_x as f32 + 30.0;
+        viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 + 30.0, &session.eng, 2.0);
         match session.submenu {
             Main => {
                 viewport.pos.y = smooth_value_towards(
