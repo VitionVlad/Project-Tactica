@@ -1,6 +1,6 @@
 use crate::engine::{math::vec3::Vec3, physics::physics::PhysicsObject};
 use crate::game::SubMenu::{self, Audio, Game, Graphics, Main, Settings};
-use crate::game::{do_paper_sound, do_paper2_sound};
+use crate::game::{do_paper_sliding_sound, do_paper_sound, do_paper2_sound};
 use crate::game::{InputType, settings::save_settings, smooth_value_towards};
 
 use super::{GameSession, sync_writing_system_layout};
@@ -16,9 +16,12 @@ pub fn updatesubemnumenu(session: &mut GameSession){
         session.menu_text[session.writing_system as usize][i].signal = session.submenu == Main;
         session.menu_text[session.writing_system as usize][i].per_symbol = false;
         session.menu_text[session.writing_system as usize][i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-        if session.menu_text[session.writing_system as usize][i].exec(&mut session.eng, &session.text_content[session.chosen_language].main_menu[i]) && session.submenu == Main && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+        let hovered = session.menu_text[session.writing_system as usize][i].exec(&mut session.eng, &session.text_content[session.chosen_language].main_menu[i]);
+        super::do_paper_writing_sound_on_hover(session, hovered, session.submenu == Main, i);
+        if hovered && session.submenu == Main && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
             match i {
                 0 => {
+                    do_paper_sliding_sound(session);
                     session.returning_to_game = true;
                 }
                 1 => {
@@ -84,7 +87,9 @@ pub fn updatesubemnusettings(session: &mut GameSession){
         session.menu_text[session.writing_system as usize][i].signal = session.submenu == Settings;
         session.menu_text[session.writing_system as usize][i].per_symbol = false;
         session.menu_text[session.writing_system as usize][i].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-        if session.menu_text[session.writing_system as usize][i].exec(&mut session.eng, &session.text_content[session.chosen_language].settings[i-4]) && session.submenu == Settings && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+        let hovered = session.menu_text[session.writing_system as usize][i].exec(&mut session.eng, &session.text_content[session.chosen_language].settings[i-4]);
+        super::do_paper_writing_sound_on_hover(session, hovered, session.submenu == Settings, i);
+        if hovered && session.submenu == Settings && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
             match i {
                 4 => {
                     session.submenu = SubMenu::Game;
@@ -181,7 +186,9 @@ pub fn updatesubemnugame(session: &mut GameSession){
                 }
                 _ => {}
             }
-        if session.menu_text[session.writing_system as usize][i].exec(&mut session.eng, &txt) && session.submenu == Game && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+        let hovered = session.menu_text[session.writing_system as usize][i].exec(&mut session.eng, &txt);
+        super::do_paper_writing_sound_on_hover(session, hovered, session.submenu == Game, i);
+        if hovered && session.submenu == Game && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
             match i {
                 9 => {
                     select_next_language(session);
@@ -268,7 +275,9 @@ pub fn updatesubemnuaudio(session: &mut GameSession){
             txt += &session.eng.audio.vol.to_string();
             txt += " ";
         }
-        if session.menu_text[session.writing_system as usize][i].exec(&mut session.eng, &txt) && session.submenu == Audio && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+        let hovered = session.menu_text[session.writing_system as usize][i].exec(&mut session.eng, &txt);
+        super::do_paper_writing_sound_on_hover(session, hovered, session.submenu == Audio, i);
+        if hovered && session.submenu == Audio && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
             match i {
                 14 => {
                     session.eng.audio.vol = ((session.eng.audio.vol*10.0) as i32 + 1) as f32 / 10.0;
@@ -385,7 +394,9 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                 },
                 _ => {}
             }
-        if session.menu_text[session.writing_system as usize][i].exec(&mut session.eng, &txt) && session.submenu == Graphics && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+        let hovered = session.menu_text[session.writing_system as usize][i].exec(&mut session.eng, &txt);
+        super::do_paper_writing_sound_on_hover(session, hovered, session.submenu == Graphics, i);
+        if hovered && session.submenu == Graphics && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
             match i {
                 17 => {
                     session.use_rt_lighting = !session.use_rt_lighting;
@@ -641,6 +652,7 @@ pub fn handle_input(session: &mut GameSession) {
     if session.action_cooldown <= 0.0 && (start_pressed || session.eng.control.get_gamepad_button_state(session.controller_mappings.abxy[1] as u8)) {
         match session.submenu {
             Main => {
+                do_paper_sliding_sound(session);
                 session.returning_to_game = true;
             }
             Settings => {
@@ -717,7 +729,10 @@ pub fn handle_input(session: &mut GameSession) {
 
 fn activate_gamepad_selection(session: &mut GameSession) {
     match (session.submenu, session.gamepadsel) {
-        (Main, 0) => session.returning_to_game = true,
+        (Main, 0) => {
+            do_paper_sliding_sound(session);
+            session.returning_to_game = true;
+        },
         (Main, 1) => {
             session.submenu = Settings;
             session.gamepadsel = 4;

@@ -1,4 +1,4 @@
-use crate::{engine::{math::vec3::Vec3, physics::physics::PhysicsObject}, game::{InputType, do_paper_sound, smooth_value_towards}};
+use crate::{engine::{math::vec3::Vec3, physics::physics::PhysicsObject}, game::{InputType, do_paper_sliding_sound, do_paper_sound, smooth_value_towards}};
 
 use super::{Awarness, GameSession};
 
@@ -106,7 +106,9 @@ pub fn handle_gom(session: &mut GameSession){
     session.menu_text[session.writing_system as usize][1].per_symbol = false;
     session.menu_text[session.writing_system as usize][1].implicit_on = false;
     session.menu_text[session.writing_system as usize][1].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
-    if session.menu_text[session.writing_system as usize][1].exec(&mut session.eng, &session.text_content[session.chosen_language].game_over[1]) && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
+    let hovered = session.menu_text[session.writing_system as usize][1].exec(&mut session.eng, &session.text_content[session.chosen_language].game_over[1]);
+    super::do_paper_writing_sound_on_hover(session, hovered, true, 1);
+    if hovered && session.eng.control.mousebtn[2] && session.action_cooldown <= 0.0{
         session.input_type = InputType::Touchscreen;
         session.action_cooldown = 0.25;
         //session.game_state = super::GameState::InGame;
@@ -128,6 +130,7 @@ pub fn handle_gom(session: &mut GameSession){
             session.input_type = InputType::Gamepad;
             session.action_cooldown = 0.25;
             do_paper_sound(session);
+            do_paper_sliding_sound(session);
             session.returning_to_game = true;
         }
     }

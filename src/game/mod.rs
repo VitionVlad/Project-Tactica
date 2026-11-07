@@ -175,6 +175,7 @@ pub enum SubMenu {
     Graphics,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum GameState{
     InGame,
     Paused,
@@ -403,6 +404,8 @@ pub struct GameSession {
     pub writing_system: WritingSystem,
     pub text_content: Vec<TextContent>,
     pub game_state: GameState,
+    pub last_menu_hover: Option<(GameState, SubMenu, usize)>,
+    pub last_menu_hover_frame: Option<u32>,
     pub resize_cnt: u32,
     pub tredr: f32,
     pub exit: bool,
@@ -423,6 +426,38 @@ pub fn do_paper_sound(session: &mut GameSession) {
 pub fn do_paper2_sound(session: &mut GameSession) {
     session.speakers[7].move_sound_cursor(0.0);
     session.speakers[7].play = true;
+}
+
+pub fn do_paper_writing_sound(session: &mut GameSession) {
+    session.speakers[8].move_sound_cursor(0.0);
+    session.speakers[8].play = true;
+}
+
+pub fn do_paper_writing_sound_on_hover(
+    session: &mut GameSession,
+    hovered: bool,
+    active: bool,
+    item_index: usize,
+) {
+    if !hovered || !active || session.eng.control.mousebtn[2] {
+        return;
+    }
+
+    let hover = (session.game_state, session.submenu, item_index);
+    let entered_hover = session.last_menu_hover != Some(hover)
+        || session.last_menu_hover_frame.map(|frame| frame.wrapping_add(1))
+            != Some(session.frame_count);
+    session.last_menu_hover = Some(hover);
+    session.last_menu_hover_frame = Some(session.frame_count);
+
+    if entered_hover {
+        do_paper_writing_sound(session);
+    }
+}
+
+pub fn do_paper_sliding_sound(session: &mut GameSession) {
+    session.speakers[9].move_sound_cursor(0.0);
+    session.speakers[9].play = true;
 }
 
 pub fn tile_test(

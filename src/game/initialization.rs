@@ -484,6 +484,8 @@ pub fn initialize() -> GameSession {
         "assets/audio/cityambient.mp3",
         "assets/audio/shutter.mp3",
         "assets/audio/paper2.mp3",
+        "assets/audio/paper_writing.mp3",
+        "assets/audio/paper_slide.mp3",
     ];
 
     let mut speakers = Vec::new();
@@ -505,6 +507,11 @@ pub fn initialize() -> GameSession {
     speakers[5].loopsound = true;
     speakers[5].play = true;
     speakers[5].volume = 0.1;
+
+    speakers[1].volume = 0.5;
+    speakers[7].volume = 0.5;
+    speakers[8].volume = 0.5;
+    speakers[9].volume = 1.5;
 
     let pivot_position = scn.objects[pivot.id].physic_object.pos;
     eng.cameras[0].physic_object.pos.x = pivot_position.x - 5.0;
@@ -628,6 +635,8 @@ pub fn initialize() -> GameSession {
         writing_system,
         text_content,
         game_state: crate::game::GameState::MainMenu,
+        last_menu_hover: None,
+        last_menu_hover_frame: None,
         resize_cnt: 0,
         tredr: 0.1,
         exit: false,

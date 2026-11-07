@@ -3,7 +3,7 @@ mod game;
 
 use game::{control, game_over, initialization, pause, rest, tbt};
 
-use crate::game::{demo_end, mainmenu, settings::save_settings};
+use crate::game::{GameState, demo_end, mainmenu, settings::save_settings};
 
 fn main() {
     let mut session = initialization::initialize();
@@ -12,6 +12,10 @@ fn main() {
         if session.action_cooldown > 0.0 {
             session.action_cooldown -= session.eng.logic_frametime;
         }
+
+        let previous_game_state = session.game_state;
+        let previous_submenu = session.submenu;
+        let previous_gamepad_selection = session.gamepadsel;
 
         match session.game_state{
             game::GameState::InGame => {
@@ -237,6 +241,15 @@ fn main() {
                 mainmenu::update(&mut session);
                 mainmenu::handle_input(&mut session);
             },
+        }
+
+        if (previous_game_state != session.game_state && session.game_state != GameState::InGame) || previous_submenu != session.submenu {
+            game::do_paper_sliding_sound(&mut session);
+        }
+        if previous_gamepad_selection != session.gamepadsel
+            && session.input_type == game::InputType::Gamepad
+        {
+            game::do_paper_writing_sound(&mut session);
         }
 
         session.frame_count += 1;
