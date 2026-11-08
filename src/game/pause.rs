@@ -6,6 +6,28 @@ use crate::game::{InputType, settings::save_settings, smooth_value_towards};
 use super::{GameSession, sync_writing_system_layout};
 
 pub fn updatesubemnumenu(session: &mut GameSession){
+    session.lgtext.size.x = 50.0 * session.ui_scale;
+    session.lgtext.size.y = 100.0 * session.ui_scale;
+    session.lgtext.pos.x = session.menu_text[session.writing_system as usize][0].pos.x;
+    session.lgtext.pos.y = session.menu_text[session.writing_system as usize][0].pos.y - 250.0;
+    session.lgtext.pos.z = 0.7;
+    session.lgtext.draw = true;
+    session.lgtext.signal = false;
+    session.lgtext.implicit_on = false;
+    session.lgtext.per_symbol = false;
+    session.lgtext.new_line_symbol = b'|';
+    session.lgtext.rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
+    session.lgtext.exec(&mut session.eng, "Project|Tatica!");
+
+    session.black_background[23].object.physic_object.scale.x = session.lgtext.size.x*7.0 + 15.0;
+    session.black_background[23].object.physic_object.scale.y = session.lgtext.size.y*2.0 + 15.0;
+    session.black_background[23].object.physic_object.pos.x = session.lgtext.pos.x - 7.5;
+    session.black_background[23].object.physic_object.pos.y = session.lgtext.pos.y - 7.5;
+    session.black_background[23].object.physic_object.pos.z = 0.71;
+    session.black_background[23].object.draw = true;
+    session.black_background[23].object.physic_object.rot = session.lgtext.rotation;
+    session.black_background[23].exec(&mut session.eng);
+
     for i in 0..session.text_content[session.chosen_language].pause.len(){
         session.menu_text[session.writing_system as usize][i].size.x = 25.0 * session.ui_scale;
         session.menu_text[session.writing_system as usize][i].size.y = 50.0 * session.ui_scale;
@@ -496,7 +518,7 @@ pub fn update(session: &mut GameSession) {
         sign.exec(&mut session.eng);
     }
 
-    session.menu_background[0].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
+    session.menu_background[0].object.physic_object.scale.x = session.eng.render.resolution_x as f32 / 2.0 - 30.0;
     session.menu_background[0].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
     session.menu_background[0].object.physic_object.pos.x = 0.0;
     session.menu_background[0].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y;

@@ -62,6 +62,7 @@ pub fn handle_demoend(session: &mut GameSession){
     session.menu_text[session.writing_system as usize][0].pos.z = 0.7;
     session.menu_text[session.writing_system as usize][0].draw = true;
     session.menu_text[session.writing_system as usize][0].signal = false;
+    session.menu_text[session.writing_system as usize][0].implicit_on = false;
     session.menu_text[session.writing_system as usize][0].per_symbol = false;
     session.menu_text[session.writing_system as usize][0].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
     session.menu_text[session.writing_system as usize][0].exec(&mut session.eng, &session.text_content[session.chosen_language].demo_end[0]);

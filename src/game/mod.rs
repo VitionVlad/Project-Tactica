@@ -416,6 +416,7 @@ pub struct GameSession {
     pub tmcoef: f32,
     pub bwgcoef: f32,
     pub x_max_lv: f32,
+    pub lgtext: UItext,
 }
 
 pub fn do_paper_sound(session: &mut GameSession) {

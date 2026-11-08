@@ -165,6 +165,14 @@ pub fn initialize() -> GameSession {
         MeshUsage::PostPass,
     );
 
+    let lgtext = UItext::new_from_file(
+        &mut eng,
+        matt,
+        "assets/comicmonoinv.png",
+        "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789,.;:'+-<>_[]{}/*`?!% ",
+        MeshUsage::PostPass,
+    );
+
     let mut text = Vec::new();
     for i in 0..4 {
         let t = UItext::new_from_file(
@@ -511,7 +519,8 @@ pub fn initialize() -> GameSession {
     speakers[1].volume = 0.5;
     speakers[7].volume = 0.5;
     speakers[8].volume = 0.5;
-    speakers[9].volume = 1.5;
+    speakers[9].volume = 2.5;
+    speakers[9].play = true;
 
     let pivot_position = scn.objects[pivot.id].physic_object.pos;
     eng.cameras[0].physic_object.pos.x = pivot_position.x - 5.0;
@@ -647,6 +656,7 @@ pub fn initialize() -> GameSession {
         tmcoef: 1.0,
         bwgcoef: 1.0,
         x_max_lv,
+        lgtext,
     };
 
     load_settings(&mut session);
