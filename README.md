@@ -8,7 +8,7 @@ This demo consists of one simple playable level. Since the game has tactical con
 
 I classify it as a **tactical turn-based strategy**, something similar to *Mario + Rabbids* or *Persona 5 Tactica*. Those games are my biggest source of inspiration, even though my project differs from them quite a lot in mechanics and game flow.
 
-You can either download a compiled build from the [Releases](#) page, or take the source code and compile it yourself (see [Building](#building)).
+You can either download a compiled build from the [Releases](#) page, or take the source code and compile it yourself.
 
 # Gameplay
 
@@ -42,10 +42,6 @@ GPU requirements aren't very high. The demo runs at about **30 FPS at 0.5 resolu
 - If your CPU doesn't support AVX, you can compile the demo from source for your target CPU.
 - Targeting **AVX2** or **AVX512** may give even more performance through accelerated matrix multiplication.
 
-# Building
-
-*TODO: build instructions.*
-
 # Art style
 
 The game is heavily stylized, with a comic look inspired by *Persona*, *XIII* and a bit of *Max Payne*.
@@ -63,6 +59,20 @@ As with my other projects, the setting is based on real events, and here it's my
 - West German intelligence already knows that East Germany is shipping military aid, but not to whom. They waited for Soviet military advisors to visit East Germany, and now Junge has to get into East Berlin, to the place where East German and Soviet officials meet, and gather intel on those shipments.
 - The story is short, just like the final game, and takes place over a few hours on the eve of the Yom Kippur War.
 
-## Status
+# Builds
+
+# Build 1
+
+This is the first public build. Here is what works in it:
+
+- **Game logic is basically done.** You can complete the demo without any issues.
+- **The first level is done.**
+- **Most of the UI is done and functional.**
+- **Settings are saved without problems.** The demo is too short to have savepoints, so there are no saves.
+- **Controls:** PC keyboard and mouse, plus complete gamepad support.
+- **Full Russian translation.** For now it mostly serves as a test of the Cyrillic integration.
+- **Rendering looks finished.** I expect it to stay mostly unmodified in the future.
+
+# Status
 
 This demo is still in development. A lot has been done and a lot more is still to come, so stay tuned: I'll share updates and new builds here.
