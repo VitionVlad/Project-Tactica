@@ -10,8 +10,8 @@ enum {
     EUCLID_RENDER_PASS_COUNT = 4
 };
 
-float get_frametime(uint32_t eh);
-float get_gpuframetime(uint32_t eh);
+double get_frametime(uint32_t eh);
+double get_gpuframetime(uint32_t eh);
 uint32_t get_gpufps(uint32_t eh);
 uint32_t get_resx(uint32_t eh);
 uint32_t get_resy(uint32_t eh);

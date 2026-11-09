@@ -212,7 +212,7 @@ impl PhysicsObject {
         return p1 >= v1 && p1 <= v2;
     }
     #[allow(dead_code)]
-    pub fn exec(&mut self, logic_frametime: f32) {
+    pub fn exec(&mut self, logic_frametime: f64) {
         if !self.is_static {
             self.hit = false;
             self.oldpos = self.pos;
@@ -223,36 +223,48 @@ impl PhysicsObject {
                 self.acceleration.y -= GRAVITATIONAL_ACCELERATION;
             }
 
-            let decay = self.air_friction.powf(logic_frametime);
+            let decay = (self.air_friction as f64).powf(logic_frametime);
 
             if !self.pin_pos {
-                self.speed.x += self.acceleration.x * logic_frametime;
-                self.speed.y += self.acceleration.y * logic_frametime;
-                self.speed.z += self.acceleration.z * logic_frametime;
+                self.speed.x = (self.speed.x as f64
+                    + self.acceleration.x as f64 * logic_frametime)
+                    as f32;
+                self.speed.y = (self.speed.y as f64
+                    + self.acceleration.y as f64 * logic_frametime)
+                    as f32;
+                self.speed.z = (self.speed.z as f64
+                    + self.acceleration.z as f64 * logic_frametime)
+                    as f32;
                 self.acceleration.x = 0.0;
                 self.acceleration.y = 0.0;
                 self.acceleration.z = 0.0;
 
-                self.speed.x *= decay;
-                self.speed.y *= decay;
-                self.speed.z *= decay;
+                self.speed.x = (self.speed.x as f64 * decay) as f32;
+                self.speed.y = (self.speed.y as f64 * decay) as f32;
+                self.speed.z = (self.speed.z as f64 * decay) as f32;
 
-                self.pos.x += self.speed.x * logic_frametime;
-                self.pos.y += self.speed.y * logic_frametime;
-                self.pos.z += self.speed.z * logic_frametime;
+                self.pos.x = (self.pos.x as f64 + self.speed.x as f64 * logic_frametime) as f32;
+                self.pos.y = (self.pos.y as f64 + self.speed.y as f64 * logic_frametime) as f32;
+                self.pos.z = (self.pos.z as f64 + self.speed.z as f64 * logic_frametime) as f32;
             }
 
-            self.angular_velocity.x += self.angular_acceleration.x * logic_frametime;
-            self.angular_velocity.y += self.angular_acceleration.y * logic_frametime;
-            self.angular_velocity.z += self.angular_acceleration.z * logic_frametime;
+            self.angular_velocity.x = (self.angular_velocity.x as f64
+                + self.angular_acceleration.x as f64 * logic_frametime)
+                as f32;
+            self.angular_velocity.y = (self.angular_velocity.y as f64
+                + self.angular_acceleration.y as f64 * logic_frametime)
+                as f32;
+            self.angular_velocity.z = (self.angular_velocity.z as f64
+                + self.angular_acceleration.z as f64 * logic_frametime)
+                as f32;
 
             self.angular_acceleration.x = 0.0;
             self.angular_acceleration.y = 0.0;
             self.angular_acceleration.z = 0.0;
 
-            self.angular_velocity.x *= decay;
-            self.angular_velocity.y *= decay;
-            self.angular_velocity.z *= decay;
+            self.angular_velocity.x = (self.angular_velocity.x as f64 * decay) as f32;
+            self.angular_velocity.y = (self.angular_velocity.y as f64 * decay) as f32;
+            self.angular_velocity.z = (self.angular_velocity.z as f64 * decay) as f32;
 
             let (wx, wy, wz) = (
                 self.angular_velocity.x,
@@ -266,10 +278,14 @@ impl PhysicsObject {
             let dqz = wx * qy - wy * qx + wz * qw;
             let dqw = -(wx * qx + wy * qy + wz * qz);
 
-            self.rot.x += 0.5 * dqx * logic_frametime;
-            self.rot.y += 0.5 * dqy * logic_frametime;
-            self.rot.z += 0.5 * dqz * logic_frametime;
-            self.rot.w += 0.5 * dqw * logic_frametime;
+            self.rot.x =
+                (self.rot.x as f64 + 0.5 * dqx as f64 * logic_frametime) as f32;
+            self.rot.y =
+                (self.rot.y as f64 + 0.5 * dqy as f64 * logic_frametime) as f32;
+            self.rot.z =
+                (self.rot.z as f64 + 0.5 * dqz as f64 * logic_frametime) as f32;
+            self.rot.w =
+                (self.rot.w as f64 + 0.5 * dqw as f64 * logic_frametime) as f32;
 
             let len = (self.rot.x * self.rot.x
                 + self.rot.y * self.rot.y

@@ -216,12 +216,12 @@ typedef struct euclidh{
     double xpos;
     double ypos;
     uint32_t mrec;
-    _Atomic float CPUframetime;
-    _Atomic float lasttime;
-    _Atomic float GPUframetime;
+    _Atomic double CPUframetime;
+    _Atomic double lasttime;
+    _Atomic double GPUframetime;
     _Atomic uint32_t gpufps;
     _Atomic uint32_t gpucumfps;
-    float cumtm;
+    double cumtm;
     uint8_t right;
     uint8_t left;
     uint8_t middle;
@@ -256,11 +256,11 @@ struct euclidVK{
     uint32_t size;
 } euclid;
 
-float get_frametime(uint32_t eh){
+double get_frametime(uint32_t eh){
     return euclid.handle[eh].CPUframetime * 1000;
 }
 
-float get_gpuframetime(uint32_t eh){
+double get_gpuframetime(uint32_t eh){
     return euclid.handle[eh].GPUframetime * 1000;
 }
 
@@ -4850,7 +4850,7 @@ void* renderarbeite(void *arg){
     uint32_t eh = deh[0];
     while(euclid.handle[eh].lpcont != 0){
         if(euclid.handle[eh].halt_render == 0){
-            float t1 = glfwGetTime();
+            double t1 = glfwGetTime();
             startrender(eh);
             uint8_t shadow_active = atomic_load_explicit(&euclid.handle[eh].renderPassActive[0][EUCLID_RENDER_PASS_SHADOW], memory_order_relaxed);
             uint8_t deffered_active = atomic_load_explicit(&euclid.handle[eh].renderPassActive[0][EUCLID_RENDER_PASS_DEFFERED], memory_order_relaxed);
@@ -4930,6 +4930,7 @@ void* renderarbeite(void *arg){
             nanosleep(&ts, NULL);
         }
     }
+    free(deh);
     return NULL;
 }
 
@@ -5126,7 +5127,7 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug, uint8_t debug_only_
 }
 
 uint32_t loopcont(uint32_t eh){
-    float ctm = glfwGetTime();
+    double ctm = glfwGetTime();
     euclid.handle[eh].CPUframetime = ctm - euclid.handle[eh].lasttime;
     euclid.handle[eh].lasttime = ctm;
     glfwPollEvents();

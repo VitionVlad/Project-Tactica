@@ -6,8 +6,8 @@ use std::ffi::CString;
 use cty::{uint8_t, uint32_t};
 
 unsafe extern "C" {
-    fn get_frametime(eh: cty::uint32_t) -> cty::c_float;
-    fn get_gpuframetime(eh: cty::uint32_t) -> cty::c_float;
+    fn get_frametime(eh: cty::uint32_t) -> cty::c_double;
+    fn get_gpuframetime(eh: cty::uint32_t) -> cty::c_double;
     fn get_gpufps(eh: cty::uint32_t) -> cty::uint32_t;
     fn get_resx(eh: cty::uint32_t) -> cty::uint32_t;
     fn get_resy(eh: cty::uint32_t) -> cty::uint32_t;
@@ -150,8 +150,8 @@ pub struct Render {
     pub resolution_y: u32,
     pub resize_count: u32,
     pub fullscreen: bool,
-    pub cpu_frametime: f32,
-    pub gpu_frametime: f32,
+    pub cpu_frametime: f64,
+    pub gpu_frametime: f64,
     pub gpu_fps: u32,
     pub lights_count: u32,
     pub active_renderpasses: [bool; 4],

@@ -422,7 +422,7 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
             match i {
                 17 => {
                     session.use_rt_lighting = !session.use_rt_lighting;
-                    session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                    session.tredr = ((1.0 / session.eng.gpu_fps as f64)*2.0).max(0.1);
                     save_settings(session);
                     do_paper_sound(session);
                 },
@@ -431,7 +431,7 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                     if session.eng.render.resolution_scale > 1.0{
                         session.eng.render.resolution_scale = 0.1;
                     }
-                    session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                    session.tredr = ((1.0 / session.eng.gpu_fps as f64)*2.0).max(0.1);
                     save_settings(session);
                     do_paper_sound(session);
                 },
@@ -448,7 +448,7 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                         },
                         _ => { session.eng.render.shadow_map_resolution = 512; }
                     }
-                    session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                    session.tredr = ((1.0 / session.eng.gpu_fps as f64)*2.0).max(0.1);
                     save_settings(session);
                     do_paper_sound(session);
                 },
@@ -812,7 +812,7 @@ fn activate_gamepad_selection(session: &mut GameSession) {
         }
         (Graphics, 17) => {
             session.use_rt_lighting = !session.use_rt_lighting;
-            session.tredr = ((1.0 / session.eng.gpu_fps as f32) * 2.0).max(0.1);
+            session.tredr = ((1.0 / session.eng.gpu_fps as f64) * 2.0).max(0.1);
             save_settings(session);
             do_paper_sound(session);
         }
@@ -823,7 +823,7 @@ fn activate_gamepad_selection(session: &mut GameSession) {
                 session.eng.render.resolution_scale = 0.1;
             }
             save_settings(session);
-            session.tredr = ((1.0 / session.eng.gpu_fps as f32) * 2.0).max(0.1);
+            session.tredr = ((1.0 / session.eng.gpu_fps as f64) * 2.0).max(0.1);
             do_paper_sound(session);
         }
         (Graphics, 19) => {
@@ -834,7 +834,7 @@ fn activate_gamepad_selection(session: &mut GameSession) {
                     2048 => 512,
                     resolution => resolution,
                 };
-            session.tredr = ((1.0 / session.eng.gpu_fps as f32) * 2.0).max(0.1);
+            session.tredr = ((1.0 / session.eng.gpu_fps as f64) * 2.0).max(0.1);
             do_paper_sound(session);
         }
         (Graphics, 20) => {

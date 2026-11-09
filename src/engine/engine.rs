@@ -22,17 +22,17 @@ pub struct Engine {
     pub lights: Vec<Light>,
     pub used_light_count: u32,
     pub physics_tick: u32,
-    cumulated_time: f32,
+    cumulated_time: f64,
     pub obj_ph: Vec<PhysicsObject>,
     pub forces: Vec<Option<force::Force>>,
     pub cpu_fps: u32,
     pub gpu_fps: u32,
     cfps: u32,
-    tmpassed: f32,
+    tmpassed: f64,
     pub primary_camera: usize,
     pub object_object_interaction: bool,
-    pub logic_frametime: f32,
-    avg_dt: f32,
+    pub logic_frametime: f64,
+    avg_dt: f64,
 }
 
 impl Engine {
@@ -84,14 +84,16 @@ impl Engine {
     pub fn work(&mut self) -> bool {
         self.audio.exec();
         self.gpu_fps = self.render.gpu_fps;
-        const MAX_DT: f32 = 0.05;
-        const SPIKE_FACTOR: f32 = 2.0;
-        const AVG_RATE: f32 = 0.1;
+        const MAX_DT: f64 = 0.05;
+        const SPIKE_FACTOR: f64 = 2.0;
+        const AVG_RATE: f64 = 0.1;
 
         let raw = self.render.cpu_frametime / 1000.0;
         let mut dt = raw.min(MAX_DT);
         if self.avg_dt > 0.0 {
             dt = dt.min(self.avg_dt * SPIKE_FACTOR);
+        }else {
+            self.avg_dt = dt;
         }
         self.avg_dt += (dt - self.avg_dt) * AVG_RATE;
         self.logic_frametime = dt;

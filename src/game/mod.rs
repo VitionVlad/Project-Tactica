@@ -26,8 +26,8 @@ pub fn smooth_value_towards(
         return final_value;
     }
 
-    let step_factor = (engine.logic_frametime * speed_modifier).clamp(0.0, 1.0);
-    value + difference * step_factor
+    let step_factor = (engine.logic_frametime * speed_modifier as f64).clamp(0.0, 1.0);
+    (value as f64 + difference as f64 * step_factor) as f32
 }
 
 fn copy_text_layout(source: &[UItext], target: &mut [UItext]) {
@@ -391,7 +391,7 @@ pub struct GameSession {
     pub making_step: bool,
     pub object_holding: Option<(Option<usize>, Vec3)>,
     pub current_dir: Vec3,
-    pub action_cooldown: f32,
+    pub action_cooldown: f64,
     pub returning_to_game: bool,
     pub frame_count: u32,
     pub speakers: Vec<Speaker>,
@@ -407,13 +407,13 @@ pub struct GameSession {
     pub last_menu_hover: Option<(GameState, SubMenu, usize)>,
     pub last_menu_hover_frame: Option<u32>,
     pub resize_cnt: u32,
-    pub tredr: f32,
+    pub tredr: f64,
     pub exit: bool,
     pub gamepadsel: usize,
     pub submenu: SubMenu,
     pub use_rt_lighting: bool,
-    pub current_time: f32,
-    pub tmcoef: f32,
+    pub current_time: f64,
+    pub tmcoef: f64,
     pub bwgcoef: f32,
     pub x_max_lv: f32,
     pub lgtext: UItext,

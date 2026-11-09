@@ -33,7 +33,7 @@ fn main() {
             },
             game::GameState::Gameover => {
                 if session.resize_cnt != session.eng.render.resize_count{
-                    session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                    session.tredr = ((1.0 / session.eng.gpu_fps as f64)*2.0).max(0.1);
                     session.resize_cnt = session.eng.render.resize_count;
                     save_settings(&session);
                 }
@@ -80,12 +80,15 @@ fn main() {
                         }
                     }
                     session.tredr -= session.eng.logic_frametime;
+                    if !session.tredr.is_normal(){
+                        session.tredr = 0.0;
+                    }
                 }
                 game_over::handle_gom(&mut session);
             },
             game::GameState::DemoEnd => {
                 if session.resize_cnt != session.eng.render.resize_count{
-                    session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                    session.tredr = ((1.0 / session.eng.gpu_fps as f64)*2.0).max(0.1);
                     session.resize_cnt = session.eng.render.resize_count;
                     save_settings(&session);
                 }
@@ -132,12 +135,15 @@ fn main() {
                         }
                     }
                     session.tredr -= session.eng.logic_frametime;
+                    if !session.tredr.is_normal(){
+                        session.tredr = 0.0;
+                    }
                 }
                 demo_end::handle_demoend(&mut session);
             },
             game::GameState::Paused => {
                 if session.resize_cnt != session.eng.render.resize_count{
-                    session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                    session.tredr = ((1.0 / session.eng.gpu_fps as f64)*2.0).max(0.1);
                     session.resize_cnt = session.eng.render.resize_count;
                     save_settings(&session);
                 }
@@ -184,13 +190,16 @@ fn main() {
                         }
                     }
                     session.tredr -= session.eng.logic_frametime;
+                    if !session.tredr.is_normal(){
+                        session.tredr = 0.0;
+                    }
                 }
                 pause::update(&mut session);
                 pause::handle_input(&mut session);
             },
             game::GameState::MainMenu => {
                 if session.resize_cnt != session.eng.render.resize_count{
-                    session.tredr = ((1.0 / session.eng.gpu_fps as f32)*2.0).max(0.1);
+                    session.tredr = ((1.0 / session.eng.gpu_fps as f64)*2.0).max(0.1);
                     session.resize_cnt = session.eng.render.resize_count;
                     save_settings(&session);
                 }
@@ -237,6 +246,9 @@ fn main() {
                         }
                     }
                     session.tredr -= session.eng.logic_frametime;
+                    if !session.tredr.is_normal(){
+                        session.tredr = 0.0;
+                    }
                 }
                 mainmenu::update(&mut session);
                 mainmenu::handle_input(&mut session);
@@ -253,9 +265,9 @@ fn main() {
         }
 
         session.frame_count += 1;
-        session.current_time += session.eng.logic_frametime*session.tmcoef;
-        if session.current_time >= 16777216.0{
-            session.current_time = 16777215.0;
+        session.current_time += session.eng.logic_frametime * session.tmcoef;
+        if session.current_time >= 9_007_199_254_740_992.0 {
+            session.current_time = 9_007_199_254_740_991.0;
             session.tmcoef = -session.tmcoef;
         }
         if session.frame_count > 100000{

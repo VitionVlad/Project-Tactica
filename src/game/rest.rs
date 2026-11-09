@@ -770,6 +770,9 @@ pub fn update(session: &mut GameSession) {
     session.logo.object.draw = false;
     session.logo.exec(&mut session.eng);
 
+    session.lgtext.draw = false;
+    session.lgtext.exec(&mut session.eng, " ");
+
     session.viewport.object.physic_object.scale.x = session.eng.render.resolution_x as f32;
     session.viewport.object.physic_object.scale.y = session.eng.render.resolution_y as f32;
     session.viewport.object.mesh.ubo[48] = session.frame_count as f32;
@@ -786,7 +789,7 @@ pub fn update(session: &mut GameSession) {
     session.viewport.object.draw = true;
     session.viewport.exec(&mut session.eng);
 
-    if session.scn.objects[session.pivot.id].physic_object.pos.x >= session.x_max_lv - 0.5{
+    if session.scn.objects[session.pivot.id].physic_object.pos.x >= session.x_max_lv - 0.25{
         session.game_state = GameState::DemoEnd;
     }
 }
