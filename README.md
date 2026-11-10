@@ -41,6 +41,7 @@ GPU requirements aren't very high. The demo runs at about **30 FPS at 0.5 resolu
 - **CPU with AVX support.** The compiled build requires it, since AVX gives a huge performance boost (around 3x-6x on the CPU side).
 - If your CPU doesn't support AVX, you can compile the demo from source for your target CPU.
 - Targeting **AVX2** or **AVX512** may give even more performance through accelerated matrix multiplication.
+- **GPU with Vulkan support.** Engine works only with Vulkan API, version doesnt matter that much, my experiments prooves it can run on hardware with limited Vulkan support (Haswell iGPU).  
 
 # Art style
 
