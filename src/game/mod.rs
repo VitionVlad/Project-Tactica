@@ -12,8 +12,25 @@ pub mod settings;
 pub mod tbt;
 
 use crate::engine::{
-    engine::Engine, loader::jsonparser::{JsonF, NodeType}, math::vec3::Vec3, scene::Scene, speaker::Speaker, ui::{UIplane, UItext},
+    engine::Engine,
+    loader::jsonparser::{JsonF, NodeType},
+    math::{vec2::Vec2, vec3::Vec3},
+    scene::Scene,
+    speaker::Speaker,
+    ui::{UIplane, UItext},
 };
+
+pub fn fit_vec2_to_screen(size: Vec2, coefficient: f32, engine: &Engine) -> Vec2 {
+    let max_width = engine.render.resolution_x as f32 * coefficient;
+    let max_height = engine.render.resolution_y as f32 * coefficient;
+
+    let scale = (max_width / size.x).min(max_height / size.y).min(1.0);
+
+    Vec2 {
+        x: size.x * scale,
+        y: size.y * scale,
+    }
+}
 
 pub fn smooth_value_towards(
     value: f32,
@@ -379,6 +396,7 @@ pub struct GameSession {
     pub menu_background: Vec<UIplane>,
     pub black_background: Vec<UIplane>,
     pub awarness_signs: Vec<UIplane>,
+    pub main_menu_images: Vec<UIplane>,
     pub logo: UIplane,
     pub ui_scale: f32,
     pub pivot: Pivot,

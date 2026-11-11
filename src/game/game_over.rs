@@ -126,6 +126,11 @@ pub fn handle_gom(session: &mut GameSession){
     session.black_background[1].object.physic_object.rot = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
     session.black_background[1].exec(&mut session.eng);
 
+    for img in &mut session.main_menu_images {
+        img.object.draw = false;
+        img.exec(&mut session.eng);
+    }
+
     if session.eng.control.gamepad_connected {
         if session.eng.control.get_gamepad_button_state(session.controller_mappings.abxy[0] as u8) && session.action_cooldown <= 0.0{
             session.input_type = InputType::Gamepad;

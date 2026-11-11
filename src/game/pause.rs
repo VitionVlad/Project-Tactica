@@ -551,6 +551,11 @@ pub fn update(session: &mut GameSession) {
     session.black_background[0].object.physic_object.rot = session.viewport.object.physic_object.rot;
     session.black_background[0].exec(&mut session.eng);
 
+    for img in &mut session.main_menu_images {
+        img.object.draw = false;
+        img.exec(&mut session.eng);
+    }
+
     updatesubemnumenu(session);
     updatesubemnusettings(session);
     updatesubemnugame(session);

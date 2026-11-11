@@ -143,6 +143,39 @@ pub fn initialize() -> GameSession {
         MeshUsage::PostPass,
     ));
 
+    let mut main_menu_images = Vec::new();
+
+    main_menu_images.push(UIplane::new_from_file(
+        &mut eng,
+        mati,
+        ["assets/ui/mm/map.png".to_string()].to_vec(),
+        MeshUsage::PostPass,
+    ));
+    //main_menu_images.push(UIplane::new_from_file(
+    //    &mut eng,
+    //    mati,
+    //    ["assets/ui/mm/mark.png".to_string()].to_vec(),
+    //    MeshUsage::PostPass,
+    //));
+    main_menu_images.push(UIplane::new_from_file(
+        &mut eng,
+        mati,
+        ["assets/ui/mm/passport.png".to_string()].to_vec(),
+        MeshUsage::PostPass,
+    ));
+    main_menu_images.push(UIplane::new_from_file(
+        &mut eng,
+        mati,
+        ["assets/ui/mm/photo.png".to_string()].to_vec(),
+        MeshUsage::PostPass,
+    ));
+    main_menu_images.push(UIplane::new_from_file(
+        &mut eng,
+        mati,
+        ["assets/ui/mm/post.png".to_string()].to_vec(),
+        MeshUsage::PostPass,
+    ));
+
     for pl in &mut awaspr {
         pl.object.physic_object.is_static = false;
         pl.object.physic_object.gravity = false;
@@ -547,6 +580,7 @@ pub fn initialize() -> GameSession {
         fpscnt,
         text: vec![text, textcyr],
         menu_text: vec![menu_text, menu_textcyr],
+        main_menu_images: main_menu_images,
         keyimg,
         white_background: wbg,
         black_background: bbg,

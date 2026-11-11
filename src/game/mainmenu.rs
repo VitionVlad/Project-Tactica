@@ -1,6 +1,7 @@
+use crate::engine::math::vec2::Vec2;
 use crate::engine::{math::vec3::Vec3, physics::physics::PhysicsObject};
 use crate::game::SubMenu::{self, Audio, Game, Graphics, Main, Settings};
-use crate::game::{do_paper_sliding_sound, do_paper_sound, do_paper2_sound};
+use crate::game::{do_paper_sliding_sound, do_paper_sound, do_paper2_sound, fit_vec2_to_screen};
 use crate::game::{InputType, settings::save_settings, smooth_value_towards};
 
 use super::{GameSession, sync_writing_system_layout};
@@ -532,7 +533,7 @@ pub fn update(session: &mut GameSession) {
 
     session.menu_background[0].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
     session.menu_background[0].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
-    session.menu_background[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 - 30.;
+    session.menu_background[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 - 30.0;
     session.menu_background[0].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y - session.eng.render.resolution_y as f32 - 30.0;
     session.menu_background[0].object.physic_object.pos.z = 0.99;
     session.menu_background[0].object.draw = true;
@@ -550,6 +551,34 @@ pub fn update(session: &mut GameSession) {
     session.black_background[0].object.draw = true;
     session.black_background[0].object.physic_object.rot = session.viewport.object.physic_object.rot;
     session.black_background[0].exec(&mut session.eng);
+
+    let sizes = [
+        fit_vec2_to_screen(Vec2{x: 2151.0, y: 1571.0}, 0.8, &session.eng), //map
+        //fit_vec2_to_screen(Vec2{x: 1892.0 / 2.0, y: 804.0 / 2.0}, 0.4, &session.eng), //mark
+        fit_vec2_to_screen(Vec2{x: 700.0  / 2.0, y: 1060.0 / 2.0}, 0.4, &session.eng), //passport
+        fit_vec2_to_screen(Vec2{x: 757.0  / 2.0, y: 1080.0 / 2.0}, 0.4, &session.eng), //photo
+        fit_vec2_to_screen(Vec2{x: 1562.0 / 2.0, y: 1154.0 / 2.0}, 0.4, &session.eng), //post
+    ];
+
+    //let sizes = [
+    //    Vec2{x: 2151.0, y: 1571.0}, //map
+    //    Vec2{x: 1892.0, y: 804.0}, //mark
+    //    Vec2{x: 700.0, y: 1060.0}, //passport
+    //    Vec2{x: 757.0, y: 1080.0}, //photo
+    //    Vec2{x: 1562.0, y: 1154.0}, //post
+    //];
+
+    for i in 0..session.main_menu_images.len() {
+        let img = &mut session.main_menu_images[i];
+        img.object.physic_object.scale.x = sizes[i].x;
+        img.object.physic_object.scale.y = sizes[i].y;
+        img.object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 0.85 + ((session.eng.render.resolution_x as f32)/7.5)*i as f32;
+        img.object.physic_object.pos.y = session.viewport.object.physic_object.pos.y + session.eng.render.resolution_y as f32 * 0.1 + ((session.eng.render.resolution_y as f32)/10.0)*i as f32;
+        img.object.physic_object.rot = Vec3{x: 0.0, y: 0.0 as f32, z: -0.15+0.1*i as f32}.to_quat();
+        img.object.physic_object.pos.z = 0.85 - 0.01 * i as f32;
+        img.object.draw = true;
+        img.exec(&mut session.eng);
+    }
 
     updatesubemnumenu(session);
     updatesubemnusettings(session);
