@@ -456,99 +456,66 @@ void setk(uint32_t eh, uint32_t key, uint32_t state){
     }
 }
 
+static inline uint8_t keydown(GLFWwindow *w, int key){
+    return glfwGetKey(w, key) == GLFW_PRESS;
+}
+
 void keywork(uint32_t eh){
-    uint32_t btstate = 0;
-    for(uint32_t i = GLFW_KEY_F1; i != GLFW_KEY_F13; i++){
-        btstate = glfwGetKey(euclid.handle[eh].window, i);
-        setk(eh, i, btstate);
+    GLFWwindow *w = euclid.handle[eh].window;
+    uint8_t *ks = euclid.handle[eh].key_state;
+
+    for(int k = GLFW_KEY_F1; k <= GLFW_KEY_F12; k++) ks[getKey(k)] = keydown(w, k);
+    for(int k = GLFW_KEY_0;  k <= GLFW_KEY_9;  k++)  ks[getKey(k)] = keydown(w, k);
+    for(int k = GLFW_KEY_A;  k <= GLFW_KEY_Z;  k++)  ks[getKey(k)] = keydown(w, k);
+
+    ks[getKey(GLFW_KEY_SPACE)]     = keydown(w, GLFW_KEY_SPACE);
+    ks[getKey(GLFW_KEY_ESCAPE)]    = keydown(w, GLFW_KEY_ESCAPE);
+    ks[getKey(GLFW_KEY_UP)]        = keydown(w, GLFW_KEY_UP);
+    ks[getKey(GLFW_KEY_LEFT)]      = keydown(w, GLFW_KEY_LEFT);
+    ks[getKey(GLFW_KEY_DOWN)]      = keydown(w, GLFW_KEY_DOWN);
+    ks[getKey(GLFW_KEY_RIGHT)]     = keydown(w, GLFW_KEY_RIGHT);
+    ks[getKey(GLFW_KEY_ENTER)]     = keydown(w, GLFW_KEY_ENTER);
+    ks[getKey(GLFW_KEY_BACKSPACE)] = keydown(w, GLFW_KEY_BACKSPACE);
+    ks[getKey(GLFW_KEY_LEFT_SHIFT)]   = keydown(w, GLFW_KEY_LEFT_SHIFT)   || keydown(w, GLFW_KEY_RIGHT_SHIFT);
+    ks[getKey(GLFW_KEY_LEFT_CONTROL)] = keydown(w, GLFW_KEY_LEFT_CONTROL) || keydown(w, GLFW_KEY_RIGHT_CONTROL);
+
+    euclid.handle[eh].right  = glfwGetMouseButton(w, GLFW_MOUSE_BUTTON_RIGHT)  == GLFW_PRESS;
+    euclid.handle[eh].middle = glfwGetMouseButton(w, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
+    euclid.handle[eh].left   = glfwGetMouseButton(w, GLFW_MOUSE_BUTTON_LEFT)   == GLFW_PRESS;
+
+    double cx, cy;
+    glfwGetCursorPos(w, &cx, &cy);
+    if(glfwGetInputMode(w, GLFW_CURSOR) == GLFW_CURSOR_NORMAL){
+        int ww, wh, fw, fh;
+        glfwGetWindowSize(w, &ww, &wh);
+        glfwGetFramebufferSize(w, &fw, &fh);
+        if(ww > 0 && wh > 0){
+            cx *= (double)fw / (double)ww;
+            cy *= (double)fh / (double)wh;
+        }
     }
-    for(uint32_t i = GLFW_KEY_0; i != GLFW_KEY_9; i++){
-        btstate = glfwGetKey(euclid.handle[eh].window, i);
-        setk(eh, i, btstate);
-    }
-    for(uint32_t i = GLFW_KEY_A; i != GLFW_KEY_Z; i++){
-        btstate = glfwGetKey(euclid.handle[eh].window, i);
-        setk(eh, i, btstate);
-    }
-    btstate = glfwGetKey(euclid.handle[eh].window, GLFW_KEY_SPACE);
-    setk(eh, GLFW_KEY_SPACE, btstate);
-    btstate = glfwGetKey(euclid.handle[eh].window, GLFW_KEY_ESCAPE);
-    setk(eh, GLFW_KEY_ESCAPE, btstate);
-    btstate = glfwGetKey(euclid.handle[eh].window, GLFW_KEY_LEFT_SHIFT);
-    setk(eh, GLFW_KEY_LEFT_SHIFT, btstate);
-    btstate = glfwGetKey(euclid.handle[eh].window, GLFW_KEY_RIGHT_SHIFT);
-    setk(eh, GLFW_KEY_RIGHT_SHIFT, btstate);
-    btstate = glfwGetKey(euclid.handle[eh].window, GLFW_KEY_LEFT_CONTROL);
-    setk(eh, GLFW_KEY_LEFT_CONTROL, btstate);
-    btstate = glfwGetKey(euclid.handle[eh].window, GLFW_KEY_RIGHT_CONTROL);
-    setk(eh, GLFW_KEY_RIGHT_CONTROL, btstate);
-    btstate = glfwGetKey(euclid.handle[eh].window, GLFW_KEY_UP);
-    setk(eh, GLFW_KEY_UP, btstate);
-    btstate = glfwGetKey(euclid.handle[eh].window, GLFW_KEY_LEFT);
-    setk(eh, GLFW_KEY_LEFT, btstate);
-    btstate = glfwGetKey(euclid.handle[eh].window, GLFW_KEY_DOWN);
-    setk(eh, GLFW_KEY_DOWN, btstate);
-    btstate = glfwGetKey(euclid.handle[eh].window, GLFW_KEY_RIGHT);
-    setk(eh, GLFW_KEY_RIGHT, btstate);
-    btstate = glfwGetKey(euclid.handle[eh].window, GLFW_KEY_ENTER);
-    setk(eh, GLFW_KEY_ENTER, btstate);
-    btstate = glfwGetKey(euclid.handle[eh].window, GLFW_KEY_BACKSPACE);
-    setk(eh, GLFW_KEY_BACKSPACE, btstate);
-    btstate = glfwGetMouseButton(euclid.handle[eh].window, GLFW_MOUSE_BUTTON_RIGHT);
-    switch(btstate){
-        case GLFW_PRESS:
-            euclid.handle[eh].right = 1;
-            break;
-        default:
-            euclid.handle[eh].right = 0;
-            break;
-    }
-    btstate = glfwGetMouseButton(euclid.handle[eh].window, GLFW_MOUSE_BUTTON_MIDDLE);
-    switch(btstate){
-        case GLFW_PRESS:
-            euclid.handle[eh].middle = 1;
-            break;
-        default:
-            euclid.handle[eh].middle = 0;
-            break;
-    }
-    btstate = glfwGetMouseButton(euclid.handle[eh].window, GLFW_MOUSE_BUTTON_LEFT);
-    switch(btstate){
-        case GLFW_PRESS:
-            euclid.handle[eh].left = 1;
-            break;
-        default:
-            euclid.handle[eh].left = 0;
-            break;
-    }
-    glfwGetCursorPos(euclid.handle[eh].window, &euclid.handle[eh].xpos, &euclid.handle[eh].ypos);
+    euclid.handle[eh].xpos = cx;
+    euclid.handle[eh].ypos = cy;
+
     euclid.handle[eh].gamepaden = 0;
-    if(glfwJoystickPresent(GLFW_JOYSTICK_1)){
+    euclid.handle[eh].acnt = 0;
+    euclid.handle[eh].bcnt = 0;
+    if(glfwJoystickPresent(GLFW_JOYSTICK_1) && glfwJoystickIsGamepad(GLFW_JOYSTICK_1)){
         euclid.handle[eh].gamepaden = 1;
         euclid.handle[eh].axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &euclid.handle[eh].acnt);
         euclid.handle[eh].btnstats = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &euclid.handle[eh].bcnt);
-        //if(euclid.handle[eh].acnt > 0){
-        //    for(uint8_t i = 0; i != euclid.handle[eh].acnt; i++){
-        //        printf("%f, ", euclid.handle[eh].axes[i]);
-        //    }
-        //    printf(" | ");
-        //    for(uint8_t i = 0; i != euclid.handle[eh].bcnt; i++){
-        //        printf("%d, ", euclid.handle[eh].btnstats[i]);
-        //    }
-        //    printf("\n");
-        //}
     }
 }
 
 float get_axis(uint32_t eh, uint8_t n){
-    if(euclid.handle[eh].acnt < n){
+    if(euclid.handle[eh].axes == NULL || n >= euclid.handle[eh].acnt){   // was '<', read 1 past the end
         return 0;
     }
     return euclid.handle[eh].axes[n];
 }
 
 unsigned char get_button(uint32_t eh, uint8_t n){
-    if(euclid.handle[eh].bcnt < n){
+    if(euclid.handle[eh].btnstats == NULL || n >= euclid.handle[eh].bcnt){
         return 0;
     }
     return euclid.handle[eh].btnstats[n];
