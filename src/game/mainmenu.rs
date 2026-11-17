@@ -10,7 +10,7 @@ pub fn updatesubemnumenu(session: &mut GameSession){
     session.lgtext.size.x = 50.0 * session.ui_scale;
     session.lgtext.size.y = 100.0 * session.ui_scale;
     session.lgtext.pos.x = session.menu_text[session.writing_system as usize][0].pos.x;
-    session.lgtext.pos.y = session.menu_text[session.writing_system as usize][0].pos.y - 250.0;
+    session.lgtext.pos.y = session.menu_text[session.writing_system as usize][0].pos.y - 250.0 * session.ui_scale;
     session.lgtext.pos.z = 0.7;
     session.lgtext.draw = true;
     session.lgtext.signal = false;

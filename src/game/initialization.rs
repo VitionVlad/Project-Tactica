@@ -19,7 +19,7 @@ use super::{Awarness, Enemy, GameSession, Pivot, TBTplate, TextContent};
 use super::settings::load_settings;
 
 pub fn initialize() -> GameSession {
-    let mut eng = Engine::new(crate::engine::render::render::RenderDebug::OnlyInit);
+    let mut eng = Engine::new(crate::engine::render::render::RenderDebug::None);
     eng.render.set_title("Project Tactica -- Dev build --");
     eng.render.set_new_resolution(1280, 720);
 
