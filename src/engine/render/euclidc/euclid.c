@@ -160,6 +160,7 @@ typedef struct euclidh{
     VkFence *inFlightFences;
     uint32_t currentFrame;
     uint32_t imageIndex;
+    uint8_t swapchainDirty;
     uint32_t totalFrames;
     _Atomic uint32_t shadowMapResolution[2];
     uint32_t oldshadowMapResolution;
@@ -607,7 +608,7 @@ void createInstance(uint32_t eh){
     createInfo.pApplicationInfo = &appinfo;
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pNext = NULL;
-    createInfo.flags = 0;
+    createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 
     uint32_t lrnm = 0;
     vkEnumerateInstanceExtensionProperties(NULL, &lrnm, NULL);
@@ -784,8 +785,14 @@ void createSwapChain(uint32_t eh){
     createInfo.minImageCount = imageCount;
     createInfo.imageFormat = formats[chosenFormat].format;
     createInfo.imageColorSpace = formats[chosenFormat].colorSpace;
-    createInfo.imageExtent.width = euclid.handle[eh].resolutionX[0];
-    createInfo.imageExtent.height = euclid.handle[eh].resolutionY[0];
+    VkExtent2D chosenExtent;
+    chosenExtent.width = euclid.handle[eh].resolutionX[0];
+    chosenExtent.height = euclid.handle[eh].resolutionY[0];
+    if(chosenExtent.width < capabilities.minImageExtent.width) chosenExtent.width = capabilities.minImageExtent.width;
+    if(chosenExtent.width > capabilities.maxImageExtent.width) chosenExtent.width = capabilities.maxImageExtent.width;
+    if(chosenExtent.height < capabilities.minImageExtent.height) chosenExtent.height = capabilities.minImageExtent.height;
+    if(chosenExtent.height > capabilities.maxImageExtent.height) chosenExtent.height = capabilities.maxImageExtent.height;
+    createInfo.imageExtent = chosenExtent;
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
@@ -815,11 +822,12 @@ void createSwapChain(uint32_t eh){
     euclid.handle[eh].swapChainImages = malloc(sizeof(VkImage)*imageCount);
     vkGetSwapchainImagesKHR(euclid.handle[eh].device, euclid.handle[eh].swapChain, &imageCount, euclid.handle[eh].swapChainImages);
     euclid.handle[eh].swapChainImageFormat = formats[chosenFormat].format;
-    euclid.handle[eh].swapChainExtent = capabilities.currentExtent;
+    euclid.handle[eh].swapChainExtent = chosenExtent;
     euclid.handle[eh].swapChainImageCount = imageCount;
     euclid.handle[eh].oldx = euclid.handle[eh].resolutionX[0];
     euclid.handle[eh].oldy = euclid.handle[eh].resolutionY[0];
     free(modes);
+    free(formats);
 }
 
 void createSwapChainImageViews(uint32_t eh){
@@ -1418,7 +1426,7 @@ void createLightingData(uint32_t eh){
     VkImageViewCreateInfo depthCreateInfo = {0};
     depthCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     depthCreateInfo.image = euclid.handle[eh].lightingDepthImage;
-    depthCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    depthCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
     depthCreateInfo.format = VK_FORMAT_D32_SFLOAT;
     depthCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
     depthCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -1435,7 +1443,7 @@ void createLightingData(uint32_t eh){
     VkImageViewCreateInfo lightingCreateInfo = {0};
     lightingCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     lightingCreateInfo.image = euclid.handle[eh].lightingImage;
-    lightingCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    lightingCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
     lightingCreateInfo.format = VK_FORMAT_R16G16B16A16_SFLOAT;
     lightingCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
     lightingCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -1623,16 +1631,16 @@ void createSyncObjects(uint32_t eh){
 }
 
 void recreateSwapChain(uint32_t eh){
-    vkDestroySwapchainKHR(euclid.handle[eh].device, euclid.handle[eh].swapChain, NULL);
+    vkDeviceWaitIdle(euclid.handle[eh].device);
+    // children first: framebuffers -> image views -> swapchain
     for(int i = 0; i != euclid.handle[eh].swapChainImageCount; i++){
         vkDestroyFramebuffer(euclid.handle[eh].device, euclid.handle[eh].swapChainFramebuffers[i], NULL);
     }
     for(int i = 0; i != euclid.handle[eh].swapChainImageCount; i++){
         vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].swapChainImageViews[i], NULL);
     }
-    //for(int i = 0; i != euclid.handle[eh].swapChainImageCount; i++){
-    //    vkDestroyImage(euclid.handle[eh].device, euclid.handle[eh].swapChainImages[i], NULL);
-    //}
+    vkDestroySwapchainKHR(euclid.handle[eh].device, euclid.handle[eh].swapChain, NULL);
+    // swapchain images are owned by the swapchain, never vkDestroyImage them
     if(euclid.handle[eh].swapChainFramebuffers){
         free(euclid.handle[eh].swapChainFramebuffers);
         euclid.handle[eh].swapChainFramebuffers = NULL;
@@ -1654,11 +1662,61 @@ void recreateSwapChain(uint32_t eh){
     createFrameBuffers(eh);
 }
 
+// Destroys and rebuilds everything that depends on the output resolution
+// (deffered + lighting data, swapchain, render pass, framebuffers).
+// Must be called with NO acquired-but-unpresented swapchain image.
+static void rebuildResolutionDependentData(uint32_t eh){
+    vkDeviceWaitIdle(euclid.handle[eh].device);
+    vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].defferedImageView, NULL);
+    vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].defferedDepthImageView, NULL);
+    for(uint32_t i = 0, b = 0; i != euclid.handle[eh].defferedCount[0]; i++, b+=3){
+        vkDestroyFramebuffer(euclid.handle[eh].device, euclid.handle[eh].defferedFramebuffers[i], NULL);
+        vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].defferedRenderImageViews[b], NULL);
+        vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].defferedRenderImageViews[b+1], NULL);
+        vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].defferedRenderImageViews[b+2], NULL);
+        vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].defferedDepthRenderImageViews[i], NULL);
+    }
+    vkDestroyImage(euclid.handle[eh].device, euclid.handle[eh].defferedImage, NULL);
+    vkFreeMemory(euclid.handle[eh].device, euclid.handle[eh].defferedImageMemory, NULL);
+    vkDestroyImage(euclid.handle[eh].device, euclid.handle[eh].defferedDepthImage, NULL);
+    vkFreeMemory(euclid.handle[eh].device, euclid.handle[eh].defferedDepthImageMemory, NULL);
+
+    vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].lightingImageViews[0], NULL);
+    vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].lightingDepthImageViews[0], NULL);
+    vkDestroyFramebuffer(euclid.handle[eh].device, euclid.handle[eh].lightingFramebuffers[0], NULL);
+    vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].lightingImageViews[1], NULL);
+    vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].lightingDepthImageViews[1], NULL);
+    vkDestroyFramebuffer(euclid.handle[eh].device, euclid.handle[eh].lightingFramebuffers[1], NULL);
+    vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].lightingImageViewl, NULL);
+    vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].lightingDepthImageViewl, NULL);
+    vkDestroyImage(euclid.handle[eh].device, euclid.handle[eh].lightingImage, NULL);
+    vkFreeMemory(euclid.handle[eh].device, euclid.handle[eh].lightingImageMemory, NULL);
+    vkDestroyImage(euclid.handle[eh].device, euclid.handle[eh].lightingDepthImage, NULL);
+    vkFreeMemory(euclid.handle[eh].device, euclid.handle[eh].lightingDepthImageMemory, NULL);
+
+    if (euclid.handle[eh].debug == 1) printf("\e[1;35mEuclidVk\e[0;37m: Cleanup complete\n");
+
+    vkDestroyRenderPass(euclid.handle[eh].device, euclid.handle[eh].renderPass, NULL);
+    //vkDestroyRenderPass(euclid.handle[eh].device, euclid.handle[eh].lightingRenderPass, NULL);
+
+    createDefferedData(eh);
+    createLightingData(eh);
+    recreateSwapChain(eh);
+    euclid.handle[eh].mrec++;
+    if (euclid.handle[eh].debug == 1) printf("\e[1;35mEuclidVK\e[0;37m: Recreated swapchain and deffered data\n");
+}
+
+static void notifyResize(uint32_t eh){
+    atomic_fetch_add_explicit(&euclid.handle[eh].resizeCount, 1, memory_order_relaxed);
+    for(uint32_t i = 0; i != EUCLID_RENDER_PASS_COUNT; i++){
+        if(atomic_load_explicit(&euclid.handle[eh].renderPassActiveOnResize[0][i], memory_order_relaxed)){
+            atomic_store_explicit(&euclid.handle[eh].renderPassActive[0][i], 1, memory_order_relaxed);
+        }
+    }
+}
+
 void startrender(uint32_t eh){
     vkWaitForFences(euclid.handle[eh].device, 1, &euclid.handle[eh].inFlightFences[euclid.handle[eh].currentFrame], VK_TRUE, UINT64_MAX);
-    vkResetFences(euclid.handle[eh].device, 1, &euclid.handle[eh].inFlightFences[euclid.handle[eh].currentFrame]);
-
-    VkResult result = vkAcquireNextImageKHR(euclid.handle[eh].device, euclid.handle[eh].swapChain, UINT64_MAX, euclid.handle[eh].imageAvailableSemaphores[euclid.handle[eh].currentFrame], VK_NULL_HANDLE, &euclid.handle[eh].imageIndex);
 
     for(uint32_t i = 0; i != 4; i++){
         atomic_store_explicit(
@@ -1688,59 +1746,20 @@ void startrender(uint32_t eh){
     euclid.handle[eh].resolutionScale[0] = euclid.handle[eh].resolutionScale[1];
     euclid.handle[eh].shadowMapResolution[0] = euclid.handle[eh].shadowMapResolution[1];
     euclid.handle[eh].shadowMapsCount[0] = euclid.handle[eh].shadowMapsCount[1];
-    uint8_t resized = result == VK_ERROR_OUT_OF_DATE_KHR
+    // NOTE: the swapchain must be (re)built BEFORE vkAcquireNextImageKHR. An image index acquired
+    // from a swapchain that is destroyed afterwards is invalid for the new one.
+    uint8_t resized = euclid.handle[eh].swapchainDirty
         || euclid.handle[eh].oldx != euclid.handle[eh].resolutionX[0]
         || euclid.handle[eh].oldy != euclid.handle[eh].resolutionY[0];
+    euclid.handle[eh].swapchainDirty = 0;
     if (resized || euclid.handle[eh].resolutionScale[0] != euclid.handle[eh].oldResolutionScale || euclid.handle[eh].defferedCount[0] != euclid.handle[eh].oldDefferedCount) {
-        if (euclid.handle[eh].debug == 1) printf("\e[1;35mEuclidVK\e[0;37m: Resolution changed from %dx%d to %dx%d, acquiere result = %i\n", euclid.handle[eh].oldx, euclid.handle[eh].oldy, euclid.handle[eh].resolutionX[0], euclid.handle[eh].resolutionY[0], result);
+        if (euclid.handle[eh].debug == 1) printf("\e[1;35mEuclidVK\e[0;37m: Resolution changed from %dx%d to %dx%d\n", euclid.handle[eh].oldx, euclid.handle[eh].oldy, euclid.handle[eh].resolutionX[0], euclid.handle[eh].resolutionY[0]);
         euclid.handle[eh].oldx = euclid.handle[eh].resolutionX[0];
         euclid.handle[eh].oldy = euclid.handle[eh].resolutionY[0];
-        vkDeviceWaitIdle(euclid.handle[eh].device);
-        vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].defferedImageView, NULL);
-        vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].defferedDepthImageView, NULL);
-        for(uint32_t i = 0, b = 0; i != euclid.handle[eh].defferedCount[0]; i++, b+=3){
-            vkDestroyFramebuffer(euclid.handle[eh].device, euclid.handle[eh].defferedFramebuffers[i], NULL);
-            vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].defferedRenderImageViews[b], NULL);
-            vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].defferedRenderImageViews[b+1], NULL);
-            vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].defferedRenderImageViews[b+2], NULL);
-            vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].defferedDepthRenderImageViews[i], NULL);
-        }
-        vkDestroyImage(euclid.handle[eh].device, euclid.handle[eh].defferedImage, NULL);
-        vkFreeMemory(euclid.handle[eh].device, euclid.handle[eh].defferedImageMemory, NULL);
-        vkDestroyImage(euclid.handle[eh].device, euclid.handle[eh].defferedDepthImage, NULL);
-        vkFreeMemory(euclid.handle[eh].device, euclid.handle[eh].defferedDepthImageMemory, NULL);
-
-        vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].lightingImageViews[0], NULL);
-        vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].lightingDepthImageViews[0], NULL);
-        vkDestroyFramebuffer(euclid.handle[eh].device, euclid.handle[eh].lightingFramebuffers[0], NULL);
-        vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].lightingImageViews[1], NULL);
-        vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].lightingDepthImageViews[1], NULL);
-        vkDestroyFramebuffer(euclid.handle[eh].device, euclid.handle[eh].lightingFramebuffers[1], NULL);
-        vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].lightingImageViewl, NULL);
-        vkDestroyImageView(euclid.handle[eh].device, euclid.handle[eh].lightingDepthImageViewl, NULL);
-        vkDestroyImage(euclid.handle[eh].device, euclid.handle[eh].lightingImage, NULL);
-        vkFreeMemory(euclid.handle[eh].device, euclid.handle[eh].lightingImageMemory, NULL);
-        vkDestroyImage(euclid.handle[eh].device, euclid.handle[eh].lightingDepthImage, NULL);
-        vkFreeMemory(euclid.handle[eh].device, euclid.handle[eh].lightingDepthImageMemory, NULL);
-
-        if (euclid.handle[eh].debug == 1) printf("\e[1;35mEuclidVk\e[0;37m: Cleanup complete\n");
-
-        vkDestroyRenderPass(euclid.handle[eh].device, euclid.handle[eh].renderPass, NULL);
-        //vkDestroyRenderPass(euclid.handle[eh].device, euclid.handle[eh].lightingRenderPass, NULL);
-
-        createDefferedData(eh);
-        createLightingData(eh);
-        recreateSwapChain(eh);
-        euclid.handle[eh].mrec++;
-        if (euclid.handle[eh].debug == 1) printf("\e[1;35mEuclidVK\e[0;37m: Recreated swapchain and deffered data\n");
+        rebuildResolutionDependentData(eh);
     }
     if(resized){
-        atomic_fetch_add_explicit(&euclid.handle[eh].resizeCount, 1, memory_order_relaxed);
-        for(uint32_t i = 0; i != EUCLID_RENDER_PASS_COUNT; i++){
-            if(atomic_load_explicit(&euclid.handle[eh].renderPassActiveOnResize[0][i], memory_order_relaxed)){
-                atomic_store_explicit(&euclid.handle[eh].renderPassActive[0][i], 1, memory_order_relaxed);
-            }
-        }
+        notifyResize(eh);
     }
     if(euclid.handle[eh].shadowMapResolution[0] < 1 || euclid.handle[eh].shadowMapsCount[0] < 1){
         euclid.handle[eh].shadowMapResolution[0] = 1;
@@ -1764,6 +1783,29 @@ void startrender(uint32_t eh){
         euclid.handle[eh].mrec++;
         if (euclid.handle[eh].debug == 1) printf("\e[1;35mEuclidVK\e[0;37m: Recreated shadow data\n");
     }
+
+
+    // Acquire only now, after every possible swapchain rebuild.
+    VkResult acquireResult = VK_SUCCESS;
+    for(int attempt = 0; attempt < 5; attempt++){
+        acquireResult = vkAcquireNextImageKHR(euclid.handle[eh].device, euclid.handle[eh].swapChain, UINT64_MAX, euclid.handle[eh].imageAvailableSemaphores[euclid.handle[eh].currentFrame], VK_NULL_HANDLE, &euclid.handle[eh].imageIndex);
+        if(acquireResult != VK_ERROR_OUT_OF_DATE_KHR) break;
+        // Failed acquire does not signal the semaphore or return an image, so it is safe to rebuild and retry.
+        euclid.handle[eh].resolutionX[0] = euclid.handle[eh].resolutionX[1];
+        euclid.handle[eh].resolutionY[0] = euclid.handle[eh].resolutionY[1];
+        if(euclid.handle[eh].resolutionX[0] < 1) euclid.handle[eh].resolutionX[0] = 1;
+        if(euclid.handle[eh].resolutionY[0] < 1) euclid.handle[eh].resolutionY[0] = 1;
+        if (euclid.handle[eh].debug == 1) printf("\e[1;35mEuclidVK\e[0;37m: vkAcquireNextImageKHR out of date, rebuilding (%dx%d)\n", euclid.handle[eh].resolutionX[0], euclid.handle[eh].resolutionY[0]);
+        euclid.handle[eh].oldx = euclid.handle[eh].resolutionX[0];
+        euclid.handle[eh].oldy = euclid.handle[eh].resolutionY[0];
+        rebuildResolutionDependentData(eh);
+        notifyResize(eh);
+    }
+    if(acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR){
+        printf("EuclidVK: vkAcquireNextImageKHR failed with result = %d\n", acquireResult);
+    }
+    // Fence is reset only once we are sure this frame will be submitted.
+    vkResetFences(euclid.handle[eh].device, 1, &euclid.handle[eh].inFlightFences[euclid.handle[eh].currentFrame]);
 
     vkResetCommandBuffer(euclid.handle[eh].commandBuffers[euclid.handle[eh].currentFrame*4+0], 0);
     vkResetCommandBuffer(euclid.handle[eh].commandBuffers[euclid.handle[eh].currentFrame*4+1], 0);
@@ -1919,12 +1961,21 @@ void endrender(uint32_t eh){
         euclid.handle[eh].commandBuffers[euclid.handle[eh].currentFrame*4+3]
     };
 
+    //VkCommandBuffer commandBuffers[4];
+    //uint8_t total_used = 0;
+    //for(int i = 0; i != 4; i++){
+    //    if(total_used_renderpasses[i]){
+    //        commandBuffers[i] = euclid.handle[eh].commandBuffers[euclid.handle[eh].currentFrame*4+i];
+    //        total_used++;
+    //    }
+    //}
+
     submitInfo.commandBufferCount = 4;
     submitInfo.pCommandBuffers = commandBuffers;
 
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = &euclid.handle[eh].renderFinishedSemaphores[euclid.handle[eh].currentFrame];
-    vkQueueSubmit(euclid.handle[eh].graphicsQueue, 1, &submitInfo, euclid.handle[eh].inFlightFences[euclid.handle[eh].currentFrame]);
+    VkResult result = vkQueueSubmit(euclid.handle[eh].graphicsQueue, 1, &submitInfo, euclid.handle[eh].inFlightFences[euclid.handle[eh].currentFrame]);
 
     VkPresentInfoKHR presentInfo = {0};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -1935,8 +1986,12 @@ void endrender(uint32_t eh){
     presentInfo.pSwapchains = &euclid.handle[eh].swapChain;
     presentInfo.pImageIndices = &euclid.handle[eh].imageIndex;
     presentInfo.pResults = NULL;
+    presentInfo.pNext = NULL;
 
-    vkQueuePresentKHR(euclid.handle[eh].presentQueue, &presentInfo);
+    VkResult presentResult = vkQueuePresentKHR(euclid.handle[eh].presentQueue, &presentInfo);
+    if(presentResult == VK_ERROR_OUT_OF_DATE_KHR){
+        euclid.handle[eh].swapchainDirty = 1;
+    }
 
     euclid.handle[eh].currentFrame = (euclid.handle[eh].currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     euclid.handle[eh].totalFrames++;
@@ -4385,9 +4440,15 @@ static uint32_t newtexture_real(uint32_t eh, uint32_t te, euclidCreationQueue *i
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
     imageInfo.extent.width = item->xsize;
     imageInfo.extent.height = item->ysize;
-    imageInfo.extent.depth = 1;
     imageInfo.mipLevels = euclid.handle[eh].textures[te].mipLevels;
-    imageInfo.arrayLayers = item->zsize;
+    if (item->is3d == 1) {
+        imageInfo.extent.depth = item->zsize;
+        imageInfo.arrayLayers = 1;
+    } else {
+        imageInfo.extent.depth = 1;
+        imageInfo.arrayLayers = item->zsize;
+    }
+    //imageInfo.extent.depth = 1;
     imageInfo.format = item->imageformat;
     imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -4505,6 +4566,9 @@ static uint32_t newtexture_real(uint32_t eh, uint32_t te, euclidCreationQueue *i
     viewInfo.subresourceRange.levelCount = euclid.handle[eh].textures[te].mipLevels;
     viewInfo.subresourceRange.baseArrayLayer = 0;
     viewInfo.subresourceRange.layerCount = item->zsize;
+    if(item->is3d == 1){
+        viewInfo.subresourceRange.layerCount = 1;
+    }
 
     result = vkCreateImageView(euclid.handle[eh].device, &viewInfo, NULL, &euclid.handle[eh].textures[te].textureImageView);
     if (euclid.handle[eh].debug == 1) printf("\e[1;36mEuclidTEX\e[0;37m: Texture view created with result = %d\n", result);
@@ -4908,6 +4972,12 @@ void* renderarbeite(void *arg){
             if(lighting_thread_created){
                 pthread_join(euclid.handle[eh].threads[2], NULL);
             }
+            //uint8_t renderpassactive[EUCLID_RENDER_PASS_COUNT] = {
+            //    shadow_active,
+            //    deffered_active,
+            //    lighting_active,
+            //    main_active
+            //};
             endrender(eh);
             for(uint32_t i = 0; i != euclid.handle[eh].mesize; i++){
                 euclid.handle[eh].meshes[i].uniformslot = (euclid.handle[eh].meshes[i].uniformslot+1)%2;
@@ -5002,6 +5072,7 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug, uint8_t debug_only_
     euclid.handle[eh].lpcont = 1;
     euclid.handle[eh].halt_render = 0;
     euclid.handle[eh].currentFrame = 0;
+    euclid.handle[eh].swapchainDirty = 0;
     euclid.handle[eh].imageIndex = 0;
     euclid.handle[eh].totalFrames = 0;
     euclid.handle[eh].lightattn = 0;
@@ -5022,6 +5093,16 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug, uint8_t debug_only_
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
     euclid.handle[eh].window = glfwCreateWindow(800, 600, "Schnellwerke", NULL, NULL);
     glfwCreateWindowSurface(euclid.handle[eh].instance, euclid.handle[eh].window, NULL, &euclid.handle[eh].surface);
+    {
+        int fbw = 0, fbh = 0;
+        glfwGetFramebufferSize(euclid.handle[eh].window, &fbw, &fbh);
+        if(fbw > 0 && fbh > 0){
+            euclid.handle[eh].resolutionX[0] = fbw;
+            euclid.handle[eh].resolutionY[0] = fbh;
+            euclid.handle[eh].resolutionX[1] = fbw;
+            euclid.handle[eh].resolutionY[1] = fbh;
+        }
+    }
     getPresentFamily(eh);
     createDevice(eh);
     createSwapChain(eh);
