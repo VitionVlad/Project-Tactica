@@ -575,7 +575,10 @@ void createInstance(uint32_t eh){
     createInfo.pApplicationInfo = &appinfo;
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pNext = NULL;
+    createInfo.flags = NULL;
+    #if defined(__APPLE__) || defined(MACOSX) || defined(macintosh) || defined(Macintosh)
     createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+    #endif
 
     uint32_t lrnm = 0;
     vkEnumerateInstanceExtensionProperties(NULL, &lrnm, NULL);
@@ -5012,7 +5015,7 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug, uint8_t debug_only_
     // whole array. Only call neweng() for additional handles when no other handle's render
     // thread is running, or add external synchronization around this table if that's needed.
     euclid.handle[eh].chosenDevice = -1;
-    euclid.handle[eh].usedPresentMode = 0;
+    euclid.handle[eh].usedPresentMode = 1;
     euclid.handle[eh].debug = debug;
     euclid.handle[eh].resolutionX[0] = 800;
     euclid.handle[eh].resolutionY[0] = 600;
@@ -5060,16 +5063,16 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug, uint8_t debug_only_
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
     euclid.handle[eh].window = glfwCreateWindow(800, 600, "Schnellwerke", NULL, NULL);
     glfwCreateWindowSurface(euclid.handle[eh].instance, euclid.handle[eh].window, NULL, &euclid.handle[eh].surface);
-    {
-        int fbw = 0, fbh = 0;
-        glfwGetFramebufferSize(euclid.handle[eh].window, &fbw, &fbh);
-        if(fbw > 0 && fbh > 0){
-            euclid.handle[eh].resolutionX[0] = fbw;
-            euclid.handle[eh].resolutionY[0] = fbh;
-            euclid.handle[eh].resolutionX[1] = fbw;
-            euclid.handle[eh].resolutionY[1] = fbh;
-        }
-    }
+    //{
+    //    int fbw = 0, fbh = 0;
+    //    glfwGetFramebufferSize(euclid.handle[eh].window, &fbw, &fbh);
+    //    if(fbw > 0 && fbh > 0){
+    //        euclid.handle[eh].resolutionX[0] = fbw;
+    //        euclid.handle[eh].resolutionY[0] = fbh;
+    //        euclid.handle[eh].resolutionX[1] = fbw;
+    //        euclid.handle[eh].resolutionY[1] = fbh;
+    //    }
+    //}
     getPresentFamily(eh);
     createDevice(eh);
     createSwapChain(eh);
