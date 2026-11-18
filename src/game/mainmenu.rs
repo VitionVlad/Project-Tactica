@@ -487,8 +487,8 @@ pub fn update(session: &mut GameSession) {
 
     if session.show_dbg_stat{
         let fps_text = format!(
-            "CPU_cps:{}|GPU_fps:{}",
-            session.eng.cpu_fps, session.eng.gpu_fps
+            "CPU_cps:{}|GPU_fps:{}|{}x{}",
+            session.eng.cpu_fps, session.eng.gpu_fps, session.eng.render.resolution_x, session.eng.render.resolution_y
         );
         session.fpscnt.size.x = 10.0 * session.ui_scale;
         session.fpscnt.size.y = 20.0 * session.ui_scale;
