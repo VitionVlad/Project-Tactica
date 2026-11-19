@@ -1,8 +1,6 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use std::u8;
-
 use crate::engine::{
     loader::{
         jsonparser::JsonF,

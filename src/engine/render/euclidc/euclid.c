@@ -575,7 +575,7 @@ void createInstance(uint32_t eh){
     createInfo.pApplicationInfo = &appinfo;
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pNext = NULL;
-    createInfo.flags = NULL;
+    createInfo.flags = 0;
     #if defined(__APPLE__) || defined(MACOSX) || defined(macintosh) || defined(Macintosh)
     createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
     #endif
@@ -4529,7 +4529,9 @@ static uint32_t newtexture_real(uint32_t eh, uint32_t te, euclidCreationQueue *i
     viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
     if(item->is3d == 1){
         viewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
-    }
+    }//else if(item->zsize == 1){
+    //    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    //}
     viewInfo.format = item->imageformat;
     viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     viewInfo.subresourceRange.baseMipLevel = 0;
