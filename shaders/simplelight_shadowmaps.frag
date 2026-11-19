@@ -32,7 +32,7 @@ layout(binding = 5)  uniform texture2DArray defferedDepthTexture;
 layout(binding = 6)  uniform texture2DArray shadowTexture;
 layout(binding = 7)  uniform sampler        imageSampler;
 layout(binding = 8)  uniform sampler        attachmentSampler;
-layout(binding = 9)  uniform texture2D      noiseTexture;
+layout(binding = 9)  uniform texture2DArray noiseTexture;
 layout(binding = 10) uniform sampler        noiseSampler;
 
 const float PI           = 3.14159265359;
@@ -536,7 +536,7 @@ vec3 voxelplusssrt() {
     // Dedicated dither sample for the volumetric march, decorrelated from the
     // BRDF's blue-noise sample below so their noise patterns don't stack.
     vec2 volBnUV = mod(uv * 2.0 + (mi.addinfo.x * GOLDEN_RATIO + 0.37), 1.0);
-    float volDither = texture(sampler2D(noiseTexture, attachmentSampler), volBnUV).w;
+    float volDither = texture(sampler2DArray(noiseTexture, attachmentSampler), vec3(volBnUV, 0.0)).w;
 
     float d = SampleDepth(uv);
     bool  hitSurface = d < 0.9999;
@@ -561,7 +561,7 @@ vec3 voxelplusssrt() {
 
     for (int j = 0; j < spp; j++) {
         vec2 bnUV = mod(uv * 2.0 + float(mi.addinfo.x + j) * GOLDEN_RATIO, 1.0);
-        vec4 bn   = texture(sampler2D(noiseTexture, attachmentSampler), bnUV);
+        vec4 bn   = texture(sampler2DArray(noiseTexture, attachmentSampler), vec3(bnUV, 0.0));
         vec3 throughput = albedo;
         BRDFSample brdf = finalSample(V, normal, albedo, roughness, metallic, bn.xyz);
         vec3 rayDir     = brdf.direction;
