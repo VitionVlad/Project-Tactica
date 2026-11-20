@@ -1,18 +1,7 @@
 use crate::{
     engine::{
-        engine::Engine,
-        image::Image,
-        light::{Light, LightType},
-        loader::{jsonparser::JsonF, rw::readfs},
-        material::Material,
-        math::{ivec3::Ivec3, vec3::Vec3},
-        render::render::{CullMode, MeshUsage, TextureFormat},
-        scene::{Scene, SceneVoxelizer},
-        speaker::Speaker,
-        ui::{UIplane, UItext},
-        voxel::VoxelizerSettings,
-    },
-    game::{ControllerMappings, Key, KeyboardBindings},
+        engine::Engine, image::Image, light::{Light, LightType}, loader::{imageasset::ImageAsset, jsonparser::JsonF, rw::readfs}, material::Material, math::{ivec3::Ivec3, vec3::Vec3}, render::render::{CullMode, MeshUsage, TextureFormat}, scene::{Scene, SceneVoxelizer}, speaker::Speaker, ui::{UIplane, UItext}, voxel::VoxelizerSettings,
+    }, game::{ControllerMappings, Key, KeyboardBindings},
 };
 
 use super::{Awarness, Enemy, GameSession, Pivot, TBTplate, TextContent};
@@ -173,6 +162,27 @@ pub fn initialize() -> GameSession {
         &mut eng,
         mati,
         ["assets/ui/mm/post.png".to_string()].to_vec(),
+        MeshUsage::PostPass,
+    ));
+
+    let mut comic_images = Vec::new();
+
+    comic_images.push(UIplane::new_from_file(
+        &mut eng,
+        mati,
+        ["assets/comic/comic1.png.png".to_string()].to_vec(),
+        MeshUsage::PostPass,
+    ));
+    comic_images.push(UIplane::new_from_file(
+        &mut eng,
+        mati,
+        ["assets/comic/comic2.png".to_string()].to_vec(),
+        MeshUsage::PostPass,
+    ));
+    comic_images.push(UIplane::new_from_file(
+        &mut eng,
+        mati,
+        ["assets/comic/comic3.png".to_string()].to_vec(),
         MeshUsage::PostPass,
     ));
 
@@ -390,7 +400,9 @@ pub fn initialize() -> GameSession {
     //    TextureFormat::R8g8b8a8Unorm,
     //    false,
     //);
-    let bluenoise = Image::new_from_files(&eng, vec!["assets/noise.png".to_string()]);
+    let rwnoisetex = ImageAsset::other_load("assets/noise.png");
+    println!("size: {}x{}", rwnoisetex.size[0], rwnoisetex.size[1]);
+    let bluenoise = Image::new(&eng, [rwnoisetex.size[0], rwnoisetex.size[1], 1], rwnoisetex.data, false, TextureFormat::R8g8b8a8Unorm, false);
     let mut ltviewport = UIplane::new(
         &mut eng,
         lightmat,
@@ -581,6 +593,7 @@ pub fn initialize() -> GameSession {
         text: vec![text, textcyr],
         menu_text: vec![menu_text, menu_textcyr],
         main_menu_images: main_menu_images,
+        comic_images: comic_images,
         keyimg,
         white_background: wbg,
         black_background: bbg,

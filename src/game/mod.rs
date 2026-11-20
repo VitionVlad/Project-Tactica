@@ -190,6 +190,7 @@ pub enum SubMenu {
     Game,
     Audio,
     Graphics,
+    Comic(u8),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -397,6 +398,7 @@ pub struct GameSession {
     pub black_background: Vec<UIplane>,
     pub awarness_signs: Vec<UIplane>,
     pub main_menu_images: Vec<UIplane>,
+    pub comic_images: Vec<UIplane>,
     pub logo: UIplane,
     pub ui_scale: f32,
     pub pivot: Pivot,

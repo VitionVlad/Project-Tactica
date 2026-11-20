@@ -674,6 +674,7 @@ pub fn update(session: &mut GameSession) {
                     2.0,
                 );
             },
+            _ => {},
         }
     }
     session.viewport.object.physic_object.pos.z = 0.6;
@@ -705,23 +706,24 @@ pub fn handle_input(session: &mut GameSession) {
             Main => {
                 do_paper_sliding_sound(session);
                 session.returning_to_game = true;
-            }
+            },
             Settings => {
                 session.submenu = Main;
                 session.gamepadsel = 1;
-            }
+            },
             Game => {
                 session.submenu = Settings;
                 session.gamepadsel = 4;
-            }
+            },
             Audio => {
                 session.submenu = Settings;
                 session.gamepadsel = 5;
-            }
+            },
             Graphics => {
                 session.submenu = Settings;
                 session.gamepadsel = 6;
-            }
+            },
+            _ => {},
         }
         do_paper2_sound(session);
         session.action_cooldown = 0.25;
@@ -733,6 +735,7 @@ pub fn handle_input(session: &mut GameSession) {
         Game => (9, session.text_content[session.chosen_language].game_set.len() + 6),
         Audio => (14, session.text_content[session.chosen_language].audio.len() + 13),
         Graphics => (17, session.text_content[session.chosen_language].graphics.len() + 9),
+        _ => (0, 2),
     };
     if session.gamepadsel < first_item || session.gamepadsel > last_item {
         session.gamepadsel = first_item;
