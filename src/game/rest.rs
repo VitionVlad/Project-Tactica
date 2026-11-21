@@ -794,6 +794,11 @@ pub fn update(session: &mut GameSession) {
         img.exec(&mut session.eng);
     }
 
+    for img in &mut session.comic_images {
+        img.object.draw = false;
+        img.exec(&mut session.eng);
+    }
+
     if session.scn.objects[session.pivot.id].physic_object.pos.x >= session.x_max_lv - 0.25{
         session.game_state = GameState::DemoEnd;
     }

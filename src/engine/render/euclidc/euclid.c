@@ -5017,7 +5017,7 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug, uint8_t debug_only_
     // whole array. Only call neweng() for additional handles when no other handle's render
     // thread is running, or add external synchronization around this table if that's needed.
     euclid.handle[eh].chosenDevice = -1;
-    euclid.handle[eh].usedPresentMode = 1;
+    euclid.handle[eh].usedPresentMode = 0;
     euclid.handle[eh].debug = debug;
     euclid.handle[eh].resolutionX[0] = 800;
     euclid.handle[eh].resolutionY[0] = 600;

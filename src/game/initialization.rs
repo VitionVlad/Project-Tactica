@@ -170,7 +170,7 @@ pub fn initialize() -> GameSession {
     comic_images.push(UIplane::new_from_file(
         &mut eng,
         mati,
-        ["assets/comic/comic1.png.png".to_string()].to_vec(),
+        ["assets/comic/comic1.png".to_string()].to_vec(),
         MeshUsage::PostPass,
     ));
     comic_images.push(UIplane::new_from_file(

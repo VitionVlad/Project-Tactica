@@ -32,7 +32,7 @@ pub fn updatesubemnumenu(session: &mut GameSession){
     for i in 0..session.text_content[session.chosen_language].pause.len(){
         session.menu_text[session.writing_system as usize][i].size.x = 25.0 * session.ui_scale;
         session.menu_text[session.writing_system as usize][i].size.y = 50.0 * session.ui_scale;
-        session.menu_text[session.writing_system as usize][i].pos.x = session.black_background[0].object.physic_object.pos.x - session.eng.render.resolution_x as f32 + session.menu_text[session.writing_system as usize][i].size.x*2.0;
+        session.menu_text[session.writing_system as usize][i].pos.x = session.black_background[0].object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 2.5 - 120.0 + session.menu_text[session.writing_system as usize][i].size.x*2.0;
         session.menu_text[session.writing_system as usize][i].pos.y = session.eng.render.resolution_y as f32 / 2.0 + (session.menu_text[session.writing_system as usize][i].size.y + 30.0)*(i as f32) + session.viewport.object.physic_object.pos.y;
         session.menu_text[session.writing_system as usize][i].pos.z = 0.7;
         session.menu_text[session.writing_system as usize][i].draw = true;
@@ -479,6 +479,32 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
     }
 }
 
+pub fn updatecomic(session: &mut GameSession){
+    session.comic_images[0].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
+    session.comic_images[0].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
+    session.comic_images[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 1.5 - 90.0;
+    session.comic_images[0].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y;
+    session.comic_images[0].object.physic_object.pos.z = 0.99;
+    session.comic_images[0].object.draw = true;
+    session.comic_images[0].exec(&mut session.eng);
+
+    session.comic_images[1].object.physic_object.scale.x = session.eng.render.resolution_x as f32 / 4.0;
+    session.comic_images[1].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
+    session.comic_images[1].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 0.5 - 60.0;
+    session.comic_images[1].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y;
+    session.comic_images[1].object.physic_object.pos.z = 0.99;
+    session.comic_images[1].object.draw = true;
+    session.comic_images[1].exec(&mut session.eng);
+
+    session.comic_images[2].object.physic_object.scale.x = session.eng.render.resolution_x as f32 / 4.0;
+    session.comic_images[2].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
+    session.comic_images[2].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 0.25 - 30.0;
+    session.comic_images[2].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y;
+    session.comic_images[2].object.physic_object.pos.z = 0.99;
+    session.comic_images[2].object.draw = true;
+    session.comic_images[2].exec(&mut session.eng);
+}
+
 pub fn update(session: &mut GameSession) {
     session.speakers[3].volume = 0.0;
     for speaker in &mut session.speakers {
@@ -521,7 +547,7 @@ pub fn update(session: &mut GameSession) {
 
     session.menu_background[1].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
     session.menu_background[1].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
-    session.menu_background[1].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 - 30.0;
+    session.menu_background[1].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 2.5 - 120.0;
     session.menu_background[1].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y;
     session.menu_background[1].object.physic_object.pos.z = 0.99;
     session.menu_background[1].object.draw = true;
@@ -533,7 +559,7 @@ pub fn update(session: &mut GameSession) {
 
     session.menu_background[0].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
     session.menu_background[0].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
-    session.menu_background[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 - 30.0;
+    session.menu_background[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 2.5 - 120.0;
     session.menu_background[0].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y - session.eng.render.resolution_y as f32 - 30.0;
     session.menu_background[0].object.physic_object.pos.z = 0.99;
     session.menu_background[0].object.draw = true;
@@ -572,7 +598,7 @@ pub fn update(session: &mut GameSession) {
         let img = &mut session.main_menu_images[i];
         img.object.physic_object.scale.x = sizes[i].x;
         img.object.physic_object.scale.y = sizes[i].y;
-        img.object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 0.85 + ((session.eng.render.resolution_x as f32)/7.5)*i as f32;
+        img.object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 2.35 - 120.0 + ((session.eng.render.resolution_x as f32)/7.5)*i as f32;
         img.object.physic_object.pos.y = session.viewport.object.physic_object.pos.y + session.eng.render.resolution_y as f32 * 0.1 + ((session.eng.render.resolution_y as f32)/10.0)*i as f32;
         img.object.physic_object.rot = Vec3{x: 0.0, y: 0.0 as f32, z: -0.15+0.1*i as f32}.to_quat();
         img.object.physic_object.pos.z = 0.85 - 0.01 * i as f32;
@@ -585,6 +611,7 @@ pub fn update(session: &mut GameSession) {
     updatesubemnugame(session);
     updatesubemnuaudio(session);
     updatesubemnugraphics(session);
+    updatecomic(session);
 
     if session.returning_to_game {
         //session.viewport.object.mesh.ubo[52] = smooth_value_towards(
@@ -632,7 +659,7 @@ pub fn update(session: &mut GameSession) {
         let viewport = &mut session.viewport.object.physic_object;
         viewport.scale.x = session.eng.render.resolution_x as f32;
         viewport.scale.y = session.eng.render.resolution_y as f32;
-        viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 + 30.0, &session.eng, 2.0);
+        viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 * 2.5 + 120.0, &session.eng, 2.0);
         match session.submenu {
             Main => {
                 viewport.pos.y = smooth_value_towards(
