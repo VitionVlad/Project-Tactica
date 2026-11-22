@@ -34,7 +34,7 @@ pub fn updatesubemnumenu(session: &mut GameSession){
     for i in 0..session.text_content[session.chosen_language].pause.len(){
         session.menu_text[session.writing_system as usize][i].size.x = 25.0 * session.ui_scale;
         session.menu_text[session.writing_system as usize][i].size.y = 50.0 * session.ui_scale;
-        session.menu_text[session.writing_system as usize][i].pos.x = session.black_background[0].object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 2.5 - 120.0 + session.menu_text[session.writing_system as usize][i].size.x*2.0;
+        session.menu_text[session.writing_system as usize][i].pos.x = session.black_background[0].object.physic_object.pos.x - menu_page_offset(session.eng.render.resolution_x as f32, session.eng.render.resolution_y as f32) + session.menu_text[session.writing_system as usize][i].size.x*2.0;
         session.menu_text[session.writing_system as usize][i].pos.y = session.eng.render.resolution_y as f32 / 2.0 + (session.menu_text[session.writing_system as usize][i].size.y + 30.0)*(i as f32) + session.viewport.object.physic_object.pos.y;
         session.menu_text[session.writing_system as usize][i].pos.z = 0.7;
         session.menu_text[session.writing_system as usize][i].draw = true;
@@ -482,37 +482,59 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
     }
 }
 
+fn comic_panel_widths(screen_height: f32) -> [f32; 3] {
+    [
+        screen_height * (16.0 / 9.0),
+        screen_height * (4.0 / 9.0),
+        screen_height * (4.0 / 9.0),
+    ]
+}
+
+fn menu_page_offset(screen_width: f32, screen_height: f32) -> f32 {
+    comic_panel_widths(screen_height).iter().sum::<f32>() + screen_width + 120.0
+}
+
+fn comic_panel_layout(viewport_x: f32, screen_height: f32) -> ([f32; 3], [f32; 3]) {
+    let panel_widths = comic_panel_widths(screen_height);
+    let panel_positions = [
+        viewport_x - panel_widths[0] - panel_widths[1] - panel_widths[2] - 90.0,
+        viewport_x - panel_widths[1] - panel_widths[2] - 60.0,
+        viewport_x - panel_widths[2] - 30.0,
+    ];
+    (panel_widths, panel_positions)
+}
+
+fn comic_slide_viewport_x(panel_widths: [f32; 3], screen_width: f32, slide: u8) -> f32 {
+    match slide {
+        0 => screen_width + panel_widths[1] + panel_widths[2] + 90.0,
+        1 => screen_width + panel_widths[2] + 60.0,
+        _ => screen_width + 30.0,
+    }
+}
+
 pub fn updatecomic(session: &mut GameSession){
-    session.comic_images[0].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
-    session.comic_images[0].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
-    session.comic_images[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 1.5 - 90.0;
-    session.comic_images[0].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y;
-    session.comic_images[0].object.physic_object.pos.z = 0.99;
-    session.comic_images[0].object.draw = true;
-    session.comic_images[0].exec(&mut session.eng);
-
-    session.comic_images[1].object.physic_object.scale.x = session.eng.render.resolution_x as f32 / 4.0;
-    session.comic_images[1].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
-    session.comic_images[1].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 0.5 - 60.0;
-    session.comic_images[1].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y;
-    session.comic_images[1].object.physic_object.pos.z = 0.99;
-    session.comic_images[1].object.draw = true;
-    session.comic_images[1].exec(&mut session.eng);
-
-    session.comic_images[2].object.physic_object.scale.x = session.eng.render.resolution_x as f32 / 4.0;
-    session.comic_images[2].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
-    session.comic_images[2].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 0.25 - 30.0;
-    session.comic_images[2].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y;
-    session.comic_images[2].object.physic_object.pos.z = 0.99;
-    session.comic_images[2].object.draw = true;
-    session.comic_images[2].exec(&mut session.eng);
+    let screen_height = session.eng.render.resolution_y as f32;
+    let (panel_widths, panel_positions) = comic_panel_layout(
+        session.viewport.object.physic_object.pos.x,
+        screen_height,
+    );
+    for i in 0..session.comic_images.len() {
+        let panel = &mut session.comic_images[i];
+        panel.object.physic_object.scale.x = panel_widths[i];
+        panel.object.physic_object.scale.y = screen_height;
+        panel.object.physic_object.pos.x = panel_positions[i];
+        panel.object.physic_object.pos.y = session.viewport.object.physic_object.pos.y;
+        panel.object.physic_object.pos.z = 0.99;
+        panel.object.draw = true;
+        panel.exec(&mut session.eng);
+    }
 
     //21, 22
 
     let text = session.text_content[session.writing_system as usize].comic[0].clone();
     session.menu_text[session.writing_system as usize][22].size.x = 20.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][22].size.y = 40.0 * session.ui_scale;
-    session.menu_text[session.writing_system as usize][22].pos.x = session.comic_images[0].object.physic_object.pos.x + session.eng.render.resolution_x as f32 - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][22].size.x;
+    session.menu_text[session.writing_system as usize][22].pos.x = session.comic_images[0].object.physic_object.pos.x + session.comic_images[0].object.physic_object.scale.x - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][22].size.x;
     session.menu_text[session.writing_system as usize][22].pos.y = session.eng.render.resolution_y as f32 - 60.0;
     session.menu_text[session.writing_system as usize][22].pos.z = 0.7;
     session.menu_text[session.writing_system as usize][22].signal = false;
@@ -537,7 +559,7 @@ pub fn updatecomic(session: &mut GameSession){
 
     session.menu_text[session.writing_system as usize][23].size.x = 20.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][23].size.y = 40.0 * session.ui_scale;
-    session.menu_text[session.writing_system as usize][23].pos.x = session.comic_images[1].object.physic_object.pos.x + session.eng.render.resolution_x as f32 / 4.0 - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][23].size.x;
+    session.menu_text[session.writing_system as usize][23].pos.x = session.comic_images[1].object.physic_object.pos.x + session.comic_images[1].object.physic_object.scale.x - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][23].size.x;
     session.menu_text[session.writing_system as usize][23].pos.y = session.eng.render.resolution_y as f32 - 60.0;
     session.menu_text[session.writing_system as usize][23].pos.z = 0.7;
     session.menu_text[session.writing_system as usize][23].signal = false;
@@ -562,7 +584,7 @@ pub fn updatecomic(session: &mut GameSession){
 
     session.menu_text[session.writing_system as usize][24].size.x = 20.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][24].size.y = 40.0 * session.ui_scale;
-    session.menu_text[session.writing_system as usize][24].pos.x = session.comic_images[2].object.physic_object.pos.x + session.eng.render.resolution_x as f32 / 4.0 - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][24].size.x;
+    session.menu_text[session.writing_system as usize][24].pos.x = session.comic_images[2].object.physic_object.pos.x + session.comic_images[2].object.physic_object.scale.x - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][24].size.x;
     session.menu_text[session.writing_system as usize][24].pos.y = session.eng.render.resolution_y as f32 - 60.0;
     session.menu_text[session.writing_system as usize][24].pos.z = 0.7;
     session.menu_text[session.writing_system as usize][24].signal = false;
@@ -627,7 +649,7 @@ pub fn update(session: &mut GameSession) {
 
     session.menu_background[1].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
     session.menu_background[1].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
-    session.menu_background[1].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 2.5 - 120.0;
+    session.menu_background[1].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - menu_page_offset(session.eng.render.resolution_x as f32, session.eng.render.resolution_y as f32);
     session.menu_background[1].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y;
     session.menu_background[1].object.physic_object.pos.z = 0.99;
     session.menu_background[1].object.draw = true;
@@ -639,7 +661,7 @@ pub fn update(session: &mut GameSession) {
 
     session.menu_background[0].object.physic_object.scale.x = session.eng.render.resolution_x as f32;
     session.menu_background[0].object.physic_object.scale.y = session.eng.render.resolution_y as f32;
-    session.menu_background[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 2.5 - 120.0;
+    session.menu_background[0].object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - menu_page_offset(session.eng.render.resolution_x as f32, session.eng.render.resolution_y as f32);
     session.menu_background[0].object.physic_object.pos.y = session.viewport.object.physic_object.pos.y - session.eng.render.resolution_y as f32 - 30.0;
     session.menu_background[0].object.physic_object.pos.z = 0.99;
     session.menu_background[0].object.draw = true;
@@ -678,7 +700,7 @@ pub fn update(session: &mut GameSession) {
         let img = &mut session.main_menu_images[i];
         img.object.physic_object.scale.x = sizes[i].x;
         img.object.physic_object.scale.y = sizes[i].y;
-        img.object.physic_object.pos.x = session.viewport.object.physic_object.pos.x - session.eng.render.resolution_x as f32 * 2.35 - 120.0 + ((session.eng.render.resolution_x as f32)/7.5)*i as f32;
+        img.object.physic_object.pos.x = session.menu_background[0].object.physic_object.pos.x + (session.eng.render.resolution_x as f32)*0.15 + ((session.eng.render.resolution_x as f32)/7.5)*i as f32;
         img.object.physic_object.pos.y = session.viewport.object.physic_object.pos.y + session.eng.render.resolution_y as f32 * 0.1 + ((session.eng.render.resolution_y as f32)/10.0)*i as f32;
         img.object.physic_object.rot = Vec3{x: 0.0, y: 0.0 as f32, z: -0.15+0.1*i as f32}.to_quat();
         img.object.physic_object.pos.z = 0.85 - 0.01 * i as f32;
@@ -736,12 +758,16 @@ pub fn update(session: &mut GameSession) {
         //session.viewport.object.mesh.ubo[52] = 10.0;
         session.viewport.object.mesh.ubo[53] = 10.0;
 
+        let screen_width = session.eng.render.resolution_x as f32;
+        let screen_height = session.eng.render.resolution_y as f32;
+        let panel_widths = comic_panel_widths(screen_height);
+        let menu_viewport_x = menu_page_offset(screen_width, screen_height);
         let viewport = &mut session.viewport.object.physic_object;
         viewport.scale.x = session.eng.render.resolution_x as f32;
         viewport.scale.y = session.eng.render.resolution_y as f32;
         match session.submenu {
             Main => {
-                viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 * 2.5 + 120.0, &session.eng, 2.0);
+                viewport.pos.x = smooth_value_towards(viewport.pos.x, menu_viewport_x, &session.eng, 2.0);
                 viewport.pos.y = smooth_value_towards(
                     viewport.pos.y,
                     0.0,
@@ -750,7 +776,7 @@ pub fn update(session: &mut GameSession) {
                 );
             },
             Settings => {
-                viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 * 2.5 + 120.0, &session.eng, 2.0);
+                viewport.pos.x = smooth_value_towards(viewport.pos.x, menu_viewport_x, &session.eng, 2.0);
                 viewport.pos.y = smooth_value_towards(
                     viewport.pos.y,
                     session.eng.render.resolution_y as f32 * 0.9,
@@ -759,7 +785,7 @@ pub fn update(session: &mut GameSession) {
                 );
             },
             Game => {
-                viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 * 2.5 + 120.0, &session.eng, 2.0);
+                viewport.pos.x = smooth_value_towards(viewport.pos.x, menu_viewport_x, &session.eng, 2.0);
                 viewport.pos.y = smooth_value_towards(
                     viewport.pos.y,
                     session.eng.render.resolution_y as f32 * 0.9,
@@ -768,7 +794,7 @@ pub fn update(session: &mut GameSession) {
                 );
             },
             Audio => {
-                viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 * 2.5 + 120.0, &session.eng, 2.0);
+                viewport.pos.x = smooth_value_towards(viewport.pos.x, menu_viewport_x, &session.eng, 2.0);
                 viewport.pos.y = smooth_value_towards(
                     viewport.pos.y,
                     session.eng.render.resolution_y as f32 * 0.9,
@@ -777,7 +803,7 @@ pub fn update(session: &mut GameSession) {
                 );
             },
             Graphics => {
-                viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 * 2.5 + 120.0, &session.eng, 2.0);
+                viewport.pos.x = smooth_value_towards(viewport.pos.x, menu_viewport_x, &session.eng, 2.0);
                 viewport.pos.y = smooth_value_towards(
                     viewport.pos.y,
                     session.eng.render.resolution_y as f32 * 0.9,
@@ -794,11 +820,7 @@ pub fn update(session: &mut GameSession) {
                 );
                 viewport.pos.x = smooth_value_towards(
                     viewport.pos.x,
-                    match slide {
-                        0 => session.eng.render.resolution_x as f32 * 1.5 + 90.0,
-                        1 => session.eng.render.resolution_x as f32 * 1.25 + 60.0,
-                        _ => session.eng.render.resolution_x as f32 * 1.0 + 30.0
-                    },
+                    comic_slide_viewport_x(panel_widths, screen_width, slide),
                     &session.eng,
                     2.0,
                 );
@@ -1035,4 +1057,43 @@ fn select_next_language(session: &mut GameSession) {
         previous_writing_system,
         session.writing_system as usize,
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{comic_panel_layout, comic_panel_widths, comic_slide_viewport_x, menu_page_offset};
+
+    #[test]
+    fn comic_layout_preserves_source_aspects_and_panel_gaps() {
+        let (widths, positions) = comic_panel_layout(3000.0, 720.0);
+
+        assert_eq!(widths, [1280.0, 320.0, 320.0]);
+        assert_eq!(positions[1] - (positions[0] + widths[0]), 30.0);
+        assert_eq!(positions[2] - (positions[1] + widths[1]), 30.0);
+        assert_eq!(positions[2] + widths[2], 2970.0);
+        assert_eq!(comic_slide_viewport_x(widths, 1280.0, 0), 2010.0);
+        assert_eq!(comic_slide_viewport_x(widths, 1280.0, 1), 1660.0);
+        assert_eq!(comic_slide_viewport_x(widths, 1280.0, 2), 1310.0);
+        for (slide, panel) in [0, 1, 2].iter().zip([0, 1, 2].iter()) {
+            let viewport_x = comic_slide_viewport_x(widths, 1280.0, *slide);
+            let (_, slide_positions) = comic_panel_layout(viewport_x, 720.0);
+            assert_eq!(slide_positions[*panel] + widths[*panel], 1280.0);
+        }
+    }
+
+    #[test]
+    fn comic_panel_widths_depend_on_height_not_screen_width() {
+        let widths = comic_panel_widths(900.0);
+
+        assert_eq!(widths, [1600.0, 400.0, 400.0]);
+        let screen_width = 1400.0;
+        let menu_viewport_x = menu_page_offset(screen_width, 900.0);
+        let menu_background_left = menu_viewport_x - menu_page_offset(screen_width, 900.0);
+        let menu_background_right = menu_background_left + screen_width;
+        let first_panel_left = menu_viewport_x - widths.iter().sum::<f32>() - 90.0;
+
+        assert_eq!(menu_background_left, 0.0);
+        assert_eq!(menu_background_right, screen_width);
+        assert_eq!(first_panel_left - menu_background_right, 30.0);
+    }
 }
