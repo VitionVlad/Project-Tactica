@@ -214,6 +214,7 @@ pub struct TextContent{
     pub graphics: Vec<String>,
     pub game_over: Vec<String>,
     pub demo_end: Vec<String>,
+    pub comic: Vec<String>,
 }
 
 impl TextContent {
@@ -305,6 +306,7 @@ impl TextContent {
             graphics: parse_list("graphics")?,
             game_over: parse_list("game_over")?,
             demo_end: parse_list("demo_end")?,
+            comic: parse_list("comic")?,
         })
     }
 

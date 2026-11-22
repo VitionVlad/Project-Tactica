@@ -580,7 +580,7 @@ pub fn initialize() -> GameSession {
             },
     );
 
-    viewport.object.physic_object.pos.x = eng.render.resolution_x as f32 * 4.1;
+    viewport.object.physic_object.pos.x = eng.render.resolution_x as f32 * 4.5;
 
     let mut session = GameSession {
         show_dbg_stat: false,

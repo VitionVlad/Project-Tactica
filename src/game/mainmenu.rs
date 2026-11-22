@@ -1,3 +1,5 @@
+use std::u8;
+
 use crate::engine::math::vec2::Vec2;
 use crate::engine::{math::vec3::Vec3, physics::physics::PhysicsObject};
 use crate::game::SubMenu::{self, Audio, Game, Graphics, Main, Settings};
@@ -45,7 +47,8 @@ pub fn updatesubemnumenu(session: &mut GameSession){
             match i {
                 0 => {
                     do_paper_sliding_sound(session);
-                    session.returning_to_game = true;
+                    session.submenu = SubMenu::Comic(0);
+                    //session.returning_to_game = true;
                 }
                 1 => {
                     session.submenu = SubMenu::Settings;
@@ -503,6 +506,83 @@ pub fn updatecomic(session: &mut GameSession){
     session.comic_images[2].object.physic_object.pos.z = 0.99;
     session.comic_images[2].object.draw = true;
     session.comic_images[2].exec(&mut session.eng);
+
+    //21, 22
+
+    let text = session.text_content[session.writing_system as usize].comic[0].clone();
+    session.menu_text[session.writing_system as usize][22].size.x = 20.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][22].size.y = 40.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][22].pos.x = session.comic_images[0].object.physic_object.pos.x + session.eng.render.resolution_x as f32 - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][22].size.x;
+    session.menu_text[session.writing_system as usize][22].pos.y = session.eng.render.resolution_y as f32 - 60.0;
+    session.menu_text[session.writing_system as usize][22].pos.z = 0.7;
+    session.menu_text[session.writing_system as usize][22].signal = false;
+    if session.submenu == SubMenu::Comic(0){
+        session.menu_text[session.writing_system as usize][22].signal = true;
+    }
+    session.menu_text[session.writing_system as usize][22].draw = true;
+    session.menu_text[session.writing_system as usize][22].per_symbol = false;
+    if session.menu_text[session.writing_system as usize][22].exec(&mut session.eng, &text) && session.eng.control.mousebtn[2]{
+        session.submenu = SubMenu::Comic(1);
+    }
+
+    session.black_background[24].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][22].size.x*(text.len() as f32)+15.0;
+    session.black_background[24].object.physic_object.scale.y = session.menu_text[session.writing_system as usize][22].size.y+15.0;
+    session.black_background[24].object.physic_object.pos.x = session.menu_text[session.writing_system as usize][22].pos.x-7.5;
+    session.black_background[24].object.physic_object.pos.y = session.menu_text[session.writing_system as usize][22].pos.y-7.5;
+    session.black_background[24].object.physic_object.pos.z = 0.71;
+    session.black_background[24].object.draw = true;
+    session.black_background[24].exec(&mut session.eng);
+
+    //
+
+    session.menu_text[session.writing_system as usize][23].size.x = 20.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][23].size.y = 40.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][23].pos.x = session.comic_images[1].object.physic_object.pos.x + session.eng.render.resolution_x as f32 / 4.0 - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][23].size.x;
+    session.menu_text[session.writing_system as usize][23].pos.y = session.eng.render.resolution_y as f32 - 60.0;
+    session.menu_text[session.writing_system as usize][23].pos.z = 0.7;
+    session.menu_text[session.writing_system as usize][23].signal = false;
+    if session.submenu == SubMenu::Comic(1){
+        session.menu_text[session.writing_system as usize][23].signal = true;
+    }
+    session.menu_text[session.writing_system as usize][23].draw = true;
+    session.menu_text[session.writing_system as usize][23].per_symbol = false;
+    if session.menu_text[session.writing_system as usize][23].exec(&mut session.eng, &text) && session.eng.control.mousebtn[2]{
+        session.submenu = SubMenu::Comic(2);
+    }
+
+    session.black_background[25].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][23].size.x*(text.len() as f32)+15.0;
+    session.black_background[25].object.physic_object.scale.y = session.menu_text[session.writing_system as usize][23].size.y+15.0;
+    session.black_background[25].object.physic_object.pos.x = session.menu_text[session.writing_system as usize][23].pos.x-7.5;
+    session.black_background[25].object.physic_object.pos.y = session.menu_text[session.writing_system as usize][23].pos.y-7.5;
+    session.black_background[25].object.physic_object.pos.z = 0.71;
+    session.black_background[25].object.draw = true;
+    session.black_background[25].exec(&mut session.eng);
+
+    //
+
+    session.menu_text[session.writing_system as usize][24].size.x = 20.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][24].size.y = 40.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][24].pos.x = session.comic_images[2].object.physic_object.pos.x + session.eng.render.resolution_x as f32 / 4.0 - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][24].size.x;
+    session.menu_text[session.writing_system as usize][24].pos.y = session.eng.render.resolution_y as f32 - 60.0;
+    session.menu_text[session.writing_system as usize][24].pos.z = 0.7;
+    session.menu_text[session.writing_system as usize][24].signal = false;
+    if session.submenu != SubMenu::Comic(0) && session.submenu != SubMenu::Comic(1){
+        session.menu_text[session.writing_system as usize][24].signal = true;
+    }
+    session.menu_text[session.writing_system as usize][24].draw = true;
+    session.menu_text[session.writing_system as usize][24].per_symbol = false;
+    if session.menu_text[session.writing_system as usize][24].exec(&mut session.eng, &text) && session.eng.control.mousebtn[2]{
+        session.submenu = SubMenu::Main;
+        session.returning_to_game = true;
+    }
+
+    session.black_background[26].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][24].size.x*(text.len() as f32)+15.0;
+    session.black_background[26].object.physic_object.scale.y = session.menu_text[session.writing_system as usize][24].size.y+15.0;
+    session.black_background[26].object.physic_object.pos.x = session.menu_text[session.writing_system as usize][24].pos.x-7.5;
+    session.black_background[26].object.physic_object.pos.y = session.menu_text[session.writing_system as usize][24].pos.y-7.5;
+    session.black_background[26].object.physic_object.pos.z = 0.71;
+    session.black_background[26].object.draw = true;
+    session.black_background[26].exec(&mut session.eng);
 }
 
 pub fn update(session: &mut GameSession) {
@@ -659,9 +739,9 @@ pub fn update(session: &mut GameSession) {
         let viewport = &mut session.viewport.object.physic_object;
         viewport.scale.x = session.eng.render.resolution_x as f32;
         viewport.scale.y = session.eng.render.resolution_y as f32;
-        viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 * 2.5 + 120.0, &session.eng, 2.0);
         match session.submenu {
             Main => {
+                viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 * 2.5 + 120.0, &session.eng, 2.0);
                 viewport.pos.y = smooth_value_towards(
                     viewport.pos.y,
                     0.0,
@@ -670,6 +750,7 @@ pub fn update(session: &mut GameSession) {
                 );
             },
             Settings => {
+                viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 * 2.5 + 120.0, &session.eng, 2.0);
                 viewport.pos.y = smooth_value_towards(
                     viewport.pos.y,
                     session.eng.render.resolution_y as f32 * 0.9,
@@ -678,6 +759,7 @@ pub fn update(session: &mut GameSession) {
                 );
             },
             Game => {
+                viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 * 2.5 + 120.0, &session.eng, 2.0);
                 viewport.pos.y = smooth_value_towards(
                     viewport.pos.y,
                     session.eng.render.resolution_y as f32 * 0.9,
@@ -686,6 +768,7 @@ pub fn update(session: &mut GameSession) {
                 );
             },
             Audio => {
+                viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 * 2.5 + 120.0, &session.eng, 2.0);
                 viewport.pos.y = smooth_value_towards(
                     viewport.pos.y,
                     session.eng.render.resolution_y as f32 * 0.9,
@@ -694,6 +777,7 @@ pub fn update(session: &mut GameSession) {
                 );
             },
             Graphics => {
+                viewport.pos.x = smooth_value_towards(viewport.pos.x, session.eng.render.resolution_x as f32 * 2.5 + 120.0, &session.eng, 2.0);
                 viewport.pos.y = smooth_value_towards(
                     viewport.pos.y,
                     session.eng.render.resolution_y as f32 * 0.9,
@@ -701,7 +785,24 @@ pub fn update(session: &mut GameSession) {
                     2.0,
                 );
             },
-            _ => {},
+            SubMenu::Comic(slide) => {
+                viewport.pos.y = smooth_value_towards(
+                    viewport.pos.y,
+                    0.0,
+                    &session.eng,
+                    2.0,
+                );
+                viewport.pos.x = smooth_value_towards(
+                    viewport.pos.x,
+                    match slide {
+                        0 => session.eng.render.resolution_x as f32 * 1.5 + 90.0,
+                        1 => session.eng.render.resolution_x as f32 * 1.25 + 60.0,
+                        _ => session.eng.render.resolution_x as f32 * 1.0 + 30.0
+                    },
+                    &session.eng,
+                    2.0,
+                );
+            },
         }
     }
     session.viewport.object.physic_object.pos.z = 0.6;
