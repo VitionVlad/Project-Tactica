@@ -138,6 +138,10 @@ typedef struct euclidh{
     VkExtent2D swapChainExtent;
     VkFormat swapChainImageFormat;
     uint32_t usedPresentMode;
+    uint32_t FIFOPresentMode;
+    uint32_t ImediatePresentMode;
+    uint8_t ImediatePresentModeAvaible;
+    uint8_t changedPresentMode;
     _Atomic uint32_t resolutionX[2];
     _Atomic uint32_t resolutionY[2];
     uint32_t sresolutionX;
@@ -333,6 +337,18 @@ void setresolution(uint32_t eh, uint32_t xs, uint32_t ys){
 
 void settitle(uint32_t eh, const char* title){
     glfwSetWindowTitle(euclid.handle[eh].window, title);
+}
+
+void swapFIFO(uint32_t eh){
+    euclid.handle[eh].usedPresentMode = euclid.handle[eh].FIFOPresentMode;
+    euclid.handle[eh].changedPresentMode = 1;
+}
+
+void swapImediate(uint32_t eh){
+    if (euclid.handle[eh].ImediatePresentModeAvaible == 1){
+        euclid.handle[eh].usedPresentMode = euclid.handle[eh].ImediatePresentMode;
+        euclid.handle[eh].changedPresentMode = 1;
+    }
 }
 
 void seticon(uint32_t eh, uint32_t xs, uint32_t ys, char *pixels){
@@ -736,11 +752,23 @@ void createSwapChain(uint32_t eh){
         vkGetPhysicalDeviceSurfacePresentModesKHR(euclid.handle[eh].physicalDevices[euclid.handle[eh].chosenDevice], euclid.handle[eh].surface, &presentModeCount, modes);
         for(int i = 0; i != presentModeCount; i++){
             if (euclid.handle[eh].debug == 1) printf("\e[1;36mEuclidVK\e[0;37m: Present mode avaible = %d\n", modes[i]);
+            switch (modes[i]){
+            case VK_PRESENT_MODE_FIFO_KHR:
+                euclid.handle[eh].FIFOPresentMode = i;
+                break;
+            case VK_PRESENT_MODE_IMMEDIATE_KHR:
+                euclid.handle[eh].ImediatePresentMode = i;
+                euclid.handle[eh].ImediatePresentModeAvaible = 1;
+                break;
+            default:
+                break;
+            }
         }
     }else{
         if (euclid.handle[eh].debug == 1) printf("\e[1;31mError\e[0;37m: No present mode avaible");
         exit(-1);
     }
+    //euclid.handle[eh].usedPresentMode = euclid.handle[eh].ImediatePresentMode;
 
     uint32_t imageCount = capabilities.minImageCount+1;
     if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount) {
@@ -1722,10 +1750,11 @@ void startrender(uint32_t eh){
         || euclid.handle[eh].oldx != euclid.handle[eh].resolutionX[0]
         || euclid.handle[eh].oldy != euclid.handle[eh].resolutionY[0];
     euclid.handle[eh].swapchainDirty = 0;
-    if (resized || euclid.handle[eh].resolutionScale[0] != euclid.handle[eh].oldResolutionScale || euclid.handle[eh].defferedCount[0] != euclid.handle[eh].oldDefferedCount) {
+    if (resized || euclid.handle[eh].resolutionScale[0] != euclid.handle[eh].oldResolutionScale || euclid.handle[eh].defferedCount[0] != euclid.handle[eh].oldDefferedCount || euclid.handle[eh].changedPresentMode == 1) {
         if (euclid.handle[eh].debug == 1) printf("\e[1;35mEuclidVK\e[0;37m: Resolution changed from %dx%d to %dx%d\n", euclid.handle[eh].oldx, euclid.handle[eh].oldy, euclid.handle[eh].resolutionX[0], euclid.handle[eh].resolutionY[0]);
         euclid.handle[eh].oldx = euclid.handle[eh].resolutionX[0];
         euclid.handle[eh].oldy = euclid.handle[eh].resolutionY[0];
+        euclid.handle[eh].changedPresentMode = 0;
         rebuildResolutionDependentData(eh);
     }
     if(resized){
@@ -5018,6 +5047,8 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug, uint8_t debug_only_
     // thread is running, or add external synchronization around this table if that's needed.
     euclid.handle[eh].chosenDevice = -1;
     euclid.handle[eh].usedPresentMode = 0;
+    euclid.handle[eh].changedPresentMode = 0;
+    euclid.handle[eh].ImediatePresentModeAvaible = 0;
     euclid.handle[eh].debug = debug;
     euclid.handle[eh].resolutionX[0] = 800;
     euclid.handle[eh].resolutionY[0] = 600;
@@ -5090,6 +5121,9 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug, uint8_t debug_only_
     createCommandPool(eh);
     createCommandBuffer(eh);
     createSyncObjects(eh);
+
+    euclid.handle[eh].usedPresentMode = euclid.handle[eh].FIFOPresentMode;
+    euclid.handle[eh].changedPresentMode = 1;
 
     {
         VkSamplerCreateInfo samplerInfo = {0};

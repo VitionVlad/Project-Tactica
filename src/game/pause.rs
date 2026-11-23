@@ -374,10 +374,10 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                 17 => {
                     match session.use_rt_lighting {
                         true => {
-                            txt += &session.text_content[session.chosen_language].graphics[11].clone();
+                            txt += &session.text_content[session.chosen_language].graphics[12].clone();
                         },
                         false => {
-                            txt += &session.text_content[session.chosen_language].graphics[10].clone();
+                            txt += &session.text_content[session.chosen_language].graphics[11].clone();
                         },
                     }
                     //session.returning_to_game = true;
@@ -390,13 +390,13 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                 19 => {
                     match session.eng.render.shadow_map_resolution {
                         512 => {
-                            txt += &session.text_content[session.chosen_language].graphics[7].clone();
-                        },
-                        1024 => {
                             txt += &session.text_content[session.chosen_language].graphics[8].clone();
                         },
-                        2048 => {
+                        1024 => {
                             txt += &session.text_content[session.chosen_language].graphics[9].clone();
+                        },
+                        2048 => {
+                            txt += &session.text_content[session.chosen_language].graphics[10].clone();
                         },
                         _ => {
                             txt += &session.eng.render.shadow_map_resolution.to_string();
@@ -407,10 +407,20 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                 20 => {
                     match session.eng.render.fullscreen {
                         true => {
-                            txt += &session.text_content[session.chosen_language].graphics[5].clone();
+                            txt += &session.text_content[session.chosen_language].graphics[6].clone();
                         },
                         false => {
+                            txt += &session.text_content[session.chosen_language].graphics[7].clone();
+                        },
+                    }
+                },
+                21 => {
+                    match session.eng.render.vsync {
+                        true => {
                             txt += &session.text_content[session.chosen_language].graphics[6].clone();
+                        },
+                        false => {
+                            txt += &session.text_content[session.chosen_language].graphics[7].clone();
                         },
                     }
                 },
@@ -458,6 +468,12 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                     do_paper_sound(session);
                 },
                 21 => {
+                    session.eng.render.vsync = !session.eng.render.vsync;
+                    session.tredr = 0.2;
+                    save_settings(session);
+                    do_paper_sound(session);
+                },
+                22 => {
                     session.submenu = SubMenu::Settings;
                     do_paper2_sound(session);
                 }
@@ -850,6 +866,12 @@ fn activate_gamepad_selection(session: &mut GameSession) {
             do_paper_sound(session);
         }
         (Graphics, 21) => {
+            session.eng.render.vsync = !session.eng.render.vsync;
+            session.tredr = 0.2;
+            save_settings(session);
+            do_paper_sound(session);
+        }
+        (Graphics, 22) => {
             session.submenu = Settings;
             session.gamepadsel = 6;
             do_paper2_sound(session);

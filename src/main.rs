@@ -7,7 +7,6 @@ use crate::game::{GameState, demo_end, mainmenu, settings::save_settings};
 
 fn main() {
     let mut session = initialization::initialize();
-
     while session.eng.work() && !session.exit{
         if session.action_cooldown > 0.0 {
             session.action_cooldown -= session.eng.logic_frametime;
@@ -33,7 +32,7 @@ fn main() {
             },
             game::GameState::Gameover => {
                 if session.resize_cnt != session.eng.render.resize_count{
-                    session.tredr = ((1.0 / session.eng.gpu_fps as f64)*2.0).max(0.1);
+                    session.tredr = ((1.0 / session.eng.gpu_fps as f64)*2.0).max(0.2);
                     session.resize_cnt = session.eng.render.resize_count;
                     save_settings(&session);
                 }

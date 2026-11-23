@@ -15,7 +15,7 @@ pub fn save_settings(session: &GameSession) {
     ensure_settings_dir();
 
     let json = format!(
-        "{{\n  \"chosen_language\": {},\n  \"ui_scale\": {},\n  \"show_dbg_stat\": {},\n  \"audio_volume\": {},\n  \"use_rt_lighting\": {},\n  \"resolution_scale\": {},\n  \"fullscreen\": {},\n  \"shadowmaps_resolution\": {},\n  \"resolution_x\": {},\n  \"resolution_y\": {}\n}}\n",
+        "{{\n  \"chosen_language\": {},\n  \"ui_scale\": {},\n  \"show_dbg_stat\": {},\n  \"audio_volume\": {},\n  \"use_rt_lighting\": {},\n  \"resolution_scale\": {},\n  \"fullscreen\": {},\n  \"shadowmaps_resolution\": {},\n  \"resolution_x\": {},\n  \"resolution_y\": {},\n  \"vsync\": {}\n}}\n",
         session.chosen_language,
         session.ui_scale,
         session.show_dbg_stat,
@@ -26,6 +26,7 @@ pub fn save_settings(session: &GameSession) {
         session.eng.render.shadow_map_resolution,
         session.eng.render.resolution_x,
         session.eng.render.resolution_y,
+        session.eng.render.vsync,
     );
 
     writefs(SETTINGS_PATH, json.into_bytes());
@@ -73,6 +74,9 @@ pub fn load_settings(session: &mut GameSession) {
             }
             "resolution_y" if option.node_type == NodeType::Number => {
                 nr.1 = option.numeral_val as u32;
+            }
+            "vsync" if option.node_type == NodeType::Bolean => {
+                session.eng.render.vsync = option.bolean;
             }
             _ => {}
         }

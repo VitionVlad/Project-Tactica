@@ -22,14 +22,14 @@ pub fn updatesubemnumenu(session: &mut GameSession){
     session.lgtext.rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
     session.lgtext.exec(&mut session.eng, "Project|Tatica!");
 
-    session.black_background[23].object.physic_object.scale.x = session.lgtext.size.x*7.0 + 15.0;
-    session.black_background[23].object.physic_object.scale.y = session.lgtext.size.y*2.0 + 15.0;
-    session.black_background[23].object.physic_object.pos.x = session.lgtext.pos.x - 7.5;
-    session.black_background[23].object.physic_object.pos.y = session.lgtext.pos.y - 7.5;
-    session.black_background[23].object.physic_object.pos.z = 0.71;
-    session.black_background[23].object.draw = true;
-    session.black_background[23].object.physic_object.rot = session.lgtext.rotation;
-    session.black_background[23].exec(&mut session.eng);
+    session.black_background[24].object.physic_object.scale.x = session.lgtext.size.x*7.0 + 15.0;
+    session.black_background[24].object.physic_object.scale.y = session.lgtext.size.y*2.0 + 15.0;
+    session.black_background[24].object.physic_object.pos.x = session.lgtext.pos.x - 7.5;
+    session.black_background[24].object.physic_object.pos.y = session.lgtext.pos.y - 7.5;
+    session.black_background[24].object.physic_object.pos.z = 0.71;
+    session.black_background[24].object.draw = true;
+    session.black_background[24].object.physic_object.rot = session.lgtext.rotation;
+    session.black_background[24].exec(&mut session.eng);
 
     for i in 0..session.text_content[session.chosen_language].pause.len(){
         session.menu_text[session.writing_system as usize][i].size.x = 25.0 * session.ui_scale;
@@ -378,10 +378,10 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                 17 => {
                     match session.use_rt_lighting {
                         true => {
-                            txt += &session.text_content[session.chosen_language].graphics[11].clone();
+                            txt += &session.text_content[session.chosen_language].graphics[12].clone();
                         },
                         false => {
-                            txt += &session.text_content[session.chosen_language].graphics[10].clone();
+                            txt += &session.text_content[session.chosen_language].graphics[11].clone();
                         },
                     }
                     //session.returning_to_game = true;
@@ -394,13 +394,13 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                 19 => {
                     match session.eng.render.shadow_map_resolution {
                         512 => {
-                            txt += &session.text_content[session.chosen_language].graphics[7].clone();
-                        },
-                        1024 => {
                             txt += &session.text_content[session.chosen_language].graphics[8].clone();
                         },
-                        2048 => {
+                        1024 => {
                             txt += &session.text_content[session.chosen_language].graphics[9].clone();
+                        },
+                        2048 => {
+                            txt += &session.text_content[session.chosen_language].graphics[10].clone();
                         },
                         _ => {
                             txt += &session.eng.render.shadow_map_resolution.to_string();
@@ -411,10 +411,20 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                 20 => {
                     match session.eng.render.fullscreen {
                         true => {
-                            txt += &session.text_content[session.chosen_language].graphics[5].clone();
+                            txt += &session.text_content[session.chosen_language].graphics[6].clone();
                         },
                         false => {
+                            txt += &session.text_content[session.chosen_language].graphics[7].clone();
+                        },
+                    }
+                },
+                21 => {
+                    match session.eng.render.vsync {
+                        true => {
                             txt += &session.text_content[session.chosen_language].graphics[6].clone();
+                        },
+                        false => {
+                            txt += &session.text_content[session.chosen_language].graphics[7].clone();
                         },
                     }
                 },
@@ -462,6 +472,11 @@ pub fn updatesubemnugraphics(session: &mut GameSession){
                     do_paper_sound(session);
                 },
                 21 => {
+                    session.eng.render.vsync = !session.eng.render.vsync;
+                    save_settings(session);
+                    do_paper_sound(session);
+                },
+                22 => {
                     session.submenu = SubMenu::Settings;
                     do_paper2_sound(session);
                 }
@@ -532,44 +547,19 @@ pub fn updatecomic(session: &mut GameSession){
     //21, 22
 
     let text = session.text_content[session.writing_system as usize].comic[0].clone();
-    session.menu_text[session.writing_system as usize][22].size.x = 20.0 * session.ui_scale;
-    session.menu_text[session.writing_system as usize][22].size.y = 40.0 * session.ui_scale;
-    session.menu_text[session.writing_system as usize][22].pos.x = session.comic_images[0].object.physic_object.pos.x + session.comic_images[0].object.physic_object.scale.x - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][22].size.x;
-    session.menu_text[session.writing_system as usize][22].pos.y = session.eng.render.resolution_y as f32 - 60.0;
-    session.menu_text[session.writing_system as usize][22].pos.z = 0.7;
-    session.menu_text[session.writing_system as usize][22].signal = false;
-    if session.submenu == SubMenu::Comic(0){
-        session.menu_text[session.writing_system as usize][22].signal = true;
-    }
-    session.menu_text[session.writing_system as usize][22].draw = true;
-    session.menu_text[session.writing_system as usize][22].per_symbol = false;
-    if session.menu_text[session.writing_system as usize][22].exec(&mut session.eng, &text) && session.eng.control.mousebtn[2]{
-        session.submenu = SubMenu::Comic(1);
-    }
-
-    session.black_background[24].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][22].size.x*(text.len() as f32)+15.0;
-    session.black_background[24].object.physic_object.scale.y = session.menu_text[session.writing_system as usize][22].size.y+15.0;
-    session.black_background[24].object.physic_object.pos.x = session.menu_text[session.writing_system as usize][22].pos.x-7.5;
-    session.black_background[24].object.physic_object.pos.y = session.menu_text[session.writing_system as usize][22].pos.y-7.5;
-    session.black_background[24].object.physic_object.pos.z = 0.71;
-    session.black_background[24].object.draw = true;
-    session.black_background[24].exec(&mut session.eng);
-
-    //
-
     session.menu_text[session.writing_system as usize][23].size.x = 20.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][23].size.y = 40.0 * session.ui_scale;
-    session.menu_text[session.writing_system as usize][23].pos.x = session.comic_images[1].object.physic_object.pos.x + session.comic_images[1].object.physic_object.scale.x - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][23].size.x;
+    session.menu_text[session.writing_system as usize][23].pos.x = session.comic_images[0].object.physic_object.pos.x + session.comic_images[0].object.physic_object.scale.x - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][22].size.x;
     session.menu_text[session.writing_system as usize][23].pos.y = session.eng.render.resolution_y as f32 - 60.0;
     session.menu_text[session.writing_system as usize][23].pos.z = 0.7;
     session.menu_text[session.writing_system as usize][23].signal = false;
-    if session.submenu == SubMenu::Comic(1){
+    if session.submenu == SubMenu::Comic(0){
         session.menu_text[session.writing_system as usize][23].signal = true;
     }
     session.menu_text[session.writing_system as usize][23].draw = true;
     session.menu_text[session.writing_system as usize][23].per_symbol = false;
     if session.menu_text[session.writing_system as usize][23].exec(&mut session.eng, &text) && session.eng.control.mousebtn[2]{
-        session.submenu = SubMenu::Comic(2);
+        session.submenu = SubMenu::Comic(1);
     }
 
     session.black_background[25].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][23].size.x*(text.len() as f32)+15.0;
@@ -584,18 +574,17 @@ pub fn updatecomic(session: &mut GameSession){
 
     session.menu_text[session.writing_system as usize][24].size.x = 20.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][24].size.y = 40.0 * session.ui_scale;
-    session.menu_text[session.writing_system as usize][24].pos.x = session.comic_images[2].object.physic_object.pos.x + session.comic_images[2].object.physic_object.scale.x - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][24].size.x;
+    session.menu_text[session.writing_system as usize][24].pos.x = session.comic_images[1].object.physic_object.pos.x + session.comic_images[1].object.physic_object.scale.x - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][24].size.x;
     session.menu_text[session.writing_system as usize][24].pos.y = session.eng.render.resolution_y as f32 - 60.0;
     session.menu_text[session.writing_system as usize][24].pos.z = 0.7;
     session.menu_text[session.writing_system as usize][24].signal = false;
-    if session.submenu != SubMenu::Comic(0) && session.submenu != SubMenu::Comic(1){
+    if session.submenu == SubMenu::Comic(1){
         session.menu_text[session.writing_system as usize][24].signal = true;
     }
     session.menu_text[session.writing_system as usize][24].draw = true;
     session.menu_text[session.writing_system as usize][24].per_symbol = false;
     if session.menu_text[session.writing_system as usize][24].exec(&mut session.eng, &text) && session.eng.control.mousebtn[2]{
-        session.submenu = SubMenu::Main;
-        session.returning_to_game = true;
+        session.submenu = SubMenu::Comic(2);
     }
 
     session.black_background[26].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][24].size.x*(text.len() as f32)+15.0;
@@ -605,6 +594,32 @@ pub fn updatecomic(session: &mut GameSession){
     session.black_background[26].object.physic_object.pos.z = 0.71;
     session.black_background[26].object.draw = true;
     session.black_background[26].exec(&mut session.eng);
+
+    //
+
+    session.menu_text[session.writing_system as usize][25].size.x = 20.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][25].size.y = 40.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][25].pos.x = session.comic_images[2].object.physic_object.pos.x + session.comic_images[2].object.physic_object.scale.x - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][25].size.x;
+    session.menu_text[session.writing_system as usize][25].pos.y = session.eng.render.resolution_y as f32 - 60.0;
+    session.menu_text[session.writing_system as usize][25].pos.z = 0.7;
+    session.menu_text[session.writing_system as usize][25].signal = false;
+    if session.submenu != SubMenu::Comic(0) && session.submenu != SubMenu::Comic(1){
+        session.menu_text[session.writing_system as usize][25].signal = true;
+    }
+    session.menu_text[session.writing_system as usize][25].draw = true;
+    session.menu_text[session.writing_system as usize][25].per_symbol = false;
+    if session.menu_text[session.writing_system as usize][25].exec(&mut session.eng, &text) && session.eng.control.mousebtn[2]{
+        session.submenu = SubMenu::Main;
+        session.returning_to_game = true;
+    }
+
+    session.black_background[27].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][25].size.x*(text.len() as f32)+15.0;
+    session.black_background[27].object.physic_object.scale.y = session.menu_text[session.writing_system as usize][25].size.y+15.0;
+    session.black_background[27].object.physic_object.pos.x = session.menu_text[session.writing_system as usize][25].pos.x-7.5;
+    session.black_background[27].object.physic_object.pos.y = session.menu_text[session.writing_system as usize][25].pos.y-7.5;
+    session.black_background[27].object.physic_object.pos.z = 0.71;
+    session.black_background[27].object.draw = true;
+    session.black_background[27].exec(&mut session.eng);
 }
 
 pub fn update(session: &mut GameSession) {
@@ -1031,6 +1046,11 @@ fn activate_gamepad_selection(session: &mut GameSession) {
             do_paper_sound(session);
         }
         (Graphics, 21) => {
+            session.eng.render.vsync = !session.eng.render.vsync;
+            save_settings(session);
+            do_paper_sound(session);
+        }
+        (Graphics, 22) => {
             session.submenu = Settings;
             session.gamepadsel = 6;
             do_paper2_sound(session);

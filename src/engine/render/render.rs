@@ -15,6 +15,8 @@ unsafe extern "C" {
     fn setresolution(eh: cty::uint32_t, xs: cty::uint32_t, ys: cty::uint32_t);
     fn seticon(eh: cty::uint32_t, xs: cty::uint32_t, ys: cty::uint32_t, pixels: *mut cty::c_char);
     fn settitle(eh: cty::uint32_t, title: *const cty::c_char);
+    fn swapFIFO(eh: cty::uint32_t);
+    fn swapImediate(eh: cty::uint32_t);
     fn setfullscreen(eh: cty::uint32_t);
     fn quitfullscreen(eh: cty::uint32_t);
     fn getKeyPressed(eh: cty::uint32_t, index: cty::uint32_t) -> cty::uint8_t;
@@ -156,6 +158,8 @@ pub struct Render {
     pub lights_count: u32,
     pub active_renderpasses: [bool; 4],
     pub active_renderpasses_on_resize: [bool; 4],
+    pub vsync: bool,
+    old_vsync: bool,
     fullscreeno: bool,
 }
 
@@ -190,6 +194,8 @@ impl Render {
             active_renderpasses: [true, true, true, true],
             active_renderpasses_on_resize: [true, true, true, true],
             lights_count: 1,
+            vsync: true,
+            old_vsync: true,
         }
     }
     pub fn continue_loop(&mut self) -> bool {
@@ -220,6 +226,13 @@ impl Render {
                     i,
                     u8::from(self.active_renderpasses_on_resize[i as usize]),
                 );
+            }
+            if self.old_vsync != self.vsync{
+                match self.vsync{
+                    true => swapFIFO(self.euclid),
+                    false => swapImediate(self.euclid),
+                }
+                self.old_vsync = self.vsync;
             }
         };
         let should_continue = unsafe { loopcont(self.euclid) } == 1;
