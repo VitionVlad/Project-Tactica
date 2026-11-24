@@ -144,6 +144,7 @@ typedef struct euclidh{
     uint8_t changedPresentMode;
     _Atomic uint32_t resolutionX[2];
     _Atomic uint32_t resolutionY[2];
+    float dpiscalefactor;
     uint32_t sresolutionX;
     uint32_t sresolutionY;
     uint32_t oldx;
@@ -309,7 +310,7 @@ GLFWmonitor* get_current_monitor(GLFWwindow *window)
     bestmonitor = NULL;
 
     glfwGetWindowPos(window, &wx, &wy);
-    glfwGetWindowSize(window, &ww, &wh);
+    glfwGetFramebufferSize(window, &ww, &wh);
     monitors = glfwGetMonitors(&nmonitors);
 
     for (i = 0; i < nmonitors; i++) {
@@ -332,7 +333,7 @@ GLFWmonitor* get_current_monitor(GLFWwindow *window)
 }
 
 void setresolution(uint32_t eh, uint32_t xs, uint32_t ys){
-    glfwSetWindowSize(euclid.handle[eh].window, xs, ys);
+    glfwSetWindowSize(euclid.handle[eh].window, xs*euclid.handle[eh].dpiscalefactor, ys*euclid.handle[eh].dpiscalefactor);
 }
 
 void settitle(uint32_t eh, const char* title){
@@ -5035,16 +5036,6 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug, uint8_t debug_only_
     if(euclid.size >= 100){
         euclid.size = 0;
     }
-    //euclidh *grown = realloc(euclid.handle, sizeof(euclidh)*euclid.size);
-    //if(grown == NULL){
-    //    if(debug == 1) printf("\e[1;31mError\e[0;37m: Failed to allocate engine handle table\n");
-    //    exit(-1);
-    //}
-    //euclid.handle = grown;
-    // NOTE: growing this table still isn't safe to call concurrently with another handle's
-    // render thread (renderarbeite) dereferencing euclid.handle[...] — realloc can move the
-    // whole array. Only call neweng() for additional handles when no other handle's render
-    // thread is running, or add external synchronization around this table if that's needed.
     euclid.handle[eh].chosenDevice = -1;
     euclid.handle[eh].usedPresentMode = 0;
     euclid.handle[eh].changedPresentMode = 0;
@@ -5073,6 +5064,7 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug, uint8_t debug_only_
         atomic_init(&euclid.handle[eh].renderPassActiveOnResize[1][i], 1);
     }
     euclid.handle[eh].lpcont = 1;
+    euclid.handle[eh].dpiscalefactor = 1.0;
     euclid.handle[eh].halt_render = 0;
     euclid.handle[eh].currentFrame = 0;
     euclid.handle[eh].swapchainDirty = 0;
@@ -5093,9 +5085,17 @@ uint32_t neweng(uint32_t shadowMapResolution, uint8_t debug, uint8_t debug_only_
     getDevice(eh);
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
+    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_FALSE);
+    #if defined(__APPLE__) || defined(MACOSX) || defined(macintosh) || defined(Macintosh)
+    glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
+    #endif
     euclid.handle[eh].window = glfwCreateWindow(800, 600, "Schnellwerke", NULL, NULL);
     glfwCreateWindowSurface(euclid.handle[eh].instance, euclid.handle[eh].window, NULL, &euclid.handle[eh].surface);
+    uint32_t tsx, tsy;
+    glfwGetFramebufferSize(euclid.handle[eh].window, &tsx, &tsy);
+    int winW, winH;
+    glfwGetWindowSize(euclid.handle[eh].window, &winW, &winH);
+    euclid.handle[eh].dpiscalefactor = (float)winW/(float)tsx;
     //{
     //    int fbw = 0, fbh = 0;
     //    glfwGetFramebufferSize(euclid.handle[eh].window, &fbw, &fbh);
@@ -5223,6 +5223,9 @@ uint32_t loopcont(uint32_t eh){
     keywork(eh);
     uint32_t tsx, tsy;
     glfwGetFramebufferSize(euclid.handle[eh].window, &tsx, &tsy);
+    int winW, winH;
+    glfwGetWindowSize(euclid.handle[eh].window, &winW, &winH);
+    euclid.handle[eh].dpiscalefactor = (float)winW/(float)tsx;
     euclid.handle[eh].resolutionX[1] = tsx;
     euclid.handle[eh].resolutionY[1] = tsy;
 
