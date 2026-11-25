@@ -19,14 +19,14 @@ pub fn updatesubemnumenu(session: &mut GameSession){
     session.lgtext.rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
     session.lgtext.exec(&mut session.eng, "Project|Tatica!");
 
-    session.black_background[23].object.physic_object.scale.x = session.lgtext.size.x*7.0 + 15.0;
-    session.black_background[23].object.physic_object.scale.y = session.lgtext.size.y*2.0 + 15.0;
-    session.black_background[23].object.physic_object.pos.x = session.lgtext.pos.x - 7.5;
-    session.black_background[23].object.physic_object.pos.y = session.lgtext.pos.y - 7.5;
-    session.black_background[23].object.physic_object.pos.z = 0.71;
-    session.black_background[23].object.draw = true;
-    session.black_background[23].object.physic_object.rot = session.lgtext.rotation;
-    session.black_background[23].exec(&mut session.eng);
+    session.black_background[30].object.physic_object.scale.x = session.lgtext.size.x*7.0 + 15.0;
+    session.black_background[30].object.physic_object.scale.y = session.lgtext.size.y*2.0 + 15.0;
+    session.black_background[30].object.physic_object.pos.x = session.lgtext.pos.x - 7.5;
+    session.black_background[30].object.physic_object.pos.y = session.lgtext.pos.y - 7.5;
+    session.black_background[30].object.physic_object.pos.z = 0.71;
+    session.black_background[30].object.draw = true;
+    session.black_background[30].object.physic_object.rot = session.lgtext.rotation;
+    session.black_background[30].exec(&mut session.eng);
 
     for i in 0..session.text_content[session.chosen_language].pause.len(){
         session.menu_text[session.writing_system as usize][i].size.x = 25.0 * session.ui_scale;
