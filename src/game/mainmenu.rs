@@ -1,5 +1,3 @@
-use std::u8;
-
 use crate::engine::math::vec2::Vec2;
 use crate::engine::{math::vec3::Vec3, physics::physics::PhysicsObject};
 use crate::game::SubMenu::{self, Audio, Game, Graphics, Main, Settings};
@@ -620,7 +618,7 @@ pub fn updatecomic(session: &mut GameSession){
     let lg = ctext.len() as f32/5.0-1.0;
     session.menu_text[session.writing_system as usize][27].size.x = 10.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][27].size.y = 20.0 * session.ui_scale;
-    session.menu_text[session.writing_system as usize][27].pos.x = session.comic_images[1].object.physic_object.pos.x + session.comic_images[1].object.physic_object.scale.x - 60.0 * session.ui_scale - lg as f32*session.menu_text[session.writing_system as usize][27].size.x;
+    session.menu_text[session.writing_system as usize][27].pos.x = session.comic_images[1].object.physic_object.pos.x + session.comic_images[1].object.physic_object.scale.x - 30.0 * session.ui_scale - lg as f32*session.menu_text[session.writing_system as usize][27].size.x;
     session.menu_text[session.writing_system as usize][27].pos.y = 60.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][27].pos.z = 0.7;
     session.menu_text[session.writing_system as usize][27].signal = false;
