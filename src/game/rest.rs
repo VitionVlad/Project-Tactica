@@ -747,26 +747,6 @@ pub fn update(session: &mut GameSession) {
         }
     }
 
-    for wbg in &mut session.white_background {
-        wbg.object.draw = false;
-        wbg.exec(&mut session.eng);
-    }
-
-    for bbg in &mut session.black_background {
-        bbg.object.draw = false;
-        bbg.exec(&mut session.eng);
-    }
-
-    for mbg in &mut session.menu_background {
-        mbg.object.draw = false;
-        mbg.exec(&mut session.eng);
-    }
-
-    for txt in &mut session.menu_text[session.writing_system as usize] {
-        txt.draw = false;
-        txt.exec(&mut session.eng, " ");
-    }
-
     session.logo.object.draw = false;
     session.logo.exec(&mut session.eng);
 
@@ -788,16 +768,6 @@ pub fn update(session: &mut GameSession) {
     session.viewport.object.mesh.ubo[53] = 0.0;
     session.viewport.object.draw = true;
     session.viewport.exec(&mut session.eng);
-
-    for img in &mut session.main_menu_images {
-        img.object.draw = false;
-        img.exec(&mut session.eng);
-    }
-
-    for img in &mut session.comic_images {
-        img.object.draw = false;
-        img.exec(&mut session.eng);
-    }
 
     if session.scn.objects[session.pivot.id].physic_object.pos.x >= session.x_max_lv - 0.25{
         session.game_state = GameState::DemoEnd;

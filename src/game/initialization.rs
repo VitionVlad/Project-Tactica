@@ -10,7 +10,6 @@ use super::settings::load_settings;
 pub fn initialize() -> GameSession {
     let mut eng = Engine::new(crate::engine::render::render::RenderDebug::None);
     eng.render.set_title("Project Tactica -- Dev build --");
-    eng.render.set_new_resolution(1280, 720);
 
     let gmtxt = JsonF::load_from_file("assets/text.json");
     let chosen_language = 0;
@@ -229,7 +228,7 @@ pub fn initialize() -> GameSession {
     }
 
     let mut menu_text = Vec::new();
-    for _ in 0..30 {
+    for _ in 0..32 {
         let t = UItext::new_from_file(
             &mut eng,
             matt,
@@ -254,19 +253,19 @@ pub fn initialize() -> GameSession {
             &mut eng,
             matt2,
             "assets/comiccyrinv.png",
-            "AaBbVvGgDdEe[]JjZzIiYyKkLlMmNnOoPpRrSsTtUuFfHhXxCc{}/*`~=@#$%^&()'0123456789,.;:'+-<>_?! ",
+            "AaBbVvGgDdEe[]JjZzIiYyKkLlMmNnOoPpRrSsTtUuFfHhXxCc{}/*`~=@#$%^&()'0123456789,.;:%+-<>_?! ",
             MeshUsage::PostPass,
         );
         textcyr.push(t);
     }
 
     let mut menu_textcyr = Vec::new();
-    for _ in 0..30 {
+    for _ in 0..32 {
         let t = UItext::new_from_file(
             &mut eng,
             matt,
             "assets/comiccyrinv.png",
-            "AaBbVvGgDdEe[]JjZzIiYyKkLlMmNnOoPpRrSsTtUuFfHhXxCc{}/*`~=@#$%^&()'0123456789,.;:'+-<>_?! ",
+            "AaBbVvGgDdEe[]JjZzIiYyKkLlMmNnOoPpRrSsTtUuFfHhXxCc{}/*`~=@#$%^&()'0123456789,.;:%+-<>_?! ",
             MeshUsage::PostPass,
         );
         menu_textcyr.push(t);
@@ -276,7 +275,7 @@ pub fn initialize() -> GameSession {
         &mut eng,
         matt,
         "assets/comiccyrinv.png",
-        "AaBbVvGgDdEe[]JjZzIiYyKkLlMmNnOoPpRrSsTtUuFfHhXxCc{}/*`~=@#$%^&()'0123456789,.;:'+-<>_?! ",
+        "AaBbVvGgDdEe[]JjZzIiYyKkLlMmNnOoPpRrSsTtUuFfHhXxCc{}/*`~=@#$%^&()'0123456789,.;:%+-<>_?! ",
         MeshUsage::PostPass,
     ));
 
@@ -315,7 +314,7 @@ pub fn initialize() -> GameSession {
     }
 
     let mut bbg = Vec::new();
-    for _ in 0..31 {
+    for _ in 0..34 {
         let t = UIplane::new(&mut eng, mati, vec![imgbl], MeshUsage::PostPass);
         bbg.push(t);
     }

@@ -597,6 +597,26 @@ pub fn update(session: &mut GameSession) {
             session.eng.render.resolution_x as f32,
             session.eng.render.resolution_y as f32,
         ) {
+            for wbg in &mut session.white_background {
+                wbg.object.draw = false;
+                wbg.exec(&mut session.eng);
+            }
+        
+            for bbg in &mut session.black_background {
+                bbg.object.draw = false;
+                bbg.exec(&mut session.eng);
+            }
+        
+            for mbg in &mut session.menu_background {
+                mbg.object.draw = false;
+                mbg.exec(&mut session.eng);
+            }
+        
+            for txt in &mut session.menu_text[session.writing_system as usize] {
+                txt.draw = false;
+                txt.exec(&mut session.eng, " ");
+            }
+
             viewport.scale.x = session.eng.render.resolution_x as f32;
             viewport.scale.y = session.eng.render.resolution_y as f32;
             viewport.pos.x = 0.0;

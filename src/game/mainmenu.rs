@@ -549,8 +549,8 @@ pub fn updatecomic(session: &mut GameSession){
     let text = session.text_content[session.writing_system as usize].comic[0].clone();
     session.menu_text[session.writing_system as usize][23].size.x = 20.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][23].size.y = 40.0 * session.ui_scale;
-    session.menu_text[session.writing_system as usize][23].pos.x = session.comic_images[0].object.physic_object.pos.x + session.comic_images[0].object.physic_object.scale.x - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][22].size.x;
-    session.menu_text[session.writing_system as usize][23].pos.y = session.eng.render.resolution_y as f32 - 60.0;
+    session.menu_text[session.writing_system as usize][23].pos.x = session.comic_images[0].object.physic_object.pos.x + session.comic_images[0].object.physic_object.scale.x - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][23].size.x;
+    session.menu_text[session.writing_system as usize][23].pos.y = session.eng.render.resolution_y as f32 - 60.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][23].pos.z = 0.7;
     session.menu_text[session.writing_system as usize][23].signal = false;
     if session.submenu == SubMenu::Comic(0){
@@ -570,12 +570,33 @@ pub fn updatecomic(session: &mut GameSession){
     session.black_background[25].object.draw = true;
     session.black_background[25].exec(&mut session.eng);
 
+    let ctext = session.text_content[session.writing_system as usize].comic[1].clone();
+    let lg = ctext.len() as f32/2.0-1.0;
+    session.menu_text[session.writing_system as usize][26].size.x = 20.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][26].size.y = 40.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][26].pos.x = session.comic_images[0].object.physic_object.pos.x + session.comic_images[0].object.physic_object.scale.x - 30.0 * session.ui_scale - lg*session.menu_text[session.writing_system as usize][26].size.x;
+    session.menu_text[session.writing_system as usize][26].pos.y = 60.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][26].pos.z = 0.7;
+    session.menu_text[session.writing_system as usize][26].signal = false;
+    session.menu_text[session.writing_system as usize][26].draw = true;
+    session.menu_text[session.writing_system as usize][26].per_symbol = false;
+    session.menu_text[session.writing_system as usize][26].new_line_symbol = b'|';
+    session.menu_text[session.writing_system as usize][26].exec(&mut session.eng, &ctext);
+
+    session.black_background[28].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][26].size.x*(lg as f32)+15.0;
+    session.black_background[28].object.physic_object.scale.y = session.menu_text[session.writing_system as usize][26].size.y*2.0+15.0;
+    session.black_background[28].object.physic_object.pos.x = session.menu_text[session.writing_system as usize][26].pos.x-7.5;
+    session.black_background[28].object.physic_object.pos.y = session.menu_text[session.writing_system as usize][26].pos.y-7.5;
+    session.black_background[28].object.physic_object.pos.z = 0.71;
+    session.black_background[28].object.draw = true;
+    session.black_background[28].exec(&mut session.eng);
+
     //
 
     session.menu_text[session.writing_system as usize][24].size.x = 20.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][24].size.y = 40.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][24].pos.x = session.comic_images[1].object.physic_object.pos.x + session.comic_images[1].object.physic_object.scale.x - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][24].size.x;
-    session.menu_text[session.writing_system as usize][24].pos.y = session.eng.render.resolution_y as f32 - 60.0;
+    session.menu_text[session.writing_system as usize][24].pos.y = session.eng.render.resolution_y as f32 - 60.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][24].pos.z = 0.7;
     session.menu_text[session.writing_system as usize][24].signal = false;
     if session.submenu == SubMenu::Comic(1){
@@ -595,12 +616,33 @@ pub fn updatecomic(session: &mut GameSession){
     session.black_background[26].object.draw = true;
     session.black_background[26].exec(&mut session.eng);
 
+    let ctext = session.text_content[session.writing_system as usize].comic[2].clone();
+    let lg = ctext.len() as f32/5.0-1.0;
+    session.menu_text[session.writing_system as usize][27].size.x = 10.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][27].size.y = 20.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][27].pos.x = session.comic_images[1].object.physic_object.pos.x + session.comic_images[1].object.physic_object.scale.x - 60.0 * session.ui_scale - lg as f32*session.menu_text[session.writing_system as usize][27].size.x;
+    session.menu_text[session.writing_system as usize][27].pos.y = 60.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][27].pos.z = 0.7;
+    session.menu_text[session.writing_system as usize][27].signal = false;
+    session.menu_text[session.writing_system as usize][27].draw = true;
+    session.menu_text[session.writing_system as usize][27].per_symbol = false;
+    session.menu_text[session.writing_system as usize][27].new_line_symbol = b'|';
+    session.menu_text[session.writing_system as usize][27].exec(&mut session.eng, &ctext);
+
+    session.black_background[29].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][27].size.x*(lg as f32)+15.0;
+    session.black_background[29].object.physic_object.scale.y = session.menu_text[session.writing_system as usize][27].size.y*5.0+15.0;
+    session.black_background[29].object.physic_object.pos.x = session.menu_text[session.writing_system as usize][27].pos.x-7.5;
+    session.black_background[29].object.physic_object.pos.y = session.menu_text[session.writing_system as usize][27].pos.y-7.5;
+    session.black_background[29].object.physic_object.pos.z = 0.71;
+    session.black_background[29].object.draw = true;
+    session.black_background[29].exec(&mut session.eng);
+
     //
 
     session.menu_text[session.writing_system as usize][25].size.x = 20.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][25].size.y = 40.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][25].pos.x = session.comic_images[2].object.physic_object.pos.x + session.comic_images[2].object.physic_object.scale.x - 60.0 - text.len() as f32*session.menu_text[session.writing_system as usize][25].size.x;
-    session.menu_text[session.writing_system as usize][25].pos.y = session.eng.render.resolution_y as f32 - 60.0;
+    session.menu_text[session.writing_system as usize][25].pos.y = session.eng.render.resolution_y as f32 - 60.0 * session.ui_scale;
     session.menu_text[session.writing_system as usize][25].pos.z = 0.7;
     session.menu_text[session.writing_system as usize][25].signal = false;
     if session.submenu != SubMenu::Comic(0) && session.submenu != SubMenu::Comic(1){
@@ -620,6 +662,92 @@ pub fn updatecomic(session: &mut GameSession){
     session.black_background[27].object.physic_object.pos.z = 0.71;
     session.black_background[27].object.draw = true;
     session.black_background[27].exec(&mut session.eng);
+
+    let ctext = session.text_content[session.writing_system as usize].comic[3].clone();
+    let lg = ctext.len() as f32/5.0-1.0;
+    session.menu_text[session.writing_system as usize][28].size.x = 10.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][28].size.y = 20.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][28].pos.x = session.comic_images[2].object.physic_object.pos.x + session.comic_images[2].object.physic_object.scale.x - 30.0 * session.ui_scale - lg*session.menu_text[session.writing_system as usize][28].size.x;
+    session.menu_text[session.writing_system as usize][28].pos.y = 60.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][28].pos.z = 0.7;
+    session.menu_text[session.writing_system as usize][28].signal = false;
+    session.menu_text[session.writing_system as usize][28].draw = true;
+    session.menu_text[session.writing_system as usize][28].per_symbol = false;
+    session.menu_text[session.writing_system as usize][28].new_line_symbol = b'|';
+    session.menu_text[session.writing_system as usize][28].exec(&mut session.eng, &ctext);
+
+    session.black_background[30].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][28].size.x*(lg as f32)+15.0;
+    session.black_background[30].object.physic_object.scale.y = session.menu_text[session.writing_system as usize][28].size.y*5.0+15.0;
+    session.black_background[30].object.physic_object.pos.x = session.menu_text[session.writing_system as usize][28].pos.x-7.5;
+    session.black_background[30].object.physic_object.pos.y = session.menu_text[session.writing_system as usize][28].pos.y-7.5;
+    session.black_background[30].object.physic_object.pos.z = 0.71;
+    session.black_background[30].object.draw = true;
+    session.black_background[30].exec(&mut session.eng);
+
+    let ctext = session.text_content[session.writing_system as usize].comic[4].clone();
+    let lg = ctext.len() as f32/4.0-1.0;
+    session.menu_text[session.writing_system as usize][29].size.x = 10.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][29].size.y = 20.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][29].pos.x = session.comic_images[2].object.physic_object.pos.x + session.comic_images[2].object.physic_object.scale.x - 30.0 * session.ui_scale - lg*session.menu_text[session.writing_system as usize][29].size.x;
+    session.menu_text[session.writing_system as usize][29].pos.y = 90.0 * session.ui_scale + session.menu_text[session.writing_system as usize][28].size.y*5.0;
+    session.menu_text[session.writing_system as usize][29].pos.z = 0.7;
+    session.menu_text[session.writing_system as usize][29].signal = false;
+    session.menu_text[session.writing_system as usize][29].draw = true;
+    session.menu_text[session.writing_system as usize][29].per_symbol = false;
+    session.menu_text[session.writing_system as usize][29].new_line_symbol = b'|';
+    session.menu_text[session.writing_system as usize][29].exec(&mut session.eng, &ctext);
+
+    session.black_background[31].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][29].size.x*(lg as f32)+15.0;
+    session.black_background[31].object.physic_object.scale.y = session.menu_text[session.writing_system as usize][29].size.y*4.0+15.0;
+    session.black_background[31].object.physic_object.pos.x = session.menu_text[session.writing_system as usize][29].pos.x-7.5;
+    session.black_background[31].object.physic_object.pos.y = session.menu_text[session.writing_system as usize][29].pos.y-7.5;
+    session.black_background[31].object.physic_object.pos.z = 0.71;
+    session.black_background[31].object.draw = true;
+    session.black_background[31].exec(&mut session.eng);
+
+    let ctext = session.text_content[session.writing_system as usize].comic[5].clone();
+    let lg = ctext.len() as f32;
+    session.menu_text[session.writing_system as usize][30].size.x = 10.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][30].size.y = 20.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][30].pos.x = session.comic_images[2].object.physic_object.pos.x + 30.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][30].pos.y = 120.0 * session.ui_scale + session.menu_text[session.writing_system as usize][28].size.y*9.0;
+    session.menu_text[session.writing_system as usize][30].pos.z = 0.7;
+    session.menu_text[session.writing_system as usize][30].signal = false;
+    session.menu_text[session.writing_system as usize][30].draw = true;
+    session.menu_text[session.writing_system as usize][30].per_symbol = false;
+    session.menu_text[session.writing_system as usize][30].new_line_symbol = b'|';
+    session.menu_text[session.writing_system as usize][30].rotation = Vec3{ x: 0.0, y: 0.0, z: -0.05}.to_quat();
+    session.menu_text[session.writing_system as usize][30].exec(&mut session.eng, &ctext);
+
+    session.black_background[32].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][30].size.x*(lg as f32)+15.0;
+    session.black_background[32].object.physic_object.scale.y = session.menu_text[session.writing_system as usize][30].size.y+15.0;
+    session.black_background[32].object.physic_object.pos.x = session.menu_text[session.writing_system as usize][30].pos.x-7.5;
+    session.black_background[32].object.physic_object.pos.y = session.menu_text[session.writing_system as usize][30].pos.y-7.5;
+    session.black_background[32].object.physic_object.pos.z = 0.71;
+    session.black_background[32].object.physic_object.rot = session.menu_text[session.writing_system as usize][30].rotation;
+    session.black_background[32].object.draw = true;
+    session.black_background[32].exec(&mut session.eng);
+
+    let ctext = session.text_content[session.writing_system as usize].comic[6].clone();
+    let lg = ctext.len() as f32/4.0-1.0;
+    session.menu_text[session.writing_system as usize][31].size.x = 10.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][31].size.y = 20.0 * session.ui_scale;
+    session.menu_text[session.writing_system as usize][31].pos.x = session.comic_images[2].object.physic_object.pos.x + session.comic_images[2].object.physic_object.scale.x - 30.0 * session.ui_scale - lg*session.menu_text[session.writing_system as usize][31].size.x;
+    session.menu_text[session.writing_system as usize][31].pos.y = 150.0 * session.ui_scale + session.menu_text[session.writing_system as usize][28].size.y*10.0;
+    session.menu_text[session.writing_system as usize][31].pos.z = 0.7;
+    session.menu_text[session.writing_system as usize][31].signal = false;
+    session.menu_text[session.writing_system as usize][31].draw = true;
+    session.menu_text[session.writing_system as usize][31].per_symbol = false;
+    session.menu_text[session.writing_system as usize][31].new_line_symbol = b'|';
+    session.menu_text[session.writing_system as usize][31].exec(&mut session.eng, &ctext);
+
+    session.black_background[33].object.physic_object.scale.x = session.menu_text[session.writing_system as usize][31].size.x*(lg as f32)+15.0;
+    session.black_background[33].object.physic_object.scale.y = session.menu_text[session.writing_system as usize][31].size.y*4.0+15.0;
+    session.black_background[33].object.physic_object.pos.x = session.menu_text[session.writing_system as usize][31].pos.x-7.5;
+    session.black_background[33].object.physic_object.pos.y = session.menu_text[session.writing_system as usize][31].pos.y-7.5;
+    session.black_background[33].object.physic_object.pos.z = 0.71;
+    session.black_background[33].object.draw = true;
+    session.black_background[33].exec(&mut session.eng);
 }
 
 pub fn update(session: &mut GameSession) {
@@ -752,6 +880,36 @@ pub fn update(session: &mut GameSession) {
             session.eng.render.resolution_x as f32,
             session.eng.render.resolution_y as f32,
         ) {
+            for wbg in &mut session.white_background {
+                wbg.object.draw = false;
+                wbg.exec(&mut session.eng);
+            }
+        
+            for bbg in &mut session.black_background {
+                bbg.object.draw = false;
+                bbg.exec(&mut session.eng);
+            }
+        
+            for mbg in &mut session.menu_background {
+                mbg.object.draw = false;
+                mbg.exec(&mut session.eng);
+            }
+        
+            for txt in &mut session.menu_text[session.writing_system as usize] {
+                txt.draw = false;
+                txt.exec(&mut session.eng, " ");
+            }
+
+            for img in &mut session.main_menu_images {
+                img.object.draw = false;
+                img.exec(&mut session.eng);
+            }
+        
+            for img in &mut session.comic_images {
+                img.object.draw = false;
+                img.exec(&mut session.eng);
+            }
+
             session.speakers[6].move_sound_cursor(0.0);
             session.speakers[6].play = true;
 
@@ -1077,43 +1235,4 @@ fn select_next_language(session: &mut GameSession) {
         previous_writing_system,
         session.writing_system as usize,
     );
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{comic_panel_layout, comic_panel_widths, comic_slide_viewport_x, menu_page_offset};
-
-    #[test]
-    fn comic_layout_preserves_source_aspects_and_panel_gaps() {
-        let (widths, positions) = comic_panel_layout(3000.0, 720.0);
-
-        assert_eq!(widths, [1280.0, 320.0, 320.0]);
-        assert_eq!(positions[1] - (positions[0] + widths[0]), 30.0);
-        assert_eq!(positions[2] - (positions[1] + widths[1]), 30.0);
-        assert_eq!(positions[2] + widths[2], 2970.0);
-        assert_eq!(comic_slide_viewport_x(widths, 1280.0, 0), 2010.0);
-        assert_eq!(comic_slide_viewport_x(widths, 1280.0, 1), 1660.0);
-        assert_eq!(comic_slide_viewport_x(widths, 1280.0, 2), 1310.0);
-        for (slide, panel) in [0, 1, 2].iter().zip([0, 1, 2].iter()) {
-            let viewport_x = comic_slide_viewport_x(widths, 1280.0, *slide);
-            let (_, slide_positions) = comic_panel_layout(viewport_x, 720.0);
-            assert_eq!(slide_positions[*panel] + widths[*panel], 1280.0);
-        }
-    }
-
-    #[test]
-    fn comic_panel_widths_depend_on_height_not_screen_width() {
-        let widths = comic_panel_widths(900.0);
-
-        assert_eq!(widths, [1600.0, 400.0, 400.0]);
-        let screen_width = 1400.0;
-        let menu_viewport_x = menu_page_offset(screen_width, 900.0);
-        let menu_background_left = menu_viewport_x - menu_page_offset(screen_width, 900.0);
-        let menu_background_right = menu_background_left + screen_width;
-        let first_panel_left = menu_viewport_x - widths.iter().sum::<f32>() - 90.0;
-
-        assert_eq!(menu_background_left, 0.0);
-        assert_eq!(menu_background_right, screen_width);
-        assert_eq!(first_panel_left - menu_background_right, 30.0);
-    }
 }

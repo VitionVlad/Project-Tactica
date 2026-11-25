@@ -425,6 +425,7 @@ pub struct GameSession {
     pub chosen_language: usize,
     pub writing_system: WritingSystem,
     pub text_content: Vec<TextContent>,
+    //pub comic_len: Vec<Vec<usize>>,
     pub game_state: GameState,
     pub last_menu_hover: Option<(GameState, SubMenu, usize)>,
     pub last_menu_hover_frame: Option<u32>,
